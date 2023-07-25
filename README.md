@@ -1,6 +1,6 @@
 # *directdemocracy.vote* sample app
 
-This repository contains the source code of the default smartphone app for *directdemocracy.vote*.
+This repository contains the source code of the default smartphone app for *[directdemocracy.vote](https://directdemocracy.vote)*.
 
 The application is developed mostly in Javascript using [Framework7](https://framework7.io/) and ported to Android and iOS with [Cordova](https://cordova.apache.org/).
 It requires the development of Cordova plugins for:
