@@ -15,14 +15,14 @@ class Translator {
     if (document.documentElement.lang !== language)
       document.documentElement.lang = language;
     if (language === 'en') {
-      translatePage();
+      this.translatePage();
       return;
     }
     fetch(`/i18n/${language}.json`)
       .then((r) => r.json())
       .then((dictionary) => {
         this.dictionary = dictionary;
-        translatePage();
+        this.translatePage();
       })
       .catch(() => {
         console.error(`Could not load "${language}.json".`);
