@@ -1,5 +1,5 @@
 import Translator from "./translator.js";
-translator = new Translator();
+let translator = new Translator();
 console.log(translator.language);
 
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/about/', url: 'about.html'}]});
