@@ -21,7 +21,7 @@ class Translator {
         // do something
       })
       .catch(() => {
-        console.error(`Could not load ${this.language}.json.`));
+        console.error(`Could not load ${this.language}.json.`);
       });
   }
   get language() {
