@@ -7,26 +7,30 @@ class Translator {
   }
   set language(language) {
     if (language === 'default')
-      this._language = navigator.languages ? navigator.languages[0] : navigator.language;
-    else
-      this._language = language;
-    if (!this._languages.includes(this._language))
-      this._language = this._language.substr(0, 2);
-    if (!this._languages.includes(this._language))
-      this._language = this._languages[0];
-    if (this.language == 'en')
+      language = navigator.languages ? navigator.languages[0] : navigator.language;
+    if (!this._languages.includes(language))
+      language = language.substr(0, 2);
+    if (!this._languages.includes(language))
+      language = this._languages[0];
+    if (document.documentElement.lang !== language)
+      document.documentElement.lang = language;
+    if (language == 'en')
       return;
-    fetch(`/i18n/${this.language}.json`)
-      .then((res) => res.json())
-      .then((translation) => {
-        // do something
+    fetch(`/i18n/${language}.json`)
+      .then((r) => r.json())
+      .then((dictionary) => {
+        this.dictionary = dictionary;
+        translatePage();
       })
       .catch(() => {
-        console.error(`Could not load ${this.language}.json`);
+        console.error(`Could not load ${language}.json`);
       });
   }
   get language() {
-    return this._language;
+    return document.documentElement.lang;
+  }
+  translatePage() {
+    
   }
 }
 export default Translator;
