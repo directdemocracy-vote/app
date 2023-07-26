@@ -3,7 +3,7 @@
 class Translator {
   constructor() {
     this._languages = ['en', 'fr'];
-    this.language = 'default';
+    this.language = 'fr';
   }
   set language(language) {
     if (language === 'default')
