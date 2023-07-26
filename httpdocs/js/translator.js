@@ -14,7 +14,7 @@ class Translator {
       this._language = this._language.substr(0, 2);
     if (!this._languages.includes(this._language))
       this._language = this._languages[0];
-    if (language == 'en')
+    if (this.language == 'en')
       return;
     fetch(`/i18n/${this.language}.json`)
       .then((res) => res.json())
@@ -22,7 +22,7 @@ class Translator {
         // do something
       })
       .catch(() => {
-        console.error(`Could not load ${this.language}.json.`);
+        console.error(`Could not load ${this.language}.json`);
       });
   }
   get language() {
