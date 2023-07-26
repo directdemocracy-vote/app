@@ -14,7 +14,8 @@ class Translator {
       this._language = this._language.substr(0, 2);
     if (!this._languages.includes(this._language))
       this._language = this._languages[0];
-    // load dictionnary
+    if (language == 'en')
+      return;
     fetch(`/i18n/${this.language}.json`)
       .then((res) => res.json())
       .then((translation) => {
