@@ -14,6 +14,10 @@ class Translator {
       language = this._languages[0];
     if (document.documentElement.lang !== language)
       document.documentElement.lang = language;
+    if (language === 'en') {
+      translatePage();
+      return;
+    }
     fetch(`/i18n/${language}.json`)
       .then((r) => r.json())
       .then((dictionary) => {
@@ -31,7 +35,9 @@ class Translator {
     this._elements = document.querySelectorAll("[data-i18n]");
     this._elements.forEach((element) => {
       let key = element.dataset.i18n;
-      if (key in this.dictionary)
+      if (this.language === 'en')
+        element.innerHTML = key;
+      else if (key in this.dictionary)
         element.innerHTML = this.dictionary[key];
       else
         console.error(`Missing translation for key "${key}" in language "${this.language}".`);
