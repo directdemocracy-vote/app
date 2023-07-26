@@ -1,6 +1,6 @@
 {
-  "Card": "Carte",
-  "Endorse": "Assermenter",
-  "Vote": "Voter",
-  "Settings": "Options"
+  "card": "Carte",
+  "endorse": "Assermenter",
+  "vote": "Voter",
+  "settings": "Options"
 }
