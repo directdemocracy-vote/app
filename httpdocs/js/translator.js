@@ -22,7 +22,6 @@ class Translator {
       .then((r) => r.json())
       .then((dictionary) => {
         this._dictionary = dictionary;
-        console.log(dictionary);
         this.translatePage();
       })
       .catch(() => {
