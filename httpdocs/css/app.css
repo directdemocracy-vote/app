@@ -16,6 +16,6 @@
   text-transform: uppercase;
   font-family: Verdana, Geneva, sans-serif;
 }
-span.tabbar-label {
+.md .tabbar-label {
   overflow: visible;
 }
