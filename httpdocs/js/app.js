@@ -1,3 +1,6 @@
+import Translator from "./translator.js";
+new Translator();
+
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/about/', url: 'about.html'}]});
 let mainView = app.views.create('.view-main');
 if (Framework7.device.ios)
