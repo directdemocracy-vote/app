@@ -15,6 +15,14 @@ class Translator {
     if (!this._languages.includes(this._language))
       this._language = this._languages[0];
     // load dictionnary
+    fetch(`/i18n/${this.language}.json`)
+      .then((res) => res.json())
+      .then((translation) => {
+        // do something
+      })
+      .catch(() => {
+        console.error(`Could not load ${this.language}.json.`));
+      });
   }
   get language() {
     return this._language;
