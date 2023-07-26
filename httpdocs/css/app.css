@@ -16,3 +16,6 @@
   text-transform: uppercase;
   font-family: Verdana, Geneva, sans-serif;
 }
+span.tabbar-label {
+  overflow: visible;
+}
