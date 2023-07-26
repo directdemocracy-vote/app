@@ -32,12 +32,15 @@ class Translator {
     this._elements.forEach((element) => {
       let key = element.dataset.i18n;
       if (key in this._dictionary)
-        element.innerHTML = this._dictionary[key];
+        element.innerHTML = this.translate(key);
       else {
         console.error(`Missing translation for key "${key}" in language "${this.language}".`);
-        element.innerHTML = this._dictionary['en'];
+        element.innerHTML = this.translate('en');
       }
     });
+  }
+  translate(key) {
+    return this._dictionary[key];
   }
 }
 export default Translator;
