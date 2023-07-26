@@ -21,7 +21,7 @@ class Translator {
     fetch(`/i18n/${language}.json`)
       .then((r) => r.json())
       .then((dictionary) => {
-        this.dictionary = dictionary;
+        this._dictionary = dictionary;
         this.translatePage();
       })
       .catch(() => {
@@ -37,8 +37,8 @@ class Translator {
       let key = element.dataset.i18n;
       if (this.language === 'en')
         element.innerHTML = key;
-      else if (key in this.dictionary)
-        element.innerHTML = this.dictionary[key];
+      else if (key in this._dictionary)
+        element.innerHTML = this._dictionary[key];
       else
         console.error(`Missing translation for key "${key}" in language "${this.language}".`);
     });
