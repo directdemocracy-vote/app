@@ -1,7 +1,20 @@
 "use strict"
 
 class Translator {
-  constructor() {
+  constructor(dictionary_url) {
+    if (!dictionary_url.endsWith('/'))
+      dictionary_url += '/';
+    this._dictionary_url = dictionary_url;
+    fetch(`${dictionary_url}languages.json`)
+      .then((r) => r.json())
+      .then((languages) => {
+        this._languages = languages;
+        this.language = 'default';
+      })
+      .catch(() => {
+        console.error(`Could not load "${dictionary_url}languages.json".`);
+      });
+
     this._languages = ['en', 'fr'];
     this.language = 'default';
   }
@@ -14,14 +27,14 @@ class Translator {
       language = this._languages[0];
     if (document.documentElement.lang !== language)
       document.documentElement.lang = language;
-    fetch(`/i18n/${language}.json`)
+    fetch(`${this._dictionary_url}${language}.json`)
       .then((r) => r.json())
       .then((dictionary) => {
         this._dictionary = dictionary;
         this.translatePage();
       })
       .catch(() => {
-        console.error(`Could not load "${language}.json".`);
+        console.error(`Could not load "${this._dictionary_url}${language}.json".`);
       });
   }
   get language() {
