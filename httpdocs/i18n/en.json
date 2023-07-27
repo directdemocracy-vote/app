@@ -8,18 +8,5 @@
   "world": "Your World, Your Say",
   "initiative": "This initiative aims at establishing world-wide <a class=\"link external\" href=\"https://en.wikipedia.org/wiki/Direct_democracy\" target=\"_blank\">direct democracy</a> in order to bring peace, freedom, safety and prosperity to humanity, including saving the climate and the biodiversity. The principle is that people will become citizens by proposing referundums and voting regardless of any official acknowledgement. Vote results from a limited number of citizens could be considered as simple survey results. They could feed debates, influence political decisions and foster more people to become citizens. Vote results from areas where a majority of people are citizens will become significant from a democratic point of view. This will increase the pressure on governments to respect the democratic choices expressed by their people. Ultimately, this bottom-up initiative will enforce direct democracy everywhere in the world.",
   "how": "How does it work?",
-  "features": "The proposed system implements the following necessary features:
-<ul>
-  <li>available to anybody equipped with a smartphone.</li>
-  <li>anybody can propose referendums and petitions.</li>
-  <li>fully decentralized: nobody can control it.</li>
-  <li>supported by a <a class="link external" href="https://en.wikipedia.org/wiki/Web_of_trust" target="_blank">web of trust</a>: distributed reputation system.</li>
-  <li>publicly verifiable referendums: check that my anonymous vote was taken into account, check that others didn't cheat.</li>
-  <li>publicly verifiable petitions: check that each signature corresponds to a real person, not just an e-mail address.</li>
-  <li>robust to attacks, resistant to vote buying and censorship.</li>
-  <li>relying on state-of-the-art <a class="link external" href="https://en.wikipedia.org/wiki/Cryptography" target="_blank">cryptography</a>.</li>
-  <li><a class="link external" href="https://en.wikipedia.org/wiki/Free_and_open-source_software" target="_blank">free and open-source</a> specifications and implementations.</li>
-  <li>easy-to-use user interfaces.</li>
-  <li>aimed at gaining confidence of both technical and non-technical people.</li>
-</ul>"
+  "features": "The proposed system implements the following necessary features:<ul><li>available to anybody equipped with a smartphone.</li><li>anybody can propose referendums and petitions.</li><li>fully decentralized: nobody can control it.</li><li>supported by a <a class="link external" href="https://en.wikipedia.org/wiki/Web_of_trust" target="_blank">web of trust</a>: distributed reputation system.</li><li>publicly verifiable referendums: check that my anonymous vote was taken into account, check that others didn't cheat.</li><li>publicly verifiable petitions: check that each signature corresponds to a real person, not just an e-mail address.</li><li>robust to attacks, resistant to vote buying and censorship.</li><li>relying on state-of-the-art <a class="link external" href="https://en.wikipedia.org/wiki/Cryptography" target="_blank">cryptography</a>.</li><li><a class="link external" href="https://en.wikipedia.org/wiki/Free_and_open-source_software" target="_blank">free and open-source</a> specifications and implementations.</li><li>easy-to-use user interfaces.</li><li>aimed at gaining confidence of both technical and non-technical people.</li></ul>"
 }
