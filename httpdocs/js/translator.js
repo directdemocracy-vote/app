@@ -1,7 +1,7 @@
 "use strict"
 
 class Translator {
-  constructor(dictionary_url) {
+  constructor(dictionary_url, language) {
     if (!dictionary_url.endsWith('/'))
       dictionary_url += '/';
     this._dictionary_url = dictionary_url;
@@ -9,7 +9,7 @@ class Translator {
       .then((r) => r.json())
       .then((languages) => {
         this._languages = languages;
-        this.language = 'default';
+        this.language = language;
       })
       .catch(() => {
         console.error(`Could not load "${dictionary_url}languages.json".`);
@@ -19,7 +19,7 @@ class Translator {
     this.language = 'default';
   }
   set language(language) {
-    if (language === 'default')
+    if (language === undefined)
       language = navigator.languages ? navigator.languages[0] : navigator.language;
     if (!this._languages.includes(language))
       language = language.substr(0, 2);
