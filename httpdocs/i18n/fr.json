@@ -13,5 +13,6 @@
   "privacy": "Devenir citoyen implique de publier sur Internet son nom, prénoms, photographie et addresse GPS du domicile. La vie démocratique comporte aussi la publication des signatures à des pétitions, de votes anonymisés et d'assermentations. Aucune information n'est transmise à des serveurs privés, toutes les informations issues de l'app sont publiques.",
   "contribute-title": "Contribuer",
   "contribute": "Il y a différentes manières de contribuer:<ul><li>Proposez un référendum ou une pétition et incitez les gens à y participer.</li><li>Parlez autour de vous de <a class=\"link external\" href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.</li><li>Faites un don pour nous aider avec le développement logiciel et l'infrastructure.</li><li>Hàbergez un service web: un <i>publisher</i>, un <i>trustee</i>, une <i>polling station</i> ou développez une app.</li></ul>",
+  "more-information": "Plus d'information",
   
 }
