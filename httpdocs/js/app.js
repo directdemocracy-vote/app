@@ -7,7 +7,7 @@ let languagePicker;
 app.on('pageInit', () => {
   console.log("Initialize language picker.");
   languagePicker = Framework7.picker.create({
-    inputEl: '#demo-picker-device',
+    inputEl: '#language-picker',
     cols: [{
          textAlign: 'center',
         values: ['English', 'French', 'iPhone 5', 'iPhone 5S', 'iPhone 6', 'iPhone 6 Plus', 'iPad 2', 'iPad Retina', 'iPad Air', 'iPad mini', 'iPad mini 2', 'iPad mini 3']
