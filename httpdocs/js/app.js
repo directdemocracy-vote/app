@@ -4,7 +4,7 @@ let translator = new Translator('/i18n');
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
 let languagePicker;
 app.on('pageInit', function(page) {
-  console.log("Initialize language picker: " + page.info);
+  console.log("Initialize language picker: " + page.name);
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     cols: [{
