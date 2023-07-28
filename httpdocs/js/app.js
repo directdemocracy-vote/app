@@ -5,6 +5,7 @@ let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: tr
 let mainView = app.views.create('.view-main');
 let languagePicker;
 app.on('pageInit', () => {
+  console.log("Initialize language picker.");
   languagePicker = Framework7.picker.create({
     inputEl: '#demo-picker-device',
     cols: [{
