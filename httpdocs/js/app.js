@@ -8,8 +8,8 @@ app.on('pageInit', () => {
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     cols: [{
-         textAlign: 'center',
-        values: ['English', 'French']
+      textAlign: 'center',
+      values: ['English', 'Français']
     }]
   });
 });
