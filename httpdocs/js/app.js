@@ -7,6 +7,10 @@ app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
   console.log("Initialize language picker: " + page.name);
+  const languages = translator.languages();
+  for (let key in languages) {
+    console.log(key, languages[key]);
+  }
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     cols: [{
