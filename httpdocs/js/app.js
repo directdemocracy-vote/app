@@ -1,5 +1,5 @@
 import Translator from "https://directdemocracy.vote/js/translator.js";
-var translator = new Translator('/i18n');
+let translator = new Translator('/i18n');
 
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
 let languagePicker;
@@ -7,6 +7,7 @@ app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
   console.log("Initialize language picker: " + page.name);
+  console.log(translator);
   console.log(translator.languages);
   for (let key in translator.languages) {
     console.log(key, translator.languages[key]);
