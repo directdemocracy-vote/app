@@ -8,10 +8,11 @@ translator.onready = function() {
     console.log(key, translator.languages[key]);
     languages.push(translator.languages[key])
   }
-  if (languagePicker)
+  if (languagePicker) {
     console.log(languagePicker);
     console.log(languagePicker.cols);
     languagePicker.cols[0].setValue(languages);
+  }
 }
 
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
