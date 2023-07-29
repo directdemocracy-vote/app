@@ -11,7 +11,6 @@ translator.onready = function() {
   if (languagePicker) {
     console.log(languagePicker);
     languagePicker.setValue(languages);
-    languagePicker.cols[0].setvalue(translator.languages[translator.language]);
   }
 }
 
