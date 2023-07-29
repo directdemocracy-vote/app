@@ -9,6 +9,8 @@ translator.onready = function() {
     languages.push(translator.languages[key])
   }
   if (languagePicker)
+    console.log(languagePicker);
+    console.log(languagePicker.cols);
     languagePicker.cols[0].setValue(languages);
 }
 
