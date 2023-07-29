@@ -5,6 +5,7 @@ let canSetupLanguagePicker = false;
 let translator = new Translator('/i18n');
 
 translator.onready = function() {
+  languages = [];
   for (let key in translator.languages)
     languages.push(translator.languages[key])
   if (canSetupLanguagePicker) {
