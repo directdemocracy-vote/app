@@ -3,7 +3,7 @@ let languagePicker;
 let languages = [];
 let translator = new Translator('/i18n');
 
-translator.onready() {
+translator.onready = function() {
   for (let key in translator.languages) {
     console.log(key, translator.languages[key]);
     languages.push(translator.languages[key])
