@@ -4,10 +4,8 @@ let languages = [];
 let translator = new Translator('/i18n');
 
 translator.onready = function() {
-  for (let key in translator.languages) {
-    console.log(key, translator.languages[key]);
+  for (let key in translator.languages)
     languages.push(translator.languages[key])
-  }
   if (languagePicker) {
     console.log(languagePicker);
     languagePicker.setValue(languages);
