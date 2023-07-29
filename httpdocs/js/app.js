@@ -1,14 +1,20 @@
 import Translator from "https://directdemocracy.vote/js/translator.js";
 let languagePicker;
-let languages = [];
+let languages;
+let canSetupLanguagePicker = false;
 let translator = new Translator('/i18n');
 
 translator.onready = function() {
   for (let key in translator.languages)
     languages.push(translator.languages[key])
-  if (languagePicker) {
-    console.log(languagePicker);
-    languagePicker.setValue(languages);
+  if (canSetupLanguagePicker) {
+      languagePicker = app.picker.create({
+        inputEl: '#language-picker',
+        cols: [{
+          textAlign: 'center',
+          values: languages
+        }]
+      });
   }
 }
 
@@ -18,13 +24,16 @@ let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: tr
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
-  languagePicker = app.picker.create({
-    inputEl: '#language-picker',
-    cols: [{
-      textAlign: 'center',
-      values: languages
-    }]
-  });
+  if (languages)
+      languagePicker = app.picker.create({
+        inputEl: '#language-picker',
+        cols: [{
+          textAlign: 'center',
+          values: languages
+        }]
+      });
+  else
+    canSetupLanguagePicker = true;
 });
 app.on('pageBeforeRemove', () => {
   languagePicker.destroy();
