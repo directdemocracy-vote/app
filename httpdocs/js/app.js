@@ -10,8 +10,7 @@ translator.onready = function() {
   }
   if (languagePicker) {
     console.log(languagePicker);
-    console.log(languagePicker.cols);
-    languagePicker.cols[0].setValue(languages);
+    languagePicker.setValue(languages);
   }
 }
 
