@@ -12,7 +12,7 @@ function setupLanguagePicker() {
       values: languages
     }]
   });
-  languagePicker.setValue(languages[translator.language]);
+  languagePicker.setValue([languages[translator.language]]);
 }
 
 translator.onready = function() {
