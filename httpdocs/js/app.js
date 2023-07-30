@@ -1,12 +1,14 @@
 import Translator from "https://directdemocracy.vote/js/translator.js";
 let languagePicker;
-let languages;
-let canSetupLanguagePicker = false;
+let homePageIsReady = false;
+let translatorIsReady = false;
 let translator = new Translator('/i18n');
 
 function setupLanguagePicker() {
-  values = [];
-  displayValues = [];
+  if (languagePicker || !homepageIsReady || !translatorIsReady)
+    return;
+  let values = [];
+  let displayValues = [];
   for (let key in translator.languages) {
     values.push(key);
     displayValues.push(translator.languages[key])
@@ -19,11 +21,12 @@ function setupLanguagePicker() {
       displayValues: displayValues
     }]
   });
+  languagePickerIsReady = true;
 }
 
 translator.onready = function() {
-  if (canSetupLanguagePicker)
-    setupLanguagePicker();
+  translatorIsReady = true;
+  setupLanguagePicker();
 }
 
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
@@ -31,14 +34,16 @@ let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: tr
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
-  if (languages)
-    setupLanguagePicker();
-  else
-    canSetupLanguagePicker = true;
+  homePageIsReady = true;
+  setupLanguagePicker();
 });
 
-app.on('pageBeforeRemove', () => {
+app.on('pageBeforeRemove', function(page) {
+  if (page.name !== 'home')
+    return;
+  homePageIsReady = false;
   languagePicker.destroy();
+  languagePicker = undefined;
 });
 
 let mainView = app.views.create('.view-main');
