@@ -25,16 +25,11 @@ translator.onready = function() {
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
 
                    
-app.on('pageInit', function(page) {
-  if (page.name !== 'home')
-    return;
+app.on('init', function() {
   if (languages)
     setupLanguagePicker();
   else
     canSetupLanguagePicker = true;
-});
-app.on('pageBeforeRemove', () => {
-  languagePicker.destroy();
 });
 
 let mainView = app.views.create('.view-main');
