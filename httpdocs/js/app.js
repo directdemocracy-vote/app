@@ -16,7 +16,7 @@ function setupLanguagePicker() {
     value: translator.language,
     cols: [{
       values: values,
-      displayValues: displayValues;
+      displayValues: displayValues
     }]
   });
 }
