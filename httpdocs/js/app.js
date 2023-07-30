@@ -8,17 +8,13 @@ function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
   let values = [];
-  let displayValues = [];
-  for (let key in translator.languages) {
-    values.push(key);
-    displayValues.push(translator.languages[key])
-  }
+  for (let key in translator.languages)
+    values.push(translator.languages[key]);
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
-    value: [translator.language],
+    value: [translator.languages[translator.language]],
     cols: [{
-      values: values,
-      displayValues: displayValues
+      values: values
     }]
   });
 }
