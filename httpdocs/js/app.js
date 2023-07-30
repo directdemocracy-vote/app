@@ -5,7 +5,7 @@ let translatorIsReady = false;
 let translator = new Translator('/i18n');
 
 function setupLanguagePicker() {
-  if (languagePicker || !homepageIsReady || !translatorIsReady)
+  if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
   let values = [];
   let displayValues = [];
