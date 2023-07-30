@@ -12,6 +12,7 @@ function setupLanguagePicker() {
       values: languages
     }]
   });
+  languagePicker.setValue(languages[translator.language]);
 }
 
 translator.onready = function() {
@@ -24,7 +25,6 @@ translator.onready = function() {
 
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
 
-                   
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
