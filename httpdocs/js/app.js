@@ -15,6 +15,7 @@ function setupLanguagePicker() {
 }
 
 translator.onready = function() {
+  console.log('ready');
   languages = [];
   for (let key in translator.languages)
     languages.push(translator.languages[key])
@@ -26,6 +27,7 @@ let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: tr
 
                    
 app.on('init', function() {
+  console.log('init');
   if (languages)
     setupLanguagePicker();
   else
