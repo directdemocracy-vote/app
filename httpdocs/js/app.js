@@ -15,7 +15,7 @@ function setupLanguagePicker() {
   }
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
-    value: translator.language,
+    value: [translator.language],
     cols: [{
       values: values,
       displayValues: displayValues
