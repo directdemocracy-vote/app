@@ -23,7 +23,6 @@ function setupLanguagePicker() {
       displayValues: displayValues
     }]
   });
-  languagePickerIsReady = true;
 }
 
 translator.onready = function() {
