@@ -15,7 +15,6 @@ function setupLanguagePicker() {
 }
 
 translator.onready = function() {
-  console.log('ready');
   languages = [];
   for (let key in translator.languages)
     languages.push(translator.languages[key])
@@ -26,12 +25,17 @@ translator.onready = function() {
 let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/info/', pageName: 'info'}, {path: '/', pageName: 'home'}]});
 
                    
-app.on('init', function() {
-  console.log('init');
+app.on('pageInit', function(page) {
+  if (page.name !== 'home')
+    return;
   if (languages)
     setupLanguagePicker();
   else
     canSetupLanguagePicker = true;
+});
+
+app.on('pageBeforeRemove', () => {
+  languagePicker.destroy();
 });
 
 let mainView = app.views.create('.view-main');
