@@ -14,6 +14,7 @@ function setupLanguagePicker() {
     inputEl: '#language-picker',
     value: [translator.languages[translator.language]],
     cols: [{
+      textAlign: 'center',
       values: values
     }]
   });
