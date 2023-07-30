@@ -5,20 +5,23 @@ let canSetupLanguagePicker = false;
 let translator = new Translator('/i18n');
 
 function setupLanguagePicker() {
+  values = [];
+  displayValues = [];
+  for (let key in translator.languages) {
+    values.push(key);
+    displayValues.push(translator.languages[key])
+  }
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
+    value: translator.language,
     cols: [{
-      textAlign: 'center',
-      values: languages
+      values: values,
+      displayValues: displayValues;
     }]
   });
-  languagePicker.setValue([languages[translator.language]]);
 }
 
 translator.onready = function() {
-  languages = [];
-  for (let key in translator.languages)
-    languages.push(translator.languages[key])
   if (canSetupLanguagePicker)
     setupLanguagePicker();
 }
