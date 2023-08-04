@@ -19,7 +19,7 @@ function setupLanguagePicker() {
     }]
   });
   languagePicker.on('change', function(picker, value, displayValue) {
-    console.log(displayValue[0]);
+    console.log(value[0] + " => " + displayValue[0]);
     console.log(translator.language);
     translator.language = displayValue[0];
   });
