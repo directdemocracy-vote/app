@@ -42,6 +42,4 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
-let mainView = app.views.create('.view-main');
-if (app.theme === 'ios')
-  app.views.main.router.navigate('/', {animate:false});  // see https://github.com/framework7io/framework7/issues/4211 and https://stackoverflow.com/questions/76802678/framework7-navbar-overlap-on-ios
+let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
