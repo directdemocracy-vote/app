@@ -22,8 +22,9 @@ function setupLanguagePicker() {
     console.log(value[0]);
     console.log(translator.language);
     for (let key in translator.languages) {
-      if (translator.language[key] == value[0]) {
+      if (translator.language[key] === value[0]) {
         translator.language = key;
+        console.log("setting language to: " + key);
         break;
       }
     }
