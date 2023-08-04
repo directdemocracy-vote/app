@@ -19,9 +19,9 @@ function setupLanguagePicker() {
     }]
   });
   languagePicker.on('change', function(picker, value, displayValue) {
-    console.log(value[0]);
+    console.log(displayValue[0]);
     console.log(translator.language);
-    translator.language = value[0];
+    translator.language = displayValue[0];
   });
 }
 
