@@ -18,10 +18,15 @@ function setupLanguagePicker() {
       values: values
     }]
   });
-  languagePicker.on('change', function(picker, value, displayValue) {
-    console.log(value[0] + " => " + displayValue[0]);
+  languagePicker.on('change', function(picker, value) {
+    console.log(value[0]);
     console.log(translator.language);
-    translator.language = displayValue[0];
+    for (let key in translator.languages) {
+      if (translator.language[key] == value[0]) {
+        translator.language = key;
+        break;
+      }
+    }
   });
 }
 
