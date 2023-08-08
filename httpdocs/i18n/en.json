@@ -16,6 +16,7 @@
   "contribute": "There are different way to contribute:<ul><li>Propose a referendum or a petition and promote it.</li><li>Spread of the word about <a class=\"link external\" href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.</li><li>Make a donation to support our development effort and infrastructure.</li><li>Host a webservice: a publisher, a trustee, a polling station or develop an app.</li></ul>",
   "more-information": "More Information",
   "language": "Language",
+  "webservices": "Webservices",
   "publisher": "Publisher",
   "trustee" : "Trustee",
   "polling-station": "Polling Station"
