@@ -28,7 +28,7 @@
   "enter-given-names": "Saisissez votre ou vos prénom(s) ici",
   "picture": "Photo :",
   "home-location": "Domicile :",
-  "latitude-longitude"; "latitude, longitude",
+  "latitude-longitude": "latitude, longitude",
   "citizen-confirm": "Je confirme que j'ai au moins 18 ans et que les informations ci-dessus sont correctes.",
   "generating-cryptographic-key": "Génération de la clé cryptographique..."
 }
