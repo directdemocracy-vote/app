@@ -195,4 +195,8 @@ window.onload = function() {
     i.classList.add('disabled');
   }
 
+  function uploadPicture() {
+    document.getElementById('register-picture-upload').click();
+  }
+
 }
