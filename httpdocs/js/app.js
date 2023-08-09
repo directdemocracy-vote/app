@@ -369,7 +369,7 @@ window.onload = function() {
   function createNewKey() {
     let dt = new Date();
     let time = -(dt.getTime());
-    document.getElementById('registration-button-message').innerHTML = "please wait...";
+    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
     citizenCrypt = new JSEncrypt({
       default_key_size: 2048
     });
@@ -378,7 +378,8 @@ window.onload = function() {
       time += (dt.getTime());
       privateKey = citizenCrypt.getPrivateKey();
       localStorage.setItem('privateKey', privateKey);
-      privateKeyAvailable('forged in ' + Number(time / 1000).toFixed(2) + ' seconds.');
+      const n = Number(time / 1000).toFixed(2);
+      privateKeyAvailable(translator.translate('key-forge-time', n));
     });
   }
 }
