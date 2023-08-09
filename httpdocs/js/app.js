@@ -16,13 +16,12 @@ function setupLanguagePicker() {
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     value: [translator.languages[translator.language]],
-    toolbarCloseText: "Select",
+    toolbarCloseText: translator.translate('language-select'),
     cols: [{
       textAlign: 'center',
       values: values
     }]
   });
-  // console.log(translator.translate('language-select'));
   
   languagePicker.on('change', function(picker, value) {
     for (let key in translator.languages) {
