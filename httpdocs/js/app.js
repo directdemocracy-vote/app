@@ -40,6 +40,8 @@ function setupLanguagePicker() {
 
 translator.onready = function() {
   translatorIsReady = true;
+  if (!localStorage.getItem('privateKey'))
+    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
   setupLanguagePicker();
 }
 
@@ -369,7 +371,6 @@ window.onload = function() {
   function createNewKey() {
     let dt = new Date();
     let time = -(dt.getTime());
-    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
     citizenCrypt = new JSEncrypt({
       default_key_size: 2048
     });
