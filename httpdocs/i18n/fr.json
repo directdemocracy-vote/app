@@ -27,6 +27,7 @@
   "given-names": "Prénom(s) :",
   "enter-given-names": "Saisissez votre ou vos prénom(s) ici",
   "picture": "Photo :",
+  "provide-picture": "Ajoutez une photo d'identité",
   "home-location": "Domicile :",
   "latitude-longitude": "latitude, longitude",
   "citizen-confirm": "Je confirme que j'ai au moins 18 ans et que les informations ci-dessus sont correctes.",
