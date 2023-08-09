@@ -25,8 +25,10 @@ function setupLanguagePicker() {
   languagePicker.on('change', function(picker, value) {
     for (let key in translator.languages) {
       if (translator.languages[key] === value[0]) {
-        translator.language = key;
-        picker.close();
+        if (translator.language !== key) {
+          translator.language = key;
+          picker.close();
+        }
         break;
       }
     }
