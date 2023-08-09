@@ -309,29 +309,20 @@ window.onload = function() {
   function validateRegistration() {
     let button = document.getElementById('register-button');
     disable(button);
-console.log(1);
     if (document.getElementById('register-family-name').value.trim() === '')
       return;
-console.log(2);
     if (document.getElementById('register-given-names').value.trim() === '')
       return;
-console.log(3);
     if (document.getElementById('register-picture').src === 'https://app.directdemocracy.vote/images/default-picture.png')
       return;
-console.log(4);
     if (document.getElementById('register-location').value === '')
       return;
-console.log(5);
     if (!document.getElementById('register-adult').checked)
       return;
-console.log(6);
     if (!document.getElementById('register-confirm').checked)
       return;
-console.log(7);
     if (!localStorage.getItem('privateKey'))
       return;
-console.log(8);
-
     enable(button);
   }
 
