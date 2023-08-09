@@ -79,6 +79,80 @@ window.onload = function() {
     showPage('splash');
   else
     showPage('register');
+  
+  document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
+  document.getElementById('register-picture').addEventListener('click', uploadPicture);
+  document.getElementById('register-picture-upload').addEventListener('change', function(event) {
+    let content = {};
+    content.innerHTML =
+      `<div class="sheet-modal" style="height: 100%">
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="left" style="margin-left:16px">Adjust your ID photo</div>
+      <div class="right">
+        <a href="#" class="link sheet-close">Done</a>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-modal-inner">
+    <div class="block margin-top-half no-padding-left no-padding-right">
+      <p><img id="edit-picture"></p>
+      <div class="row">
+        <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
+        <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
+      </div>
+    </div>
+  </div>
+</div>`;
+    let croppie = null;
+    let sheet = app.sheet.create({
+      content: content.innerHTML,
+      on: {
+        opened: function() {
+          let img = document.getElementById('edit-picture');
+          img.src = URL.createObjectURL(event.target.files[0]);
+          event.target.value = '';
+          let w = screen.width * 0.95;
+          croppie = new Croppie(img, {
+            boundary: {
+              width: w,
+              height: w * 4 / 3
+            },
+            viewport: {
+              width: w * 0.75,
+              height: w * 0.75 * 4 / 3
+            },
+            enableOrientation: true,
+            enableExif: true
+          });
+          document.getElementById('rotate-right').addEventListener('click', function() {
+            croppie.rotate(-90);
+          });
+          document.getElementById('rotate-left').addEventListener('click', function() {
+            croppie.rotate(90);
+          });
+        },
+        close: function() {
+          croppie.result({
+            type: 'base64',
+            size: {
+              width: 150,
+              height: 200
+            },
+            format: 'jpeg',
+            quality: 0.95
+          }).then(function(result) {
+            document.getElementById('register-picture').setAttribute('src', result);
+            citizen.picture = result;
+            croppie.destroy();
+            croppie = null;
+            // validateRegistration();
+          });
+        }
+      }
+    });
+    sheet.open();
+  });
 
   // show either:
   // 1. the register page when the citizen has not yet registered
