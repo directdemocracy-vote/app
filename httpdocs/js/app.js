@@ -79,7 +79,8 @@ window.onload = function() {
     showPage('splash');
   else
     showPage('register');
-  
+
+  // setting up the ID picture
   document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
   document.getElementById('register-picture').addEventListener('click', uploadPicture);
   document.getElementById('register-picture-upload').addEventListener('change', function(event) {
@@ -152,6 +153,131 @@ window.onload = function() {
     });
     sheet.open();
   });
+
+  // setting-up the home location
+    document.getElementById('register-location-button').addEventListener('click', function() {
+    let content = {};
+    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <div class="left" style="margin-left:16px">Select your home location</div>
+      <div class="right">
+        <a href="#" class="link sheet-close">Done</a>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-modal-inner">
+    <div class="block margin-top-half no-padding-left no-padding-right">
+      <div class="text-align-center" style="width:100%"><small>Zoom to building level to precisely select your home address.</small></div>
+      <div id="register-map" style="width:100%;height:500px;margin-top:10px"></div>
+    </div>
+  </div>
+</div>`;
+    let sheet = app.sheet.create({
+      content: content.innerHTML,
+      on: {
+        opened: function() {
+          let geolocation = false;
+
+          function updateLocation() {
+            registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+              if (this.readyState == 4 && this.status == 200) {
+                const a = JSON.parse(this.responseText);
+                const address = a.display_name;
+                registerMarker.setPopupContent(address + '<br><br><center style="color:#999">(' +
+                  citizen.latitude + ', ' + citizen.longitude + ')</center>').openPopup();
+              }
+            };
+            xhttp.open('GET', 'https://nominatim.openstreetmap.org/reverse.php?format=json&lat=' + citizen.latitude +
+              '&lon=' +
+              citizen.longitude + '&zoom=20', true);
+            xhttp.send();
+          }
+
+          function getGeolocationPosition(position) {
+            geolocation = true;
+            citizen.latitude = roundGeo(position.coords.latitude);
+            citizen.longitude = roundGeo(position.coords.longitude);
+            registerMap.setView([citizen.latitude, citizen.longitude], 12);
+            setTimeout(function() {
+              registerMarker.setLatLng([citizen.latitude, citizen.longitude]);
+              updateLocation();
+            }, 500);
+          }
+
+          function roundGeo(v) {
+            return Math.round(v * 1000000) / 1000000;
+          }
+          if (navigator.geolocation)
+            navigator.geolocation.getCurrentPosition(getGeolocationPosition);
+          let xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200 && geolocation == false) {
+              let coords = this.responseText.split(',');
+              getGeolocationPosition({
+                coords: {
+                  latitude: coords[0],
+                  longitude: coords[1]
+                }
+              });
+            }
+          };
+          xhttp.open('GET', 'https://ipinfo.io/loc', true);
+          xhttp.send();
+          let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+          }).addTo(registerMap);
+          registerMap.whenReady(function() {
+            setTimeout(() => {
+              this.invalidateSize();
+            }, 0);
+          });
+          let registerMarker = L.marker([citizen.latitude, citizen.longitude]).addTo(registerMap)
+            .bindPopup(citizen.latitude + ',' + citizen.longitude);
+          let e = document.getElementById('register-map');
+          const rect = e.getBoundingClientRect();
+          const h = screen.height - rect.top;
+          e.style.height = h + 'px';
+          updateLocation();
+          registerMap.on('contextmenu', function(event) {
+            return false;
+          });
+          registerMap.on('click', function onMapClick(e) {
+            citizen.latitude = roundGeo(e.latlng.lat);
+            citizen.longitude = roundGeo(e.latlng.lng);
+            registerMarker.setLatLng([citizen.latitude, citizen.longitude]);
+            updateLocation();
+          });
+        },
+        close: function() {
+          console.log('Sheet closing');
+          document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+          validateRegistration();
+        }
+      }
+    });
+    sheet.open();
+  });
+
+  
+  function validateRegistration() {
+    let button = document.getElementById('register-button');
+    disable(button);
+    if (document.getElementById('register-family-name').value.trim() === '')
+      return;
+    if (document.getElementById('register-given-names').value.trim() === '')
+      return;
+    if (document.getElementById('register-picture').src === '/images/default-picture.png')
+      return;
+    if (document.getElementById('register-location').value === '')
+      return;
+    if (!document.getElementById('register-confirm-check').checked)
+      return;
+    enable(button);
+  }
 
   // show either:
   // 1. the register page when the citizen has not yet registered
