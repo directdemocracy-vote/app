@@ -264,6 +264,7 @@ window.onload = function() {
 
   // create a private key if needed
   let privateKey = localStorage.getItem('privateKey');
+  let citizenCrypt = null;
   if (privateKey) {
     citizenCrypt = new JSEncrypt();
     citizenCrypt.setPrivateKey(privateKey);
