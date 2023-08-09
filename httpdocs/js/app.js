@@ -266,7 +266,8 @@ window.onload = function() {
     sheet.open();
   });
 
-  document.getElementById('register-confirm-check').addEventListener('input', validateRegistration);
+  document.getElementById('register-adult').addEventListener('input', validateRegistration);
+  document.getElementById('register-confirm').addEventListener('input', validateRegistration);
 
   // create a private key if needed
   let privateKey = localStorage.getItem('privateKey');
@@ -321,9 +322,16 @@ console.log(4);
     if (document.getElementById('register-location').value === '')
       return;
 console.log(5);
-    if (!document.getElementById('register-confirm-check').checked)
+    if (!document.getElementById('register-adult').checked)
       return;
 console.log(6);
+    if (!document.getElementById('register-confirm').checked)
+      return;
+console.log(7);
+    if (!localStorage.getItem('privateKey'))
+      return;
+console.log(8);
+
     enable(button);
   }
 
