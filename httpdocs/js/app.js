@@ -20,19 +20,20 @@ function setupLanguagePicker() {
       textAlign: 'center',
       values: values
     }],
+    /*
     renderToolbar: function () {
       return '<div class="toolbar">' +
             '<div class="toolbar-inner">' +
-            // '<div class="left">' +
-            // '<a  class="link toolbar-randomize-link">Randomize</a>' +
-            // '</div>' +
+            '<div class="left">' +
+            '</div>' +
             '<div class="right">' +
-            '<a  class="link sheet-close popover-close">That\'s me</a>' +
+            '<a class="link sheet-close popover-close">That\'s me</a>' +
             '</div>' +
             '</div>' +
             '</div>';
 
     }
+    */
   });
   
   languagePicker.on('change', function(picker, value) {
