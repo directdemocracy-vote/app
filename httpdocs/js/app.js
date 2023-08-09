@@ -88,12 +88,17 @@ window.onload = function() {
       if (p !== page)
         document.getElementById(p + '-page').style.display = 'none';
     });
-    const cardItems = ['tabbar-endorse', 'tab-endorse', 'endorse', 'tabbar-vote', 'tab-vote', 'tabbar-sign', 'sign', 'edit', 'revoke-key'];
-    cardItems.forEach(function(i) {
-      if (page === 'card')
-        enable(i);
-      else
-        disable(i);
+    const cards = ['endorse', 'vote', 'sign'];
+    cards.forEach(function(i) {
+      const tab = `tab-${i}`;
+      const tabbar = `tabbar-${i}`;
+      if (page === 'card') {
+        enable(tab);
+        enable(tabbar);
+      } else {
+        disable(tab);
+        disable(tabbar);
+      }
     });
   }
   
