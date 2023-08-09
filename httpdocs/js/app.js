@@ -16,11 +16,19 @@ function setupLanguagePicker() {
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     value: [translator.languages[translator.language]],
-    toolbarCloseText: translator.translate('language-select'),
     cols: [{
       textAlign: 'center',
       values: values
-    }]
+    }],
+    renderToolbar: function () {
+      return '<div class="toolbar">' +
+        '<div class="toolbar-inner">' +
+        '<div class="right">' +
+        '<a  class="link sheet-close popover-close">Select</a>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    }
   });
   
   languagePicker.on('change', function(picker, value) {
