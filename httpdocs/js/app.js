@@ -77,6 +77,38 @@ window.onload = function() {
     latitude: 0,
     longitude: 0
   };
+
+  let publisher = localStorage.getItem('publisher');
+  if (!publisher) {
+    publisher = 'https://publisher.directdemocracy.vote';
+    localStorage.setItem('publisher', publisher);
+  }
+  document.getElementById('publisher').value = publisher;
+  document.getElementById('publisher').addEventListener('input', function(event) {
+    publisher = event.target.value;
+    localStorage.setItem('publisher', publisher);
+  });
+  let trustee = localStorage.getItem('trustee');
+  if (!trustee) {
+    trustee = 'https://trustee.directdemocracy.vote';
+    localStorage.setItem('trustee', trustee);
+  }
+  document.getElementById('trustee').value = trustee;
+  document.getElementById('trustee').addEventListener('input', function(event) {
+    trustee = event.target.value;
+    localStorage.setItem('trustee', trustee);
+  });
+  let station = localStorage.getItem('station');
+  if (!station) {
+    station = 'https://station.directdemocracy.vote';
+    localStorage.setItem('station', station);
+  }
+  document.getElementById('station').value = station;
+  document.getElementById('station').addEventListener('input', function(event) {
+    station = event.target.value;
+    localStorage.setItem('station', station);
+  });
+  
   if (window.localStorage.getItem('registered'))
     showPage('splash');
   else
