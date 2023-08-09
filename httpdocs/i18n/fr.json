@@ -17,7 +17,16 @@
   "more-information": "Plus d'information (en anglais)",
   "language": "Langue",
   "webservices": "Services web",
-  "publisher": "Publieur",
-  "trustee": "Autorité de confiance",
-  "polling-station": "Bureau de vote"
+  "publisher": "Publieur :",
+  "trustee": "Autorité de confiance :",
+  "polling-station": "Bureau de vote :",
+  "become-citizen": "Devenez citoyen",
+  "family-name": "Nom de famille :",
+  "given-names": "Prénom(s) :",
+  "picture": "Photo :",
+  "home-location": "Domicile :",
+  "cryptographic-key-generation": "Génération de la clé cryptographique : ",
+  "please-wait": "patientez...",
+  "citizen-confirm": "Je confirme que j'ai au moins 18 ans et que les informations ci-dessus sont correctes.",
+  "generating-cryptographic-key": "Génération de la clé cryptographique..."
 }
