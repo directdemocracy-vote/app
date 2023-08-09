@@ -22,12 +22,16 @@ function setupLanguagePicker() {
     }],
     renderToolbar: function () {
       return '<div class="toolbar">' +
-        '<div class="toolbar-inner">' +
-        '<div class="right">' +
-        '<a  class="link sheet-close popover-close">Select</a>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
+            '<div class="toolbar-inner">' +
+            '<div class="left">' +
+            '<a  class="link toolbar-randomize-link">Randomize</a>' +
+            '</div>' +
+            '<div class="right">' +
+            '<a  class="link sheet-close popover-close">That\'s me</a>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+
     }
   });
   
