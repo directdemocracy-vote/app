@@ -16,6 +16,8 @@ function setupLanguagePicker() {
   languagePicker = app.picker.create({
     inputEl: '#language-picker',
     value: [translator.languages[translator.language]],
+    toolbar: false,
+    sheetSwipeToClose: true,
     cols: [{
       textAlign: 'center',
       values: values
