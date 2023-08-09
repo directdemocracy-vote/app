@@ -22,8 +22,8 @@ function setupLanguagePicker() {
     }],
     renderToolbar: function () {
       return '<div class="toolbar"><div class="toolbar-inner"><div class="left"></div><div class="right">' +
-            `<a class="link sheet-close popover-close" data-i18n="language-select">${translator.translate('language-select')}</a>` +
-            '</div></div></div>';
+        `<a class="link sheet-close popover-close" data-i18n="language-select">${translator.translate('language-select')}</a>` +
+        '</div></div></div>';
     }
   });
   
