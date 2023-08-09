@@ -36,5 +36,6 @@
   "adjust-photo": "Adjust your ID photo",
   "done-photo": "Done",
   "select-home-location": "Select your home location",
-  "done-home-location": "Done"
+  "done-home-location": "Done",
+  "zoom-home-location": "Zoom to building level to precisely select your home address"
 }
