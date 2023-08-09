@@ -27,6 +27,7 @@
   "given-names": "Given name(s):",
   "enter-given-names": "Enter your given name(s) here",
   "picture": "Picture:",
+  "provide-picture": "Provide a picture of yourself",
   "home-location": "Home location:",
   "latitude-longitude": "latitude, longitude",
   "citizen-confirm": "I confirm I am over 18 years old and the above information is correct.",
