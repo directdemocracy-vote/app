@@ -299,17 +299,6 @@ window.onload = function() {
     return false;
   });
 
-  function privateKeyAvailable(message) {
-    document.getElementById('register-button').innerHTML = 'Register';
-    console.log(message);
-    validateRegistration();
-  }
-
-  function privateKeyNotAvailable() {
-    document.getElementById('register-button').innerHTML = 'Generating cryptographic key...';
-    validateRegistration();
-  }
-
   function validateRegistration() {
     let button = document.getElementById('register-button');
     disable(button);
@@ -371,9 +360,16 @@ window.onload = function() {
     document.getElementById('register-picture-upload').click();
   }
 
+  function privateKeyAvailable(message) {
+    document.getElementById('register-button').innerHTML = 'Register';
+    document.getElementById('registration-button-message').innerHTML = message;
+    validateRegistration();
+  }
+
   function createNewKey() {
     let dt = new Date();
     let time = -(dt.getTime());
+    document.getElementById('registration-button-message').innerHTML = "please wait...";
     citizenCrypt = new JSEncrypt({
       default_key_size: 2048
     });
