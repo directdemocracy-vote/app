@@ -87,9 +87,9 @@ window.onload = function() {
     content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
     <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px" data-i18n="adjust-photo"></div>
+      <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
       <div class="right">
-        <a href="#" class="link sheet-close" data-i18n="done-photo"></a>
+        <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
       </div>
     </div>
   </div>
