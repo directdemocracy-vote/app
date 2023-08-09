@@ -17,7 +17,16 @@
   "more-information": "More Information",
   "language": "Language",
   "webservices": "Webservices",
-  "publisher": "Publisher",
-  "trustee" : "Trustee",
-  "polling-station": "Polling Station"
+  "publisher": "Publisher:",
+  "trustee" : "Trustee:",
+  "polling-station": "Polling Station:",
+  "become-citizen": "Become a Citizen",
+  "family-name": "Family name",
+  "given-names": "Given name(s):",
+  "picture": "Picture:",
+  "home-location": "Home location:",
+  "cryptographic-key-generation": "Cryptographic key generation: ",
+  "please-wait": "please wait...",
+  "citizen-confirm": "I confirm I am over 18 years old and the above information is correct.",
+  "generating-cryptographic-key": "Generating cryptographic key..."
 }
