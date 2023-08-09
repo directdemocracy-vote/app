@@ -22,7 +22,7 @@ function setupLanguagePicker() {
       values: values
     }]
   });
-  console.log(translator.translate('language-select'));
+  // console.log(translator.translate('language-select'));
   
   languagePicker.on('change', function(picker, value) {
     for (let key in translator.languages) {
