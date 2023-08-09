@@ -37,5 +37,6 @@
   "done-photo": "OK",
   "select-home-location": "Sélectionnez votre adresse",
   "done-home-location": "OK",
-  "zoom-home-location": "Zoomez suffisamment pour sélectionner précisément votre adresse"
+  "zoom-home-location": "Zoomez suffisamment pour sélectionner précisément votre adresse",
+  "key-forge-time": "Clé forgée en %1 secondes."
 }
