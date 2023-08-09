@@ -392,4 +392,97 @@ window.onload = function() {
       privateKeyAvailable(translator.translate('key-forge-time', n));
     });
   }
+
+  function updateCitizenCard() {
+    showPage('card');
+    document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
+    document.getElementById('register-picture').setAttribute('src', citizen.picture);
+    document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
+    document.getElementById('register-family-name').value = citizen.familyName;
+    document.getElementById('citizen-given-names').innerHTML = citizen.givenNames;
+    document.getElementById('register-given-names').value = citizen.givenNames;
+    document.getElementById('citizen-coords').innerHTML =
+      '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
+      citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
+      citizen.latitude + ', ' + citizen.longitude + '</a>';
+    document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+    let published = new Date(citizen.published);
+    document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
+    citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
+    let qrImage = document.getElementById('citizen-qr-code');
+    const rect = qrImage.getBoundingClientRect();
+    const rect2 = document.getElementById('tabbar').getBoundingClientRect();
+    const height = rect2.top - rect.top;
+    const width = screen.width - 30;
+    const size = width > height ? height : width;
+    let qr = new QRious({
+      element: qrImage,
+      value: citizenFingerprint,
+      level: 'M',
+      size,
+      padding: 0
+    });
+    // get reputation from trustee
+    let xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      if (this.status == 200) {
+        let reputation = document.getElementById('citizen-reputation');
+        let answer = JSON.parse(this.responseText);
+        let badge = document.getElementById('endorsed-badge');
+        if (answer.error) {
+          reputation.innerHTML = '<span style="font-weight:bold;color:red">' + answer.error + "</span>";
+          badge.classList.remove('color-blue');
+          badge.classList.add('color-red');
+        } else {
+          const color = answer.endorsed ? 'blue' : 'red';
+          reputation.innerHTML = '<span style="font-weight:bold;color:' + color + '">' + answer.reputation +
+            '</span>';
+          badge.classList.remove('color-red');
+          badge.classList.remove('color-blue');
+          badge.classList.add('color-' + color);
+        }
+      }
+    };
+    xhttp.open('GET', trustee + '/reputation.php?key=' + encodeURIComponent(citizen.key), true);
+    xhttp.send();
+    let list = document.getElementById('citizen-endorsements-list');
+    let badge = document.getElementById('endorsed-badge');
+    if (citizenEndorsements.length == 0) {
+      list.innerHTML =
+        '<div class="block-title">Not endorsed</div>' +
+        '<div class="block">You should ask other citizens to endorse you.</div>';
+      badge.style.background = 'red';
+      badge.innerHTML = '0';
+      return;
+    }
+    let revokeCount = 0;
+    citizenEndorsements.forEach(function(endorsement) {
+      if (endorsement.revoke)
+        revokeCount++;
+    });
+    let endorsementCount = citizenEndorsements.length - revokeCount;
+    badge.innerHTML = endorsementCount;
+    const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
+    let title = newElement(list, 'div', 'block-title', endorsementCount + '/' + citizenEndorsements.length + ' ' +
+      plural);
+    citizenEndorsements.forEach(function(endorsement) {
+      let card = newElement(list, 'div', 'card');
+      if (endorsement.revoke)
+        card.classList.add('revoked');
+      let content = newElement(card, 'div', 'card-content card-content-padding');
+      let row = newElement(content, 'div', 'row');
+      let col = newElement(row, 'div', 'col-25');
+      let img = newElement(col, 'img');
+      img.src = endorsement.picture;
+      img.style.width = '100%';
+      col = newElement(row, 'div', 'col-75');
+      let a = newElement(col, 'a', 'link external',
+        `<span style="font-weight:bold">${endorsement.familyName}</span> <span>${endorsement.givenNames}</span>`);
+      a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
+      a.target = '_blank';
+      row = newElement(col, 'div', 'row');
+      const t = new Date(endorsement.published).toISOString().slice(0, 10);
+      newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
+    });
+  }
 }
