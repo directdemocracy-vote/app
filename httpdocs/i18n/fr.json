@@ -36,5 +36,6 @@
   "adjust-photo": "Adjustez votre photo d'identité",
   "done-photo": "OK",
   "select-home-location": "Sélectionnez votre adresse",
-  "done-home-location": "OK"
+  "done-home-location": "OK",
+  "zoom-home-location": "Zoomez au niveau des immmeubles et sélectionnez précisément votre adresse"
 }
