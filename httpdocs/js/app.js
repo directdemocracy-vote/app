@@ -316,7 +316,7 @@ console.log(2);
     if (document.getElementById('register-given-names').value.trim() === '')
       return;
 console.log(3);
-    if (document.getElementById('register-picture').src === '/images/default-picture.png')
+    if (document.getElementById('register-picture').src === 'https://app.directdemocracy.vote/images/default-picture.png')
       return;
 console.log(4);
     if (document.getElementById('register-location').value === '')
