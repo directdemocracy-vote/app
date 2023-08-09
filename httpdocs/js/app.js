@@ -307,7 +307,7 @@ window.onload = function() {
   if (privateKey) {
     citizenCrypt = new JSEncrypt();
     citizenCrypt.setPrivateKey(privateKey);
-    privateKeyAvailable('complete.');
+    privateKeyAvailable('');
   } else createNewKey();
 
   // registering
