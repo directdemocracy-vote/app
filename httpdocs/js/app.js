@@ -82,6 +82,9 @@ window.onload = function() {
   else
     showPage('register');
 
+  document.getElementById('register-family-name').addEventListener('input', validateRegistration);
+  document.getElementById('register-given-names').addEventListener('input', validateRegistration);
+
   // setting up the ID picture
   document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
   document.getElementById('register-picture').addEventListener('click', uploadPicture);
@@ -148,7 +151,7 @@ window.onload = function() {
             citizen.picture = result;
             croppie.destroy();
             croppie = null;
-            // validateRegistration();
+            validateRegistration();
           });
         }
       }
@@ -263,6 +266,8 @@ window.onload = function() {
     sheet.open();
   });
 
+  document.getElementById('register-confirm-check').addEventListener('input', validateRegistration);
+
   // create a private key if needed
   let privateKey = localStorage.getItem('privateKey');
   let citizenCrypt = null;
@@ -303,16 +308,22 @@ window.onload = function() {
   function validateRegistration() {
     let button = document.getElementById('register-button');
     disable(button);
+console.log(1);
     if (document.getElementById('register-family-name').value.trim() === '')
       return;
+console.log(2);
     if (document.getElementById('register-given-names').value.trim() === '')
       return;
+console.log(3);
     if (document.getElementById('register-picture').src === '/images/default-picture.png')
       return;
+console.log(4);
     if (document.getElementById('register-location').value === '')
       return;
+console.log(5);
     if (!document.getElementById('register-confirm-check').checked)
       return;
+console.log(6);
     enable(button);
   }
 
