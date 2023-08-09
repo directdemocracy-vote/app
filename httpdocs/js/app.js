@@ -24,7 +24,7 @@ function setupLanguagePicker() {
       return '<div class="toolbar">' +
             '<div class="toolbar-inner">' +
             '<div class="left">' +
-            '<a  class="link toolbar-randomize-link">Randomize</a>' +
+            // '<a  class="link toolbar-randomize-link">Randomize</a>' +
             '</div>' +
             '<div class="right">' +
             '<a  class="link sheet-close popover-close">That\'s me</a>' +
