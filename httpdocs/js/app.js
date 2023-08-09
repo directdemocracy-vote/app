@@ -255,7 +255,6 @@ window.onload = function() {
           });
         },
         close: function() {
-          console.log('Sheet closing');
           document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
           validateRegistration();
         }
