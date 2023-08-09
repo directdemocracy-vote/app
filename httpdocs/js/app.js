@@ -84,13 +84,12 @@ window.onload = function() {
   document.getElementById('register-picture').addEventListener('click', uploadPicture);
   document.getElementById('register-picture-upload').addEventListener('change', function(event) {
     let content = {};
-    content.innerHTML =
-      `<div class="sheet-modal" style="height: 100%">
+    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
     <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">Adjust your ID photo</div>
+      <div class="left" style="margin-left:16px" data-i18n="adjust-photo"></div>
       <div class="right">
-        <a href="#" class="link sheet-close">Done</a>
+        <a href="#" class="link sheet-close" data-i18n="done-photo"></a>
       </div>
     </div>
   </div>
