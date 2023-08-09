@@ -30,6 +30,7 @@
   "provide-picture": "Provide your ID picture",
   "home-location": "Home location:",
   "latitude-longitude": "latitude, longitude",
-  "citizen-confirm": "I confirm I am over 18 years old and the above information is correct.",
+  "adult-confirm": "I am over 18 years old.",
+  "citizen-confirm": "I confirm the above information is correct.",
   "generating-cryptographic-key": "Generating cryptographic key..."
 }
