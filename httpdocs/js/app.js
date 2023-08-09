@@ -262,6 +262,14 @@ window.onload = function() {
     sheet.open();
   });
 
+  // create a private key if needed
+  let privateKey = localStorage.getItem('privateKey');
+  if (privateKey) {
+    citizenCrypt = new JSEncrypt();
+    citizenCrypt.setPrivateKey(privateKey);
+    privateKeyAvailable('complete.');
+  } else createNewKey();
+
   // registering
   document.getElementById('register-button').addEventListener('click', function() {
     console.log("registering...");
@@ -362,4 +370,18 @@ window.onload = function() {
     document.getElementById('register-picture-upload').click();
   }
 
+  function createNewKey() {
+    let dt = new Date();
+    let time = -(dt.getTime());
+    citizenCrypt = new JSEncrypt({
+      default_key_size: 2048
+    });
+    citizenCrypt.getKey(function() {
+      dt = new Date();
+      time += (dt.getTime());
+      privateKey = citizenCrypt.getPrivateKey();
+      localStorage.setItem('privateKey', privateKey);
+      privateKeyAvailable('forged in ' + Number(time / 1000).toFixed(2) + ' seconds.');
+    });
+  }
 }
