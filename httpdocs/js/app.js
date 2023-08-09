@@ -160,15 +160,15 @@ window.onload = function() {
     content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
     <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">Select your home location</div>
+      <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
       <div class="right">
-        <a href="#" class="link sheet-close">Done</a>
+        <a href="#" class="link sheet-close">${translator.translate('done-home-location')}</a>
       </div>
     </div>
   </div>
   <div class="sheet-modal-inner">
     <div class="block margin-top-half no-padding-left no-padding-right">
-      <div class="text-align-center" style="width:100%"><small>Zoom to building level to precisely select your home address.</small></div>
+      <div class="text-align-center" style="width:100%"><small>${translator.translate('zoom-home-location')}</small></div>
       <div id="register-map" style="width:100%;height:500px;margin-top:10px"></div>
     </div>
   </div>
