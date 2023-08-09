@@ -392,6 +392,17 @@ window.onload = function() {
       privateKeyAvailable(translator.translate('key-forge-time', n));
     });
   }
+  
+  function strippedKey(publicKey) {
+    let stripped = '';
+    const header = '-----BEGIN PUBLIC KEY-----\n'.length;
+    const footer = '-----END PUBLIC KEY-----'.length;
+    const l = publicKey.length - footer;
+    for (let i = header; i < l; i += 65)
+      stripped += publicKey.substr(i, 64);
+    stripped = stripped.slice(0, -1 - footer);
+    return stripped;
+  }
 
   function updateCitizenCard() {
     showPage('card');
