@@ -16,6 +16,7 @@
   "contribute": "Il y a différentes manières de contribuer:<ul><li>Proposez un référendum ou une pétition et incitez les gens à y participer.</li><li>Parlez autour de vous de <a class=\"link external\" href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.</li><li>Faites un don pour nous aider avec le développement logiciel, l'infrastructure et la communication.</li><li>Hébergez un service web: un <i>publisher</i>, un <i>trustee</i>, une <i>polling station</i> ou développez une app.</li></ul>",
   "more-information": "Plus d'information (en anglais)",
   "language": "Langue",
+  "language-select": "Sélectionner",
   "webservices": "Services web",
   "publisher": "Publieur :",
   "trustee": "Autorité de confiance :",
