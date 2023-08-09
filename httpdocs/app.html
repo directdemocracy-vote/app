@@ -80,12 +80,12 @@
           <swiper-container class="tabs">
             <swiper-slide class="tab tab-active page-content" id="tab-card">
               <div id="register-page" style="display:none">
-                <div class="block-title block-title-medium" id="tab-card-title">Become a Citizen</div>
-                <div class="list padding-top">
-                  <ul class="padding-top padding-bottom">
+                <div class="block-title" id="tab-card-title" data-i18n="become-citizen"></div>
+                <div class="list">
+                  <ul>
                     <li class="item-content item-input">
                       <div class="item-inner">
-                        <div class="item-title item-label">Family name:</div>
+                        <div class="item-title item-label" data-i18n="family-name"></div>
                         <div class="item-input-wrap">
                           <input type="url" id="register-family-name" placeholder="Enter your family name here" required>
                           <span class="input-clear-button"></span>
@@ -94,7 +94,7 @@
                     </li>
                     <li class="item-content item-input">
                       <div class="item-inner">
-                        <div class="item-title item-label">Given name(s):</div>
+                        <div class="item-title item-label" data-i18n="given-names"></div>
                         <div class="item-input-wrap">
                           <input type="url" id="register-given-names" placeholder="Enter your given name(s) here." required>
                           <span class="input-clear-button"></span>
@@ -103,7 +103,7 @@
                     </li>
                     <li class="item-content item-input">
                       <div class="item-inner">
-                        <div class="item-title item-label">Picture:</div>
+                        <div class="item-title item-label" data-i18n="picture"></div>
                         <div class="item-input-wrap row">
                           <img class="col-50" id="register-picture" src="https://directdemocracy.vote/images/default-picture.png">
                           <input class="custom-file-input" type="file" style="display:none" id="register-picture-upload" accept="image/*" required>
@@ -113,7 +113,7 @@
                     </li>
                     <li class="item-content item-input">
                       <div class="item-inner">
-                        <div class="item-title item-label">Home location:</div>
+                        <div class="item-title item-label" data-i18n="home-location"></div>
                         <div class="item-input-wrap row">
                           <div class="col-70">
                             <input type="text" id="register-location" placeholder="latitude, longitude" disabled required>
@@ -122,19 +122,9 @@
                         </div>
                       </div>
                     </li>
-                    <li>
-                      <div class="item-content item-input">
-                        <div class="item-inner">
-                          <div class="item-title item-label">Expiration date:</div>
-                          <div class="item-input-wrap">
-                            <input type="text" readonly id="register-expiration" />
-                          </div>
-                        </div>
-                      </div>
-                    </li>
                     <li class="item-content item-input">
                       <div class="item-inner">
-                        <div class="item-title item-label">Cryptographic key generation: <span id="registration-key-generation-status">please wait...</span></div>
+                        <div class="item-title item-label" data-i18n="cryptographic-key-generation"><span id="registration-key-generation-status" data-i18n="please-wait"></span></div>
                         <div id="register-progressbar" class="progressbar-infinite margin-top-half"></div>
                       </div>
                     </li>
@@ -142,7 +132,7 @@
                       <div class="item-content">
                         <div>
                           <div class="item-inner row" width="100%">
-                            <div class="item-label col-80">I confirm I am over 18 years old and the above information is correct.</div>
+                            <div class="item-label col-80" data-i18n="citizen-confirm"></div>
                             <div class="item-after col-20">
                               <label class="toggle">
                                 <input id="register-confirm-check" type="checkbox" name="switch" value="yes"><i class="toggle-icon"></i>
@@ -154,7 +144,7 @@
                     </li>
                   </ul>
                   <div class="block">
-                    <button class="button button-fill disabled" id="register-button">Generating cryptographic key...</button>
+                    <button class="button button-fill disabled" id="register-button" data-i18n="generating-cryptographic-key"></button>
                   </div>
                 </div>
               </div>
