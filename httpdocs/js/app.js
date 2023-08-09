@@ -262,7 +262,45 @@ window.onload = function() {
     sheet.open();
   });
 
-  
+  // registering
+  document.getElementById('register-button').addEventListener('click', function() {
+    console.log("registering...");
+    citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
+    citizen.key = strippedKey(citizenCrypt.getPublicKey());
+    citizen.published = new Date().getTime();
+    citizen.familyName = document.getElementById('register-family-name').value.trim();
+    citizen.givenNames = document.getElementById('register-given-names').value.trim();
+    citizen.signature = '';
+    citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
+    let xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      if (this.status == 200) {
+        let answer = JSON.parse(this.responseText);
+        if (answer.error)
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Publication Error');
+        else {
+          updateCitizenCard();
+          app.dialog.alert('Your citizen card was just published.', 'Congratulation!');
+          window.localStorage.setItem('registered', true);
+        }
+      }
+    };
+    xhttp.open('POST', publisher + '/publish.php', true);
+    xhttp.send(JSON.stringify(citizen));
+    return false;
+  });
+
+  function privateKeyAvailable(message) {
+    document.getElementById('register-button').innerHTML = 'Register';
+    console.log(message);
+    validateRegistration();
+  }
+
+  function privateKeyNotAvailable() {
+    document.getElementById('register-button').innerHTML = 'Generating cryptographic key...';
+    validateRegistration();
+  }
+
   function validateRegistration() {
     let button = document.getElementById('register-button');
     disable(button);
