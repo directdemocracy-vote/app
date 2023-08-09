@@ -36,12 +36,12 @@ function setupLanguagePicker() {
       }
     }
   });
-  if (!localStorage.getItem('privateKey'))
-    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
 }
 
 translator.onready = function() {
   translatorIsReady = true;
+  if (!localStorage.getItem('privateKey'))
+    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
   setupLanguagePicker();
 }
 
