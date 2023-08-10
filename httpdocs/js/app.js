@@ -125,6 +125,7 @@ window.onload = function() {
     showPage('register');
   else {
     showPage('splash');
+    /*
     let xhttp = new XMLHttpRequest();
     xhttp.onload = function() {
       if (this.status == 200) {
@@ -147,7 +148,30 @@ window.onload = function() {
     };
     xhttp.open('POST', publisher + '/citizen.php', true);
     xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send('key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey())));
+    xhttp.send();
+    */
+    fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+      .then((response) => response.json())
+      .then((answer) => {
+        if (answer.error)
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+        else {
+          citizen = answer.citizen;
+          citizen.key = strippedKey(citizenCrypt.getPublicKey());
+          endorsements = answer.endorsements;
+          if (endorsements.error)
+            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
+          citizenEndorsements = answer.citizen_endorsements;
+          updateCitizenCard();
+          // FIXME
+          // updateEndorsements();
+          // updateArea();
+        }
+      })
+      .catch((error) => {
+        app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
+      });
+
   }
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
