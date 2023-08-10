@@ -78,6 +78,7 @@ window.onload = function() {
     longitude: 0
   };
   let citizenFingerprint = null;
+  let citizenEndorsements = [];
 
   let publisher = localStorage.getItem('publisher');
   if (!publisher) {
