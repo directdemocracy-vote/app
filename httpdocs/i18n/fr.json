@@ -44,5 +44,7 @@
   "created": "Création : ",
   "reputation": "Réputation : ",
   "not-endorsed": "Pas encore assermenté",
-  "ask-others-to-endorse-you": "Demandez à d'autres citoyens de vous assermenter pour augmenter votre réputation."
+  "ask-others-to-endorse-you": "Demandez à d'autres citoyens de vous assermenter pour augmenter votre réputation.",
+  "citizen-card-published": "Votre carte de citoyen vient d'être publiée.",
+  "congratulations": "Félicitations!"
 }
