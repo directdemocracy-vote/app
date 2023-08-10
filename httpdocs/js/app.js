@@ -112,7 +112,15 @@ window.onload = function() {
     station = event.target.value;
     localStorage.setItem('station', station);
   });
-  
+
+  // create a private key if needed
+  let privateKey = localStorage.getItem('privateKey');
+  if (privateKey) {
+    citizenCrypt = new JSEncrypt();
+    citizenCrypt.setPrivateKey(privateKey);
+    privateKeyAvailable('');
+  } else createNewKey();
+
   if (!window.localStorage.getItem('registered'))
     showPage('register');
   else {
@@ -327,14 +335,6 @@ window.onload = function() {
 
   document.getElementById('register-adult').addEventListener('input', validateRegistration);
   document.getElementById('register-confirm').addEventListener('input', validateRegistration);
-
-  // create a private key if needed
-  let privateKey = localStorage.getItem('privateKey');
-  if (privateKey) {
-    citizenCrypt = new JSEncrypt();
-    citizenCrypt.setPrivateKey(privateKey);
-    privateKeyAvailable('');
-  } else createNewKey();
 
   // registering
   document.getElementById('register-button').addEventListener('click', function() {
