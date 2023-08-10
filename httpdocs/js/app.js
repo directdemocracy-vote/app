@@ -71,8 +71,8 @@ window.onload = function() {
     key: '',
     signature: '',
     published: 0,
-    familyName: '',
     givenNames: '',
+    familyName: '',
     picture: '',
     latitude: 0,
     longitude: 0
@@ -114,8 +114,8 @@ window.onload = function() {
   else
     showPage('register');
 
-  document.getElementById('register-family-name').addEventListener('input', validateRegistration);
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
+  document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
   // setting up the ID picture
   document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
@@ -316,8 +316,8 @@ window.onload = function() {
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = new Date().getTime();
-    citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
+    citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
     let xhttp = new XMLHttpRequest();
@@ -341,9 +341,9 @@ window.onload = function() {
   function validateRegistration() {
     let button = document.getElementById('register-button');
     disable(button);
-    if (document.getElementById('register-family-name').value.trim() === '')
-      return;
     if (document.getElementById('register-given-names').value.trim() === '')
+      return;
+    if (document.getElementById('register-family-name').value.trim() === '')
       return;
     if (document.getElementById('register-picture').src === 'https://app.directdemocracy.vote/images/default-picture.png')
       return;
@@ -440,10 +440,10 @@ window.onload = function() {
     showPage('card');
     document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
     document.getElementById('register-picture').setAttribute('src', citizen.picture);
-    document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
-    document.getElementById('register-family-name').value = citizen.familyName;
     document.getElementById('citizen-given-names').innerHTML = citizen.givenNames;
     document.getElementById('register-given-names').value = citizen.givenNames;
+    document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
+    document.getElementById('register-family-name').value = citizen.familyName;
     document.getElementById('citizen-coords').innerHTML =
       '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
       citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
@@ -520,7 +520,7 @@ window.onload = function() {
       img.style.width = '100%';
       col = newElement(row, 'div', 'col-75');
       let a = newElement(col, 'a', 'link external',
-        `<span style="font-weight:bold">${endorsement.familyName}</span> <span>${endorsement.givenNames}</span>`);
+        `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
       a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
       a.target = '_blank';
       row = newElement(col, 'div', 'row');
