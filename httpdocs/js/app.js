@@ -145,6 +145,7 @@ window.onload = function() {
       })
       .catch((error) => {
         app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
+        console.error(error);
       });
   }
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
@@ -226,8 +227,8 @@ window.onload = function() {
 
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', function() {
-  let content = {};
-  content.innerHTML = `<div class="sheet-modal" style="height: 100%">
+    let content = {};
+    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
@@ -243,29 +244,14 @@ window.onload = function() {
     </div>
   </div>
 </div>`;
-  let sheet = app.sheet.create({
-    content: content.innerHTML,
-    on: {
+    let sheet = app.sheet.create({
+      content: content.innerHTML,
+      on: {
         opened: function() {
           let geolocation = false;
 
           function updateLocation() {
             registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
-            /*
-            let xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-              if (this.readyState == 4 && this.status == 200) {
-                const a = JSON.parse(this.responseText);
-                const address = a.display_name;
-                registerMarker.setPopupContent(address + '<br><br><center style="color:#999">(' +
-                  citizen.latitude + ', ' + citizen.longitude + ')</center>').openPopup();
-              }
-            };
-            xhttp.open('GET', 'https://nominatim.openstreetmap.org/reverse.php?format=json&lat=' + citizen.latitude +
-              '&lon=' +
-              citizen.longitude + '&zoom=20', true);
-            xhttp.send();
-            */
             fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
               .then((response) => response.json())
               .then((answer) => {
@@ -293,6 +279,7 @@ window.onload = function() {
           }
           if (navigator.geolocation)
             navigator.geolocation.getCurrentPosition(getGeolocationPosition);
+          /*
           let xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200 && geolocation == false) {
@@ -307,6 +294,18 @@ window.onload = function() {
           };
           xhttp.open('GET', 'https://ipinfo.io/loc', true);
           xhttp.send();
+          */
+          fetch(`https://ipinfo.io/loc`)
+            .then((response) => {
+              if (geolocation)
+                return;
+              const coords = this.response.split(',');
+              getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
+            })
+            .catch((error) => {
+              console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
+              console.error(error);
+            });
           let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
