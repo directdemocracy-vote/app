@@ -39,5 +39,7 @@
   "done-home-location": "Done",
   "zoom-home-location": "Zoom to building level to precisely select your home address",
   "please-wait-for-key": "Please wait...",
-  "key-forge-time": "Key forged in %1 seconds."
+  "key-forge-time": "Key forged in %1 seconds.",
+  "created": "Created: ",
+  "reputation": "Reputation: "
 }
