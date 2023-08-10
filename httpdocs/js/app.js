@@ -125,31 +125,6 @@ window.onload = function() {
     showPage('register');
   else {
     showPage('splash');
-    /*
-    let xhttp = new XMLHttpRequest();
-    xhttp.onload = function() {
-      if (this.status == 200) {
-        let answer = JSON.parse(this.responseText);
-        if (answer.error)
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
-        else {
-          citizen = answer.citizen;
-          citizen.key = strippedKey(citizenCrypt.getPublicKey());
-          endorsements = answer.endorsements;
-          if (endorsements.error)
-            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
-          citizenEndorsements = answer.citizen_endorsements;
-          updateCitizenCard();
-          // FIXME
-          // updateEndorsements();
-          // updateArea();
-        }
-      }
-    };
-    xhttp.open('POST', publisher + '/citizen.php', true);
-    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send();
-    */
     fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
       .then((response) => response.json())
       .then((answer) => {
@@ -171,7 +146,6 @@ window.onload = function() {
       .catch((error) => {
         app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
       });
-
   }
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
@@ -277,6 +251,7 @@ window.onload = function() {
 
           function updateLocation() {
             registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
+            /*
             let xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function() {
               if (this.readyState == 4 && this.status == 200) {
@@ -290,6 +265,16 @@ window.onload = function() {
               '&lon=' +
               citizen.longitude + '&zoom=20', true);
             xhttp.send();
+            */
+            fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
+              .then((respomse) => response.json())
+              .then((answer) => {
+                registerMarker.setPopupContent(`${answer.display_name}<br><br><center style="color:#999">(${citizen.latitude}, ${citizen.longitude})</center>`).openPopup();
+              })
+              .catch((error) => {
+                console.error(`Could not load "${url}language.json".`);
+                console.error(error);
+              });
           }
 
           function getGeolocationPosition(position) {
