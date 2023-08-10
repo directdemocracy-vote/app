@@ -41,5 +41,7 @@
   "please-wait-for-key": "Please wait...",
   "key-forge-time": "Key forged in %1 seconds.",
   "created": "Created: ",
-  "reputation": "Reputation: "
+  "reputation": "Reputation: ",
+  "not-endorsed": "Not Yet Endorsed",
+  "ask-others-to-endorse-you": "Ask other citizens to endorse you to increase your reputation."
 }
