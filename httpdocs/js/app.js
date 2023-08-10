@@ -500,6 +500,7 @@ window.onload = function() {
       padding: 0
     });
     // get reputation from trustee
+    /*
     let xhttp = new XMLHttpRequest();
     xhttp.onload = function() {
       if (this.status == 200) {
@@ -522,6 +523,28 @@ window.onload = function() {
     };
     xhttp.open('GET', trustee + '/reputation.php?key=' + encodeURIComponent(citizen.key), true);
     xhttp.send();
+    */
+    fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
+      .then((response) => response.json())
+      .then((answer) => {
+        let reputation = document.getElementById('citizen-reputation');
+        let badge = document.getElementById('endorsed-badge');
+        if (answer.error) {
+          reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
+          badge.classList.remove('color-blue');
+          badge.classList.add('color-red');
+        } else {
+          const color = answer.endorsed ? 'blue' : 'red';
+          reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>';
+          badge.classList.remove('color-red');
+          badge.classList.remove('color-blue');
+          badge.classList.add('color-' + color);
+        }
+      })
+      .catch((error) => {
+        console.error(`Could publish citizen card.`);
+        console.error(error);
+      });
     let list = document.getElementById('citizen-endorsements-list');
     let badge = document.getElementById('endorsed-badge');
     if (citizenEndorsements.length == 0) {
