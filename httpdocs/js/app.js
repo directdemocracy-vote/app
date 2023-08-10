@@ -279,22 +279,6 @@ window.onload = function() {
           }
           if (navigator.geolocation)
             navigator.geolocation.getCurrentPosition(getGeolocationPosition);
-          /*
-          let xhttp = new XMLHttpRequest();
-          xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200 && geolocation == false) {
-              let coords = this.responseText.split(',');
-              getGeolocationPosition({
-                coords: {
-                  latitude: coords[0],
-                  longitude: coords[1]
-                }
-              });
-            }
-          };
-          xhttp.open('GET', 'https://ipinfo.io/loc', true);
-          xhttp.send();
-          */
           fetch(`https://ipinfo.io/loc`)
             .then((response) => {
               if (geolocation)
@@ -353,6 +337,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
+    /*
     let xhttp = new XMLHttpRequest();
     xhttp.onload = function() {
       if (this.status == 200) {
@@ -368,6 +353,22 @@ window.onload = function() {
     };
     xhttp.open('POST', publisher + '/publish.php', true);
     xhttp.send(JSON.stringify(citizen));
+    */
+    fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+      .then((response) => response.json())
+      .then((answer) => {
+        if (answer.error)
+          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+        else {
+          updateCitizenCard();
+          app.dialog.alert('Your citizen card was just published.', 'Congratulation!');
+          window.localStorage.setItem('registered', true);
+        }
+      })
+      .catch((error) => {
+        console.error(`Could publish citizen card.`);
+        console.error(error);
+      });
     return false;
   });
 
