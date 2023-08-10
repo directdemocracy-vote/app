@@ -494,14 +494,14 @@ window.onload = function() {
           badge.classList.add('color-red');
         } else {
           const color = answer.endorsed ? 'blue' : 'red';
-          reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>';
+          reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
           badge.classList.remove('color-red');
           badge.classList.remove('color-blue');
           badge.classList.add('color-' + color);
         }
       })
       .catch((error) => {
-        console.error(`Could publish citizen card.`);
+        console.error('Could not publish citizen card.');
         console.error(error);
       });
     let list = document.getElementById('citizen-endorsements-list');
