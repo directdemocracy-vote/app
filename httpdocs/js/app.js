@@ -267,7 +267,7 @@ window.onload = function() {
             xhttp.send();
             */
             fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
-              .then((respomse) => response.json())
+              .then((response) => response.json())
               .then((answer) => {
                 registerMarker.setPopupContent(`${answer.display_name}<br><br><center style="color:#999">(${citizen.latitude}, ${citizen.longitude})</center>`).openPopup();
               })
