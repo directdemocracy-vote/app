@@ -457,6 +457,7 @@ window.onload = function() {
     let qrImage = document.getElementById('citizen-qr-code');
     const rect = qrImage.getBoundingClientRect();
     const rect2 = document.getElementById('tabbar').getBoundingClientRect();
+    console.log('rect = ' + rect2.top + ' - ' + rect.top + ' width: ' + screen.width);
     const height = rect2.top - rect.top;
     const width = screen.width - 30;
     const size = width > height ? height : width;
