@@ -518,8 +518,8 @@ window.onload = function() {
     let badge = document.getElementById('endorsed-badge');
     if (citizenEndorsements.length == 0) {
       list.innerHTML =
-        '<div class="block-title">Not endorsed</div>' +
-        '<div class="block">You should ask other citizens to endorse you.</div>';
+        `<div class="block-title" data-i18n="not-endorsed">${translator.translate('not-endorsed')}</div>` +
+        `<div class="block" data-i18n="ask-others-to-endorse-you">${translator.translate('ask-others-to-endorse-you')}</div>`;
       badge.style.background = 'red';
       badge.innerHTML = '0';
       return;
