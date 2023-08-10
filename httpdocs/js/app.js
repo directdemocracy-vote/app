@@ -77,6 +77,7 @@ window.onload = function() {
     latitude: 0,
     longitude: 0
   };
+  let citizenFingerprint = null;
 
   let publisher = localStorage.getItem('publisher');
   if (!publisher) {
