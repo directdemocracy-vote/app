@@ -79,6 +79,7 @@ window.onload = function() {
   };
   let citizenFingerprint = null;
   let citizenEndorsements = [];
+  let endorsements = [];
 
   let publisher = localStorage.getItem('publisher');
   if (!publisher) {
@@ -111,11 +112,34 @@ window.onload = function() {
     localStorage.setItem('station', station);
   });
   
-  if (window.localStorage.getItem('registered'))
-    showPage('splash');
-  else
+  if (!window.localStorage.getItem('registered'))
     showPage('register');
-
+  else {
+    showPage('splash');
+    let xhttp = new XMLHttpRequest();
+    xhttp.onload = function() {
+      if (this.status == 200) {
+        let answer = JSON.parse(this.responseText);
+        if (answer.error)
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+        else {
+          citizen = answer.citizen;
+          citizen.key = strippedKey(citizenCrypt.getPublicKey());
+          endorsements = answer.endorsements;
+          if (endorsements.error)
+            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
+          citizenEndorsements = answer.citizen_endorsements;
+          updateCitizenCard();
+          // FIXME
+          // updateEndorsements();
+          // updateArea();
+        }
+      }
+    };
+    xhttp.open('POST', publisher + '/citizen.php', true);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.send('key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey())));
+  }
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
@@ -314,7 +338,6 @@ window.onload = function() {
 
   // registering
   document.getElementById('register-button').addEventListener('click', function() {
-    console.log("registering...");
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = new Date().getTime();
