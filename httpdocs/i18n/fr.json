@@ -41,5 +41,7 @@
   "please-wait-for-key": "Veuillez patienter...",
   "key-forge-time": "Clé forgée en %1 secondes.",
   "created": "Création : ",
-  "reputation": "Réputation : "
+  "reputation": "Réputation : ",
+  "not-endorsed": "Pas encore assermenté",
+  "ask-others-to-endorse-you": "Demandez à d'autres citoyens de vous assermenter pour augmenter votre réputation."
 }
