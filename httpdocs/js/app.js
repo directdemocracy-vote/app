@@ -337,23 +337,6 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    /*
-    let xhttp = new XMLHttpRequest();
-    xhttp.onload = function() {
-      if (this.status == 200) {
-        let answer = JSON.parse(this.responseText);
-        if (answer.error)
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Publication Error');
-        else {
-          updateCitizenCard();
-          app.dialog.alert('Your citizen card was just published.', 'Congratulation!');
-          window.localStorage.setItem('registered', true);
-        }
-      }
-    };
-    xhttp.open('POST', publisher + '/publish.php', true);
-    xhttp.send(JSON.stringify(citizen));
-    */
     fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
@@ -361,7 +344,7 @@ window.onload = function() {
           app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
         else {
           updateCitizenCard();
-          app.dialog.alert('Your citizen card was just published.', 'Congratulation!');
+          app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
           window.localStorage.setItem('registered', true);
         }
       })
@@ -500,30 +483,6 @@ window.onload = function() {
       padding: 0
     });
     // get reputation from trustee
-    /*
-    let xhttp = new XMLHttpRequest();
-    xhttp.onload = function() {
-      if (this.status == 200) {
-        let reputation = document.getElementById('citizen-reputation');
-        let answer = JSON.parse(this.responseText);
-        let badge = document.getElementById('endorsed-badge');
-        if (answer.error) {
-          reputation.innerHTML = '<span style="font-weight:bold;color:red">' + answer.error + "</span>";
-          badge.classList.remove('color-blue');
-          badge.classList.add('color-red');
-        } else {
-          const color = answer.endorsed ? 'blue' : 'red';
-          reputation.innerHTML = '<span style="font-weight:bold;color:' + color + '">' + answer.reputation +
-            '</span>';
-          badge.classList.remove('color-red');
-          badge.classList.remove('color-blue');
-          badge.classList.add('color-' + color);
-        }
-      }
-    };
-    xhttp.open('GET', trustee + '/reputation.php?key=' + encodeURIComponent(citizen.key), true);
-    xhttp.send();
-    */
     fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
       .then((response) => response.json())
       .then((answer) => {
