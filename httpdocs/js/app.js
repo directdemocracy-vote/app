@@ -225,9 +225,9 @@ window.onload = function() {
   });
 
   // setting-up the home location
-    document.getElementById('register-location-button').addEventListener('click', function() {
-    let content = {};
-    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
+  document.getElementById('register-location-button').addEventListener('click', function() {
+  let content = {};
+  content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
     <div class="toolbar-inner">
       <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
@@ -243,9 +243,9 @@ window.onload = function() {
     </div>
   </div>
 </div>`;
-    let sheet = app.sheet.create({
-      content: content.innerHTML,
-      on: {
+  let sheet = app.sheet.create({
+    content: content.innerHTML,
+    on: {
         opened: function() {
           let geolocation = false;
 
@@ -272,7 +272,7 @@ window.onload = function() {
                 registerMarker.setPopupContent(`${answer.display_name}<br><br><center style="color:#999">(${citizen.latitude}, ${citizen.longitude})</center>`).openPopup();
               })
               .catch((error) => {
-                console.error(`Could not load "${url}language.json".`);
+                console.error(`Could not fetch address at ${citizen.latitude}, ${citizen.longitude}.`);
                 console.error(error);
               });
           }
