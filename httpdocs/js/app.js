@@ -9,12 +9,9 @@ let translator = new Translator('/i18n');
 
 let buf = new Uint8Array(20);
 crypto.getRandomValues(buf);
-console.log(buf[0] + ' ' + buf[1] + ' ' + buf[2] + ' ' + buf[3]);
 let s = '', h = '0123456789abcdef';
 buf.forEach((v) => { s += h[v >> 4] + h[v & 15]; });
 console.log(s);
-
-console.log(buf.toString(16));
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
