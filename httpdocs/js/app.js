@@ -414,10 +414,11 @@ window.onload = function() {
           element: image,
           value: randomString,
           level: 'M',
-          size: 100,
+          size: 512,
           padding: 0
         });
         image.style.width = '100%';
+        image.style.height = '100%';
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: image.outerHTML,
