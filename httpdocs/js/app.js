@@ -405,9 +405,30 @@ window.onload = function() {
     let randomString = '', hex = '0123456789abcdef';
     randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
     console.log(randomString);
+    /*
     app.dialog.confirm('Please check that the phone of the citizen you are endorsing is set in airplane mode', '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?', function () {
       app.dialog.alert('Great!');
     });
+    */
+    var dialog_appReset = app.dialog.create({
+      title: 'Warning!',
+      text: 'You are resetting the app. Are you sure?',
+      buttons: [
+        {
+          text: 'Confirm',
+          onClick: function() {
+            console.log('confirmed');
+          }
+        },
+        {
+          text: 'Decline',
+          onClick: function() {
+            console.log('declined');
+          }
+        }
+      ]
+    });
+    dialog_appReset.open();
   });
 
   function validateRegistration() {
