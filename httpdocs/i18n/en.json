@@ -50,5 +50,7 @@
   "citizen-card-published": "Your citizen card was just published.",
   "congratulations": "Congratulations!",
   "endorse-me": "Ask an Endorsement",
-  "airplane-mode": "Enter airplane mode before pressing this button"
+  "airplane-mode": "Enter airplane mode before pressing this button",
+  "endorse-button": "Endorse a Citizen",
+  "endorse-message": "Press this button to endorse someone as a citizen"
 }
