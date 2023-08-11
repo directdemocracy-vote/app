@@ -58,7 +58,7 @@ app.on('pageInit', function(page) {
     return;
   homePageIsReady = true;
   setupLanguagePicker();
-  document.getElementById('tab-card').slider.allowSlideNext = false;
+  document.getElementById('tab-card').allowSlideNext = false;
 });
 
 app.on('pageBeforeRemove', function(page) {
