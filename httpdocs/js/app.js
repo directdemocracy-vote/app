@@ -410,8 +410,7 @@ window.onload = function() {
         hide(`${p}-page`);
     });
     let swiper = document.getElementById('swiper-container');
-    // swiper.swiper.allowTouchMove = (page === 'card');
-    swiper.setAttribute('allow-touch-move', (page === 'card') ? 'true' : 'false');
+    swiper.swiper.allowTouchMove = (page === 'card');
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
