@@ -416,10 +416,10 @@ window.onload = function() {
       const tab = `tab-${i}`;
       const tabbar = `tabbar-${i}`;
       if (page === 'card') {
-        show(tab);
+        // show(tab);
         enable(tabbar);
       } else {
-        hide(tab);
+        // hide(tab);
         disable(tabbar);
       }
     });
