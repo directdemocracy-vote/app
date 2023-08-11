@@ -404,7 +404,7 @@ window.onload = function() {
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
-    showPage('card);
+    showPage('card');
   });
   
   document.getElementById('endorse-button').addEventListener('click', function(event) {
