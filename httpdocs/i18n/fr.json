@@ -48,5 +48,7 @@
   "register": "S'inscrire",
   "registration": "Inscription",
   "citizen-card-published": "Votre carte de citoyen vient d'être publiée.",
-  "congratulations": "Félicitations!"
+  "congratulations": "Félicitations!",
+  "endorse-me": "Demander une assermentation",
+  "airplane-mode": "Passez en mode avion avant d'appuyer sur ce bouton"
 }
