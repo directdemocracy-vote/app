@@ -51,13 +51,14 @@ translator.onready = function() {
   setupLanguagePicker();
 }
 
-let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: false}, routes: [{path: '/', pageName: 'home'}, {path: '/info/', pageName: 'info'}]});
+let app = new Framework7({el: '#app', name: 'directdemocracy', routes: [{path: '/', pageName: 'home'}, {path: '/info/', pageName: 'info'}]});
 
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
   homePageIsReady = true;
   setupLanguagePicker();
+  document.getElementById('tab-card').slider.allowSlideNext = false;
 });
 
 app.on('pageBeforeRemove', function(page) {
