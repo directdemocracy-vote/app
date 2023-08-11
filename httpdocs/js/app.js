@@ -68,6 +68,10 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
+app.on('pageAfterIn', function(page) {
+  console.log('pageAfterIn ' + page.name);
+}
+
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
