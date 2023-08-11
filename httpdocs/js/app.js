@@ -58,7 +58,6 @@ app.on('pageInit', function(page) {
     return;
   homePageIsReady = true;
   setupLanguagePicker();
-  document.getElementById('tab-card').allowSlideNext = false;
 });
 
 app.on('pageBeforeRemove', function(page) {
@@ -416,10 +415,10 @@ window.onload = function() {
       const tab = `tab-${i}`;
       const tabbar = `tabbar-${i}`;
       if (page === 'card') {
-        enable(tab);
+        show(tab);
         enable(tabbar);
       } else {
-        disable(tab);
+        hide(tab);
         disable(tabbar);
       }
     });
@@ -559,14 +558,30 @@ window.onload = function() {
   }
 }
 
-function enable(item) {
+function removeClass(item, c) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  i.classList.remove('disabled');
+  i.classList.remove(c);
+}
+
+function addClass(item, c) {
+  let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  if (i.classList.contains(c))
+    return;
+  i.classList.add(c);
+}
+
+function enable(item) {
+  addClass('disabled');
 }
 
 function disable(item) {
-  let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  if (i.classList.contains('disabled'))
-    return;
-  i.classList.add('disabled');
+  removeClass('disabled');
+}
+
+function show(item) {
+  removeClass('display-none');
+}
+
+function hide(item) {
+  addClass('display-none');
 }
