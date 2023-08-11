@@ -572,11 +572,11 @@ function addClass(item, className) {
 }
 
 function enable(item) {
-  addClass(item, 'disabled');
+  removeClass(item, 'disabled');
 }
 
 function disable(item) {
-  removeClass(item, 'disabled');
+  addClass(item, 'disabled');
 }
 
 function show(item) {
