@@ -415,15 +415,11 @@ window.onload = function() {
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
-      const tab = `tab-${i}`;
       const tabbar = `tabbar-${i}`;
-      if (page === 'card') {
-        // show(tab);
+      if (page === 'card')
         enable(tabbar);
-      } else {
-        // hide(tab);
+      else
         disable(tabbar);
-      }
     });
   }
   
