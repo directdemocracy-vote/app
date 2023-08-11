@@ -331,8 +331,8 @@ window.onload = function() {
   // registering
   document.getElementById('register-button').addEventListener('click', function(event) {
     let text = document.getElementById('register-button-text');
-    const registration = translator.translate('registration');
-    text.innerHTML = registration;
+    const registration = 'registration';
+    text.innerHTML = translator.translate(registration);
     text.setAttribute('data-i18n', registration);
     document.getElementById('register-button-preloader').style.display = '';
     disable(event.currentTarget);
@@ -427,9 +427,9 @@ window.onload = function() {
   }
 
   function privateKeyAvailable(message) {
-    const register = translator.translate('register');
+    const register = 'register';
     let text = document.getElementById('register-button-text');
-    text.innerHTML = register;
+    text.innerHTML = translator.translate(register);
     text.setAttribute('data-i18n', register);
     document.getElementById('register-button-preloader').style.display = 'none';
     document.getElementById('registration-button-message').innerHTML = message;
