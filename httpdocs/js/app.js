@@ -69,7 +69,13 @@ app.on('pageBeforeRemove', function(page) {
 });
 
 app.on('pageAfterIn', function(page) {
-  console.log('pageAfterIn ' + page.name);
+  if (page.name !== 'home')
+    return;
+  card = document.getElementById('card-page');
+  if (card.classList.contains('display-none'))
+    return;
+  let swiper = document.getElementById('swiper-container');
+  swiper.swiper.allowTouchMove = true;
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
