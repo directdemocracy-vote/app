@@ -402,6 +402,10 @@ window.onload = function() {
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
   });
+
+  document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
+    showPage('card);
+  });
   
   document.getElementById('endorse-button').addEventListener('click', function(event) {
     app.dialog.create({
