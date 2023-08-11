@@ -419,11 +419,7 @@ window.onload = function() {
   }
 
   scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
-
-  document.getElementById('endorse-me-button').addEventListener('click', function(event) {
-    showPage('endorse-me');
-    scanner.start();
-    function setResult(fingerprint) {
+  function setResult(fingerprint) {
       /*
       scanner.destroy();
       scanner = null;
@@ -431,6 +427,10 @@ window.onload = function() {
       showPage('card');
       console.log(fingerprint);
     }
+
+  document.getElementById('endorse-me-button').addEventListener('click', function(event) {
+    showPage('endorse-me');
+    scanner.start();
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
