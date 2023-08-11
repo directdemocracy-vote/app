@@ -65,6 +65,10 @@ app.on('pageBeforeRemove', function(page) {
 app.on('pageAfterIn', function(page) {
   if (page.name !== 'home')
     return;
+  vote = document.getElementById('tab-vote');
+  if (vote.classList.contains('tab-active'))
+    console.log('vote is active');
+/*
   addClass('tabbar-card', 'tab-link-active');
   removeClass('tabbar-endorse', 'tab-link-active');
   removeClass('tabbar-vote', 'tab-link-active');
@@ -85,6 +89,7 @@ app.on('pageAfterIn', function(page) {
   removeClass('tab-settings', 'swiper-slide-active');
   removeClass('tab-settings', 'tab-active');
   removeClass('tab-settings', 'swiper-slide-next');
+  */
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
