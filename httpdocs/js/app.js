@@ -446,11 +446,9 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
-    /*
     let swiper = document.getElementById('swiper-container');
     swiper.swiper.allowTouchMove = (page === 'card');
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
-    */
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
       const tabbar = `tabbar-${i}`;
