@@ -557,31 +557,30 @@ window.onload = function() {
   }
 }
 
-function removeClass(item, c) {
+function removeClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  i.classList.remove(c);
+  i.classList.remove(className);
 }
 
-function addClass(item, c) {
+function addClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  console.log(c + ': ' + item + ' ' + i);
-  if (i.classList.contains(c))
+  if (i.classList.contains(className))
     return;
-  i.classList.add(c);
+  i.classList.add(className);
 }
 
 function enable(item) {
-  addClass('disabled');
+  addClass(item, 'disabled');
 }
 
 function disable(item) {
-  removeClass('disabled');
+  removeClass(item, 'disabled');
 }
 
 function show(item) {
-  removeClass('display-none');
+  removeClass(item, 'display-none');
 }
 
 function hide(item) {
-  addClass('display-none');
+  addClass(item, 'display-none');
 }
