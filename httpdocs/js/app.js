@@ -375,6 +375,11 @@ window.onload = function() {
     return false;
   });
 
+  document.getElementById('endorse-button').addEventListener('click', function(event) {
+    let swiper = document.getElementById('swiper-container');
+    swiper.swiper.allowTouchMove = true;
+  });
+
   function validateRegistration() {
     disable('register-button');
     if (document.getElementById('register-given-names').value.trim() === '')
@@ -409,9 +414,9 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
+    console.log('allow touch move: ' + (page === 'card'));
     let swiper = document.getElementById('swiper-container');
     swiper.swiper.allowTouchMove = (page === 'card');
-    console.log('allow touch move: ' + (page === 'card'));
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
