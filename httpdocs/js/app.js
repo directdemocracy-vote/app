@@ -409,6 +409,7 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
+    return;
     // document.getElementById('swiper-container').setAttribute('allow-touch-move', page === 'card' ? 'true' : 'false');
     // document.getElementById('swiper-container').swiper.allowTouchMove = (page === 'card');
     const cards = ['endorse', 'vote', 'sign'];
