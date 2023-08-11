@@ -71,11 +71,11 @@ app.on('pageBeforeRemove', function(page) {
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
-  disable(document.getElementById('endorse-me-button'));
+  disable('endorse-me-button');
 });
 
 window.addEventListener('offline', () => {
-  enable(document.getElementById('endorse-me-button'));
+  enable('endorse-me-button');
 });
 
 window.onload = function() {
@@ -348,7 +348,7 @@ window.onload = function() {
     const registration = 'registration';
     text.innerHTML = translator.translate(registration);
     text.setAttribute('data-i18n', registration);
-    show(document.getElementById('register-button-preloader'));
+    show('register-button-preloader');
     disable(event.currentTarget);
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
@@ -376,8 +376,7 @@ window.onload = function() {
   });
 
   function validateRegistration() {
-    let button = document.getElementById('register-button');
-    disable(button);
+    disable('register-button');
     if (document.getElementById('register-given-names').value.trim() === '')
       return;
     if (document.getElementById('register-family-name').value.trim() === '')
@@ -392,7 +391,7 @@ window.onload = function() {
       return;
     if (!localStorage.getItem('privateKey'))
       return;
-    enable(button);
+    enable('register-button');
   }
 
   // show either:
@@ -405,10 +404,10 @@ window.onload = function() {
       console.error(`Page '${page}' not found`);
       return;
     }
-    show(document.getElementById(page + '-page'));
+    show(`${page}-page`);
     pages.forEach(function(p) {
       if (p !== page)
-        hide(document.getElementById(p + '-page'));
+        hide(`${p}-page`);
     });
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
@@ -433,7 +432,7 @@ window.onload = function() {
     let text = document.getElementById('register-button-text');
     text.innerHTML = translator.translate(register);
     text.setAttribute('data-i18n', register);
-    hide(document.getElementById('register-button-preloader'));
+    hide('register-button-preloader');
     document.getElementById('registration-button-message').innerHTML = message;
     validateRegistration();
   }
