@@ -424,7 +424,7 @@ window.onload = function() {
         image.innerHTML = 'coucou';
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
-          el: image,
+          content: image.outerHTML,
           /* text: '<img src="https://app.directdemocracy.vote/images/default-picture.png" style="width:100%" />', */
           buttons: [{text: 'Cancel'}]
         }).open();
