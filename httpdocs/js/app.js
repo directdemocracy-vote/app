@@ -7,6 +7,10 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let translator = new Translator('/i18n');
 
+var buf = new Uint8Array(2);
+crypto.getRandomValues(buf);
+console.log(buf[0] + ' ' + buf[1]);
+
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
