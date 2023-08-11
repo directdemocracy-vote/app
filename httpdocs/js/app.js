@@ -71,7 +71,7 @@ app.on('pageBeforeRemove', function(page) {
 app.on('pageAfterIn', function(page) {
   if (page.name !== 'home')
     return;
-  card = document.getElementById('card-page');
+  let card = document.getElementById('card-page');
   if (card.classList.contains('display-none'))
     return;
   let swiper = document.getElementById('swiper-container');
