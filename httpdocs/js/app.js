@@ -91,13 +91,11 @@ app.on('pageAfterIn', function(page) {
   removeClass('tab-settings', 'swiper-slide-active');
   removeClass('tab-settings', 'tab-active');
   removeClass('tab-settings', 'swiper-slide-next');
-  /*
   let card = document.getElementById('card-page');
   if (card.classList.contains('display-none'))
     return;
   let swiper = document.getElementById('swiper-container');
   swiper.swiper.allowTouchMove = true;
-  */
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
