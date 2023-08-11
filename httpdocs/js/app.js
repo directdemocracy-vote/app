@@ -405,7 +405,7 @@ window.onload = function() {
     let randomString = '', hex = '0123456789abcdef';
     randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
     console.log(randomString);
-    app.dialog.confirm('Please check that the phone of the citizen you are endorsing is set in airplane mode', '<i class="icon f7-icons">airplane</i>Airplane mode?', function () {
+    app.dialog.confirm('Please check that the phone of the citizen you are endorsing is set in airplane mode', '<i class="icon f7-icons margin-right">airplane</i>Airplane mode?', function () {
       app.dialog.alert('Great!');
     });
   });
