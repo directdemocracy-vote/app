@@ -409,6 +409,7 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
+    document.getElementById('swiper-container').setAttribute('allow-touch-move', page === 'card' ? 'false' : 'true');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
       const tab = `tab-${i}`;
