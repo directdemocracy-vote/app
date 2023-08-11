@@ -411,7 +411,7 @@ window.onload = function() {
         console.log(randomString);
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
-          text: '<img src="https://app.directdemocracy.vote/images/default-picture.png" />',
+          text: '<img src="https://app.directdemocracy.vote/images/default-picture.png" style="width:100%" />',
           buttons: [{text: 'Cancel'}]
         }).open();
       }}, {text: 'Cancel'}]
