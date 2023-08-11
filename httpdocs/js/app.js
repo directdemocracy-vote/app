@@ -7,11 +7,11 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let translator = new Translator('/i18n');
 
-let buf = new Uint8Array(20);
-crypto.getRandomValues(buf);
-let s = '', h = '0123456789abcdef';
-buf.forEach((v) => { s += h[v >> 4] + h[v & 15]; });
-console.log(s);
+const randomBytes = new Uint8Array(20);
+crypto.getRandomValues(randomBytes);
+let randomString = '', hex = '0123456789abcdef';
+randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
+console.log(randomString);
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
