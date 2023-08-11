@@ -409,6 +409,11 @@ window.onload = function() {
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
         console.log(randomString);
+        app.dialog.create({
+          title: 'Ask the citizen to scan this QR-code',
+          text: '<img src="https://app.directdemocracy.vote/images/default-picture.png" />',
+          buttons: [{text: 'Cancel'}]
+        });
       }}, {text: 'Cancel'}]
     }).open();
   });
