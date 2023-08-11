@@ -564,6 +564,7 @@ function removeClass(item, c) {
 
 function addClass(item, c) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  console.log(c + ': ' + item + ' ' + i);
   if (i.classList.contains(c))
     return;
   i.classList.add(c);
