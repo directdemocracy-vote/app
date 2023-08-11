@@ -410,7 +410,7 @@ window.onload = function() {
         hide(`${p}-page`);
     });
     // document.getElementById('swiper-container').setAttribute('allow-touch-move', page === 'card' ? 'true' : 'false');
-    document.getElementById('swiper-container').swiper.allowTouchMove = (page === 'card');
+    // document.getElementById('swiper-container').swiper.allowTouchMove = (page === 'card');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
       const tab = `tab-${i}`;
