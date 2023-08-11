@@ -69,20 +69,20 @@ app.on('pageBeforeRemove', function(page) {
 });
 
 app.on('pageAfterIn', function(page) {
+  /*
   if (page.name !== 'home')
     return;
-  /*
   removeClass('tabbar-endorse', 'tab-link-active');
   removeClass('tabbar-vote', 'tab-link-active');
   removeClass('tabbar-sign', 'tab-link-active');
   removeClass('tabbar-settings', 'tab-link-active');
   addClass('tabbar-card', 'tab-link-active');
-  */
   let card = document.getElementById('card-page');
   if (card.classList.contains('display-none'))
     return;
   let swiper = document.getElementById('swiper-container');
   swiper.swiper.allowTouchMove = true;
+  */
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
@@ -431,10 +431,11 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
-    console.log('allow touch move: ' + (page === 'card'));
+    /*
     let swiper = document.getElementById('swiper-container');
     swiper.swiper.allowTouchMove = (page === 'card');
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
+    */
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
       const tabbar = `tabbar-${i}`;
