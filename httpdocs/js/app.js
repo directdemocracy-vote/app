@@ -409,14 +409,19 @@ window.onload = function() {
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
         console.log(randomString);
+        /*
         let image = document.createElement('img');
         image.style.width = '100%';
         let qr = new QRious({
           element: image,
           value: randomString,
           level: 'M',
+          size: 100,
           padding: 0
         });
+        */
+        let image = document.createElement('div');
+        image.innerHTML = 'coucou';
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           el: image,
