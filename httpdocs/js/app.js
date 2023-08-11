@@ -413,7 +413,7 @@ window.onload = function() {
           title: 'Ask the citizen to scan this QR-code',
           text: '<img src="https://app.directdemocracy.vote/images/default-picture.png" />',
           buttons: [{text: 'Cancel'}]
-        });
+        }).open();
       }}, {text: 'Cancel'}]
     }).open();
   });
