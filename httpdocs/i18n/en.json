@@ -48,5 +48,7 @@
   "register": "Register",
   "registration": "Registration...",
   "citizen-card-published": "Your citizen card was just published.",
-  "congratulations": "Congratulations!"
+  "congratulations": "Congratulations!",
+  "endorse-me": "Endorse me",
+  "airplane-mode": "Enter airplane mode before pressing this button"
 }
