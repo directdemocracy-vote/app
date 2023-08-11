@@ -401,6 +401,23 @@ window.onload = function() {
   });
 
   const video = document.getElementById('endorse-me-video');
+  document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
+
+  function qrVideo() { // display video as a square centered in the video rectangle
+    if (this.videoWidth > this.videoHeight) {
+      const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
+      const size = -2 * margin + 100;
+      this.style.width = size + '%';
+      this.style.marginLeft = margin + '%';
+      this.style.marginRight = margin + '%';
+    } else {
+      const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
+      this.style.width = '100%';
+      this.style.marginTop = margin + '%';
+      this.style.marginBottom = margin + '%';
+    }
+  }
+
   scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
 
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
