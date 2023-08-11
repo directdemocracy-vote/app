@@ -419,6 +419,7 @@ window.onload = function() {
         });
         image.style.width = '100%';
         image.style.height = '100%';
+        image.class = 'margin-top';
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: image.outerHTML,
