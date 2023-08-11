@@ -51,7 +51,7 @@ translator.onready = function() {
   setupLanguagePicker();
 }
 
-let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: true}, routes: [{path: '/', pageName: 'home'}, {path: '/info/', pageName: 'info'}]});
+let app = new Framework7({el: '#app', name: 'directdemocracy', panel: {swipe: false}, routes: [{path: '/', pageName: 'home'}, {path: '/info/', pageName: 'info'}]});
 
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
