@@ -71,6 +71,7 @@ app.on('pageAfterIn', function(page) {
     console.log('vote is active');
   if (voteLink.classList.contains('tab-link-active'))
     console.log('voteLink is active');
+  document.getElementById('swiper-container').swiper.slideTo(3);
 /*
   addClass('tabbar-card', 'tab-link-active');
   removeClass('tabbar-endorse', 'tab-link-active');
