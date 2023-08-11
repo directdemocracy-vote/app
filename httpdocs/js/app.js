@@ -283,7 +283,7 @@ window.onload = function() {
             .then((response) => {
               if (geolocation)
                 return;
-              const coords = this.response.split(',');
+              const coords = response.split(',');
               getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
             })
             .catch((error) => {
@@ -331,10 +331,10 @@ window.onload = function() {
   // registering
   document.getElementById('register-button').addEventListener('click', function(event) {
     let text = document.getElementById('register-button-text');
-    const registration = translator.translate('registration...');
+    const registration = translator.translate('registration');
     text.innerHTML = registration;
     text.setAttribute('data-i18n', registration);
-    document.getElementById('register-button-preloader').style.visible = '';
+    document.getElementById('register-button-preloader').style.display = '';
     disable(event.currentTarget);
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
@@ -431,7 +431,7 @@ window.onload = function() {
     let text = document.getElementById('register-button-text');
     text.innerHTML = register;
     text.setAttribute('data-i18n', register);
-    document.getElementById('register-button-preloader').style.visible = 'hidden';
+    document.getElementById('register-button-preloader').style.display = 'none';
     document.getElementById('registration-button-message').innerHTML = message;
     validateRegistration();
   }
