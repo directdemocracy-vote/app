@@ -400,30 +400,17 @@ window.onload = function() {
   });
 
   document.getElementById('endorse-button').addEventListener('click', function(event) {
-    const randomBytes = new Uint8Array(20);
-    crypto.getRandomValues(randomBytes);
-    let randomString = '', hex = '0123456789abcdef';
-    randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
-    console.log(randomString);
-    var dialog_appReset = app.dialog.create({
+    app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
-      buttons: [
-        {
-          text: 'Confirm',
-          onClick: function() {
-            console.log('confirmed');
-          }
-        },
-        {
-          text: 'Cancel',
-          onClick: function() {
-            console.log('cancelled');
-          }
-        }
-      ]
+      buttons: [{text: 'Confirm', onClick: function() {
+        const randomBytes = new Uint8Array(20);
+        crypto.getRandomValues(randomBytes);
+        let randomString = '', hex = '0123456789abcdef';
+        randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
+        console.log(randomString);
+      }}, {text: 'Cancel'}]
     }).open();
-    // dialog_appReset.open();
   });
 
   function validateRegistration() {
