@@ -7,12 +7,6 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let translator = new Translator('/i18n');
 
-const randomBytes = new Uint8Array(20);
-crypto.getRandomValues(randomBytes);
-let randomString = '', hex = '0123456789abcdef';
-randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
-console.log(randomString);
-
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
@@ -91,11 +85,6 @@ app.on('pageAfterIn', function(page) {
   removeClass('tab-settings', 'swiper-slide-active');
   removeClass('tab-settings', 'tab-active');
   removeClass('tab-settings', 'swiper-slide-next');
-  let card = document.getElementById('card-page');
-  if (card.classList.contains('display-none'))
-    return;
-  let swiper = document.getElementById('swiper-container');
-  swiper.swiper.allowTouchMove = true;
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
@@ -406,8 +395,11 @@ window.onload = function() {
   });
 
   document.getElementById('endorse-button').addEventListener('click', function(event) {
-    let swiper = document.getElementById('swiper-container');
-    swiper.swiper.allowTouchMove = true;
+    const randomBytes = new Uint8Array(20);
+    crypto.getRandomValues(randomBytes);
+    let randomString = '', hex = '0123456789abcdef';
+    randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
+    console.log(randomString);
   });
 
   function validateRegistration() {
@@ -444,9 +436,6 @@ window.onload = function() {
       if (p !== page)
         hide(`${p}-page`);
     });
-    let swiper = document.getElementById('swiper-container');
-    swiper.swiper.allowTouchMove = (page === 'card');
-    swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
       const tabbar = `tabbar-${i}`;
