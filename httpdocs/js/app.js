@@ -420,13 +420,10 @@ window.onload = function() {
 
   scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
   function setResult(fingerprint) {
-      /*
-      scanner.destroy();
-      scanner = null;
-      */
-      showPage('card');
-      console.log(fingerprint);
-    }
+    scanner.stop();
+    showPage('card');
+    console.log(fingerprint);
+  }
 
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
@@ -434,10 +431,7 @@ window.onload = function() {
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
-    /*
-    scanner.destroy();
-    scanner = null;
-    */
+    scanner.stop();
     showPage('card');
   });
   
