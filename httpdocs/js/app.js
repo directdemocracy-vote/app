@@ -65,9 +65,12 @@ app.on('pageBeforeRemove', function(page) {
 app.on('pageAfterIn', function(page) {
   if (page.name !== 'home')
     return;
-  vote = document.getElementById('tab-vote');
+  let vote = document.getElementById('tab-vote');
+  let voteLink = document.getElementById('tabbar-vote');
   if (vote.classList.contains('tab-active'))
     console.log('vote is active');
+  if (voteLink.classList.contains('tab-link-active'))
+    console.log('voteLink is active');
 /*
   addClass('tabbar-card', 'tab-link-active');
   removeClass('tabbar-endorse', 'tab-link-active');
