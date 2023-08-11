@@ -459,7 +459,7 @@ window.onload = function() {
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: image.outerHTML,
-          buttons: [{text: 'Cancel'}]
+          buttons: [{text: 'Done'}, {text: 'Cancel'}]
         }).open();
       }}, {text: 'Cancel'}]
     }).open();
