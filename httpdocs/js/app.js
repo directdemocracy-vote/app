@@ -329,7 +329,13 @@ window.onload = function() {
   document.getElementById('register-confirm').addEventListener('input', validateRegistration);
 
   // registering
-  document.getElementById('register-button').addEventListener('click', function() {
+  document.getElementById('register-button').addEventListener('click', function(event) {
+    let text = document.getElementById('register-button-text');
+    const registration = translator.translate('registration...');
+    text.innerHTML = registration;
+    text.setAttribute('data-i18n', registration);
+    document.getElementById('register-button-preloader').style.visible = '';
+    disable(event.currentTarget);
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = new Date().getTime();
@@ -421,7 +427,11 @@ window.onload = function() {
   }
 
   function privateKeyAvailable(message) {
-    document.getElementById('register-button').innerHTML = 'Register';
+    const register = translator.translate('register');
+    let text = document.getElementById('register-button-text');
+    text.innerHTML = register;
+    text.setAttribute('data-i18n', register);
+    document.getElementById('register-button-preloader').style.visible = 'hidden';
     document.getElementById('registration-button-message').innerHTML = message;
     validateRegistration();
   }
