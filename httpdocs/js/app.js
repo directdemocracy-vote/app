@@ -415,7 +415,6 @@ window.onload = function() {
           element: image,
           value: randomString,
           level: 'M',
-          200,
           padding: 0
         });
         app.dialog.create({
