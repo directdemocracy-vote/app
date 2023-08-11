@@ -411,6 +411,7 @@ window.onload = function() {
     });
     let swiper = document.getElementById('swiper-container');
     swiper.swiper.allowTouchMove = (page === 'card');
+    console.log('allow touch move: ' + (page === 'card'));
     swiper.setAttribute('speed', (page === 'card') ? '300' : '0');
     const cards = ['endorse', 'vote', 'sign'];
     cards.forEach(function(i) {
@@ -562,13 +563,11 @@ window.onload = function() {
 
 function removeClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  console.log('removeClass ' + className + ': ' + item + ' ' + i);
   i.classList.remove(className);
 }
 
 function addClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
-  console.log('addClass ' + className + ': ' + item + ' ' + i);
   if (i.classList.contains(className))
     return;
   i.classList.add(className);
