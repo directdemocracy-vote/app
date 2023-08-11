@@ -559,11 +559,13 @@ window.onload = function() {
 
 function removeClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  console.log('removeClass ' + c + ': ' + item + ' ' + i);
   i.classList.remove(className);
 }
 
 function addClass(item, className) {
   let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  console.log('addClass ' + c + ': ' + item + ' ' + i);
   if (i.classList.contains(className))
     return;
   i.classList.add(className);
