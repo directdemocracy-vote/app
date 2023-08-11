@@ -64,6 +64,14 @@ app.on('pageBeforeRemove', function(page) {
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
+window.addEventListener('online', () => {
+  console.log('Became online');
+});
+
+window.addEventListener('offline', () => {
+  console.log('Became offline');
+});
+
 window.onload = function() {
   const DIRECTDEMOCRACY_VERSION = '0.0.2';
   let citizen = {
