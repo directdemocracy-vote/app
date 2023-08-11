@@ -69,7 +69,6 @@ app.on('pageBeforeRemove', function(page) {
 });
 
 app.on('pageAfterIn', function(page) {
-  /*
   if (page.name !== 'home')
     return;
   removeClass('tabbar-endorse', 'tab-link-active');
@@ -77,6 +76,7 @@ app.on('pageAfterIn', function(page) {
   removeClass('tabbar-sign', 'tab-link-active');
   removeClass('tabbar-settings', 'tab-link-active');
   addClass('tabbar-card', 'tab-link-active');
+  /*
   let card = document.getElementById('card-page');
   if (card.classList.contains('display-none'))
     return;
