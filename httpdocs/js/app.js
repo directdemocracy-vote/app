@@ -10,7 +10,7 @@ let translator = new Translator('/i18n');
 var buf = new Uint8Array(20);
 crypto.getRandomValues(buf);
 console.log(buf[0] + ' ' + buf[1] + ' ' + buf[2] + ' ' + buf[3]);
-console.log(buf.toString('hex'));
+console.log(buf.toString(16));
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
