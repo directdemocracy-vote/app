@@ -78,13 +78,11 @@ app.on('pageAfterIn', function(page) {
   removeClass('tabbar-settings', 'tab-link-active');
   addClass('tabbar-card', 'tab-link-active');
   */
-  /*
   let card = document.getElementById('card-page');
   if (card.classList.contains('display-none'))
     return;
   let swiper = document.getElementById('swiper-container');
   swiper.swiper.allowTouchMove = true;
-  */
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
