@@ -5,6 +5,7 @@ import Translator from 'https://directdemocracy.vote/js/translator.js';
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
+let scanner = null;
 let translator = new Translator('/i18n');
 
 function setupLanguagePicker() {
@@ -402,7 +403,7 @@ window.onload = function() {
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
     const video = document.getElementById('endorse-me-video');
-    let scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
+    scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
     scanner.start();
     function setResult(fingerprint) {
       scanner.destroy();
@@ -413,6 +414,8 @@ window.onload = function() {
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
+    scanner.destroy();
+    scanner = null;
     showPage('card');
   });
   
