@@ -65,11 +65,11 @@ app.on('pageBeforeRemove', function(page) {
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
-  console.log('Became online');
+  disable(document.getElementById('endorse-me-button'));
 });
 
 window.addEventListener('offline', () => {
-  console.log('Became offline');
+  enable(document.getElementById('endorse-me-button'));
 });
 
 window.onload = function() {
@@ -418,18 +418,6 @@ window.onload = function() {
     });
   }
   
-  function enable(item) {
-    let i = (typeof item === 'string') ? document.getElementById(item) : item;
-    i.classList.remove('disabled');
-  }
-
-  function disable(item) {
-    let i = (typeof item === 'string') ? document.getElementById(item) : item;
-    if (i.classList.contains('disabled'))
-      return;
-    i.classList.add('disabled');
-  }
-
   function uploadPicture() {
     document.getElementById('register-picture-upload').click();
   }
@@ -562,4 +550,16 @@ window.onload = function() {
       newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
     });
   }
+}
+
+function enable(item) {
+  let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  i.classList.remove('disabled');
+}
+
+function disable(item) {
+  let i = (typeof item === 'string') ? document.getElementById(item) : item;
+  if (i.classList.contains('disabled'))
+    return;
+  i.classList.add('disabled');
 }
