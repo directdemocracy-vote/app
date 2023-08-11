@@ -70,7 +70,7 @@ app.on('pageBeforeRemove', function(page) {
 
 app.on('pageAfterIn', function(page) {
   console.log('pageAfterIn ' + page.name);
-}
+});
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
