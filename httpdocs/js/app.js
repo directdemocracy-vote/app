@@ -400,22 +400,27 @@ window.onload = function() {
     return false;
   });
 
+  const video = document.getElementById('endorse-me-video');
+  scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
+
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
-    const video = document.getElementById('endorse-me-video');
-    scanner = new QrScanner(video, fingerprint => setResult(fingerprint));
     scanner.start();
     function setResult(fingerprint) {
+      /*
       scanner.destroy();
       scanner = null;
+      */
       showPage('card');
       console.log(fingerprint);
     }
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
+    /*
     scanner.destroy();
     scanner = null;
+    */
     showPage('card');
   });
   
