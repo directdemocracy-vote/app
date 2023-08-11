@@ -399,6 +399,10 @@ window.onload = function() {
     return false;
   });
 
+  document.getElementById('endorse-me-button').addEventListener('click', function(event) {
+    showPage('endorse-me');
+  });
+  
   document.getElementById('endorse-button').addEventListener('click', function(event) {
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
@@ -452,8 +456,9 @@ window.onload = function() {
   // 1. the register page when the citizen has not yet registered
   // 2. the splash page when downloading registered citizen data
   // 3. the card page once registered citizen data is available
+  // 4. the video scan page to get endorsed
   function showPage(page) {
-    const pages = ['splash', 'register', 'card'];
+    const pages = ['splash', 'register', 'card', 'endorse-me'];
     if (!pages.includes(page)) {
       console.error(`Page '${page}' not found`);
       return;
