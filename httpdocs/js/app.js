@@ -415,7 +415,7 @@ window.onload = function() {
       this.style.marginRight = margin + 'px'; 
     } else {
       this.style.width = '100%';
-      const margin = Math.round(10000 * (this.videoWidth - this.videoHeight) / (2 * videoWidth)) / 100.0;
+      const margin = Math.round(10000 * (this.videoWidth - this.videoHeight) / (2 * this.videoWidth)) / 100.0;
       this.style.marginTop = margin + 'px';
       this.style.marginBottom = margin + 'px';
       this.style.paddingBottom = -margin + '%'
