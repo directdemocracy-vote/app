@@ -415,7 +415,7 @@ window.onload = function() {
       this.style.marginRight = margin + 'px'; 
     } else {
       this.style.width = app.width + 'px';
-      const margin = (this.videoWidth - this.video.Height) / 2;
+      const margin = (this.videoWidth - this.videoHeight) / 2;
       this.style.marginTop = margin + 'px';
       this.style.marginBottom = margin + 'px'; 
 
