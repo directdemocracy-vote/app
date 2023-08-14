@@ -413,6 +413,14 @@ window.onload = function() {
       const margin = (app.width - width) / 2;
       this.style.marginLeft = margin + 'px';
       this.style.marginRight = margin + 'px'; 
+    } else {
+      const ratio = this.videoWidth / this.videoHeight;
+      const width = app.width * ratio;
+      this.style.width = width + 'px';
+      const margin = (app.width - width) / 2;
+      this.style.marginTop = margin + 'px';
+      this.style.marginBottom = margin + 'px'; 
+
     }
     /*
     if (this.videoWidth > this.videoHeight) {
