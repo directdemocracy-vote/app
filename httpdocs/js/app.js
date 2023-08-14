@@ -418,12 +418,11 @@ window.onload = function() {
     }
   }
 
-  scanner = new QrScanner(video, value => setResult(value));
-  function setResult(value) {
+  scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
     console.log(value);
-  }
+  });
 
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
