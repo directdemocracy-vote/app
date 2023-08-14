@@ -408,6 +408,14 @@ window.onload = function() {
     this.style.height = "500px";
     console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
+    if (this.videoWith > this.videoHeight) {
+      const ratio = this.videoWidth / this.videoHeight;
+      const width = app.width * ratio;
+      this.style.width = width + 'px';
+      const margin = width - app.width; 
+      this.style.marginLeft = margin + 'px';
+      this.style.marginRight = margin + 'px'; 
+    }
     /*
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
