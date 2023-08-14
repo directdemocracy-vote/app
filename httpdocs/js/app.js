@@ -408,7 +408,6 @@ window.onload = function() {
     this.style.height = "500px";
     console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
-    if (this.videoWidth)
     /*
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
