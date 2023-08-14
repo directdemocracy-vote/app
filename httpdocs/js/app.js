@@ -410,7 +410,7 @@ window.onload = function() {
       const ratio = this.videoWidth / this.videoHeight;
       const width = app.width * ratio;
       this.style.width = width + 'px';
-      const margin = width - app.width; 
+      const margin = (width - app.width) / 2;
       this.style.marginLeft = margin + 'px';
       this.style.marginRight = margin + 'px'; 
     }
