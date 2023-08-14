@@ -404,23 +404,21 @@ window.onload = function() {
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
   function qrVideo() { // display video as a square centered in the video rectangle
-    this.videoHeight = 1280;
-    this.videoWidth = 480;
     console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
     if (this.videoWidth > this.videoHeight) {
       const ratio = this.videoWidth / this.videoHeight;
       const width = app.width * ratio;
       this.style.width = width + 'px';
-      const margin = (app.width - width) / 2;
+      const margin = Math.round((app.width - width) / 2);
       this.style.marginLeft = margin + 'px';
       this.style.marginRight = margin + 'px'; 
     } else {
-      this.style.width = app.width + 'px';
-      const margin = (this.videoWidth - this.videoHeight) / 2;
+      this.style.width = '100%';
+      const margin = Math.round(10000 * (this.videoWidth - this.videoHeight) / (2 * videoWidth)) / 100.0;
       this.style.marginTop = margin + 'px';
-      this.style.marginBottom = margin + 'px'; 
-
+      this.style.marginBottom = margin + 'px';
+      this.style.paddingBottom = -margin + '%'
     }
     /*
     if (this.videoWidth > this.videoHeight) {
