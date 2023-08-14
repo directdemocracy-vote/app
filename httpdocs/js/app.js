@@ -414,11 +414,10 @@ window.onload = function() {
       this.style.marginLeft = margin + 'px';
       this.style.marginRight = margin + 'px'; 
     } else {
+      const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
       this.style.width = '100%';
-      const margin = Math.round(10000 * (this.videoWidth - this.videoHeight) / (2 * this.videoWidth)) / 100.0;
-      this.style.marginTop = margin + 'px';
-      this.style.marginBottom = margin + 'px';
-      this.style.paddingBottom = -margin + '%'
+      this.style.marginTop = margin + '%';
+      this.style.marginBottom = margin + '%';
     }
     /*
     if (this.videoWidth > this.videoHeight) {
