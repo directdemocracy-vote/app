@@ -404,6 +404,9 @@ window.onload = function() {
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
   function qrVideo() { // display video as a square centered in the video rectangle
+    this.style.width = "500px";
+    this.style.height = "500px";
+    /*
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
       const size = -2 * margin + 100;
@@ -416,6 +419,7 @@ window.onload = function() {
       this.style.marginTop = margin + '%';
       this.style.marginBottom = margin + '%';
     }
+    */
   }
 
   scanner = new QrScanner(video, function(value) {
