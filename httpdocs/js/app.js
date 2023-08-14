@@ -418,7 +418,7 @@ window.onload = function() {
     }
   }
 
-  scanner = new QrScanner(video, fingerprint => setResult(value));
+  scanner = new QrScanner(video, value => setResult(value));
   function setResult(value) {
     scanner.stop();
     showPage('card');
