@@ -404,6 +404,8 @@ window.onload = function() {
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
   function qrVideo() { // display video as a square centered in the video rectangle
+    this.videoHeight = 1280;
+    this.videoWidth = 480;
     console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
     if (this.videoWidth > this.videoHeight) {
