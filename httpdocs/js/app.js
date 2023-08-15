@@ -426,10 +426,9 @@ window.onload = function() {
     challengeScanner.stop();
     showPage('card');
     const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
-    console.log('signature SHA256 = ' + citizenCrypt.sign(value, CryptoJS.SHA1256, 'sha256'));
-    console.log('signature SHA1   = ' + citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1'));
-    console.log('signature MD5    = ' + citizenCrypt.sign(value, CryptoJS.MD5, 'md5'));
-    console.log('signature MD2    = ' + citizenCrypt.sign(value, CryptoJS.MD2, 'md2'));
+    console.log('signature SHA256 = ' + citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256').toString());
+    console.log('signature SHA1   = ' + citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1').toString());
+    console.log('signature MD5    = ' + citizenCrypt.sign(value, CryptoJS.MD5, 'md5').toString());
     const qr = new QRious({
       value: citizenFingerprint + signature,
       level: 'M',
