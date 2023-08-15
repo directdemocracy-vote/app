@@ -459,26 +459,26 @@ window.onload = function() {
   });
   
   document.getElementById('endorse-button').addEventListener('click', function() {
+    const randomBytes = new Uint8Array(20);
+    crypto.getRandomValues(randomBytes);
+    let randomString = '', hex = '0123456789abcdef';
+    randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
+    console.log(randomString);
+    let image = document.createElement('img');
+    let qr = new QRious({
+      element: image,
+      value: randomString,
+      level: 'M',
+      size: 512,
+      padding: 0
+    });
+    image.style.width = '100%';
+    image.style.height = '100%';
+    image.classList.add('margin-top');
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
       buttons: [{text: 'Confirm', onClick: function() {
-        const randomBytes = new Uint8Array(20);
-        crypto.getRandomValues(randomBytes);
-        let randomString = '', hex = '0123456789abcdef';
-        randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
-        console.log(randomString);
-        let image = document.createElement('img');
-        let qr = new QRious({
-          element: image,
-          value: randomString,
-          level: 'M',
-          size: 512,
-          padding: 0
-        });
-        image.style.width = '100%';
-        image.style.height = '100%';
-        image.classList.add('margin-top');
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: image.outerHTML,
