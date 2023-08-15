@@ -523,8 +523,7 @@ window.onload = function() {
      })
      .catch((error) => {
       app.dialog.alert(error, 'Could not get citizen from publisher');
-     } 
-
+     });
   });
 
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
