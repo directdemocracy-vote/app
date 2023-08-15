@@ -422,8 +422,8 @@ window.onload = function() {
   scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
-    const signature = CryptoJS.SHA1(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256')).toString();
-    // FIXME: it this safe enough? If yes, can we instead use citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1')?
+    const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
+    // FIXME: is this safe enough or shall we revert to SHA256, but that would generate a huge QR code?
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
