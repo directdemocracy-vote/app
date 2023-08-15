@@ -424,8 +424,7 @@ window.onload = function() {
   challengeScanner = new QrScanner(challengeVideo, function(value) {
     challengeScanner.stop();
     showPage('card');
-    const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
-    // FIXME: is SHA1 safe enough for this or shall we revert to SHA256, but that would generate a huge QR code?
+    const signature = CryptoJS.SHA1(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256')).toString();
     console.log('signature = ' + signature);
     let image = document.createElement('img');
     let qr = new QRious({
