@@ -426,22 +426,17 @@ window.onload = function() {
     showPage('card');
     const signature = CryptoJS.SHA1(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256')).toString();
     console.log('signature = ' + signature);
-    let image = document.createElement('img');
-    let qr = new QRious({
-      element: image,
+    const qr = new QRious({
       value: citizenFingerprint + signature,
       level: 'M',
       size: 512,
       padding: 0
     });
-    image.style.width = '100%';
-    image.style.height = '100%';
-    image.classList.add('margin-top');
     const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
     const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
     app.dialog.create({
       title: 'Ask the citizen to scan this QR-code',
-      content: image.outerHTML,
+      content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
       buttons: [{text: 'Done', onClick: function() {
         app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
       }}]
@@ -468,13 +463,12 @@ window.onload = function() {
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
         console.log('Challenge 1 = ' + randomString);
-        let qr = new QRious({
+        const qr = new QRious({
           value: randomString,
           level: 'M',
           size: 512,
           padding: 0
         });
-        console.log(qr.toDataURL());
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
