@@ -471,7 +471,7 @@ window.onload = function() {
         const randomString2 = btoa(Array.from(randomBytes, (x) => String.fromCodePoint(x)).join("")).slice(0,-1);  // remove the last "="
         console.log('Challenge 2 = ' + randomString2);
         let qr = new QRious({
-          value: randomString,
+          value: randomString2,
           level: 'M',
           size: 512,
           padding: 0
