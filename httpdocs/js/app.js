@@ -411,12 +411,16 @@ window.onload = function() {
       this.style.width = width + 'px';
       const margin = Math.round((app.width - width) / 2);
       this.style.marginLeft = margin + 'px';
-      this.style.marginRight = margin + 'px'; 
+      this.style.marginRight = margin + 'px';
+      this.style.marginTop = '';
+      this.style.marginBottom = '';
     } else {
       const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
       this.style.width = '100%';
       this.style.marginTop = margin + '%';
       this.style.marginBottom = margin + '%';
+      this.style.marginLeft = '';
+      this.style.marginRight = '';
     }
   });
 
