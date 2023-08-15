@@ -422,7 +422,25 @@ window.onload = function() {
   scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
+    signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
     console.log(value);
+    console.log(signature);
+    let image = document.createElement('img');
+    let qr = new QRious({
+      element: image,
+      value: citizenCrypt.getPublicKey() + signature,
+      level: 'M',
+      size: 512,
+      padding: 0
+    });
+    image.style.width = '100%';
+    image.style.height = '100%';
+    image.classList.add('margin-top');
+    app.dialog.create({
+      title: 'Ask the citizen to scan this QR-code',
+      content: image.outerHTML,
+      buttons: [{text: 'Done'}, {text: 'Cancel'}]
+    }).open();
   });
 
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
@@ -527,9 +545,7 @@ window.onload = function() {
   function createNewKey() {
     let dt = new Date();
     let time = -(dt.getTime());
-    citizenCrypt = new JSEncrypt({
-      default_key_size: 2048
-    });
+    citizenCrypt = new JSEncrypt({default_key_size: 2048});
     citizenCrypt.getKey(function() {
       dt = new Date();
       time += (dt.getTime());
