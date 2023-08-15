@@ -405,10 +405,19 @@ window.onload = function() {
   video.addEventListener('loadedmetadata', function() {
     console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
-    const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
-    this.style.width = '100%';
-    this.style.marginTop = margin + '%';
-    this.style.marginBottom = margin + '%';
+    if (this.videoWidth > this.videoHeight) {
+      const ratio = this.videoWidth / this.videoHeight;
+      const width = app.width * ratio;
+      this.style.width = width + 'px';
+      const margin = Math.round((app.width - width) / 2);
+      this.style.marginLeft = margin + 'px';
+      this.style.marginRight = margin + 'px'; 
+    } else {
+      const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
+      this.style.width = '100%';
+      this.style.marginTop = margin + '%';
+      this.style.marginBottom = margin + '%';
+    }
   });
 
 /*
