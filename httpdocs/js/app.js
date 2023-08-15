@@ -467,7 +467,8 @@ window.onload = function() {
         crypto.getRandomValues(randomBytes);
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
-        console.log('Challenge = ' + randomString);
+        console.log('Challenge 1 = ' + randomString);
+        console.log('Challenge 2 = ' + btoa(randomBytes));
         let qr = new QRious({
           value: randomString,
           level: 'M',
