@@ -422,7 +422,7 @@ window.onload = function() {
   scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
-    signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
+    const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
     console.log(value);
     console.log(signature);
     let image = document.createElement('img');
