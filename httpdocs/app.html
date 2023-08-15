@@ -175,15 +175,23 @@
               </div>
               <div id="endorse-me-page" class="display-none">
                 <div style="overflow:hidden">
-                  <video muted playsinline id="endorse-me-video"></video>
+                  <video muted playsinline id="challenge-video"></video>
                 </div>
                 <div class="block no-margin-top text-align-center">Scan the QR code on the phone of your endorser.
                   <button class="button button-fill margin-top-half" id="cancel-endorse-me-button">Cancel</button>
                 </div>
-          </div>
+              </div>
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-endorse">
-              <div class="block">
+              <div id="endorse-scanner" class="display-none">
+                <div style="overflow:hidden">
+                  <video muted playsinline id="answer-video"></video>
+                </div>
+                <div class="block no-margin-top text-align-center">Scan the QR code on the phone of your fellow citizen.
+                  <button class="button button-fill margin-top-half" id="cancel-endorse-button">Cancel</button>
+                </div>
+              </div>
+              <div id="endorse-page" class="block">
                 <button class="button button-fill" id="endorse-button" data-i18n="endorse-button"></button>
                 <div id="endorse-message" class="item-label" style="display:flex;width:100%;justify-content:center" data-i18n="endorse-message"></div>
               </div>

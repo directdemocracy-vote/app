@@ -5,7 +5,8 @@ import Translator from 'https://directdemocracy.vote/js/translator.js';
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
-let scanner = null;
+let challengeScanner = null;
+let answerScanner = null;
 let translator = new Translator('/i18n');
 const DIRECTDEMOCRACY_VERSION = '0.0.2';
 let citizen = {
@@ -128,7 +129,8 @@ let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
   disable('endorse-me-button');
-  // FIXME: update reputation from trustee
+  getReputationFromTrustee();
+  updateCitizenEndorsements();
 });
 
 window.addEventListener('offline', () => {
@@ -401,8 +403,8 @@ window.onload = function() {
   });
 
 
-  const video = document.getElementById('endorse-me-video');
-  document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
+  const challengeVideo = document.getElementById('challenge-video');
+  challengeVideo.addEventListener('loadedmetadata', qrVideo);
 
   function qrVideo() { // display video as a square centered in the video rectangle
     if (this.videoWidth > this.videoHeight) {
@@ -419,11 +421,11 @@ window.onload = function() {
     }
   }
 
-  scanner = new QrScanner(video, function(value) {
-    scanner.stop();
+  challengeScanner = new QrScanner(challengeVideo, function(value) {
+    challengeScanner.stop();
     showPage('card');
     const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
-    // FIXME: is this safe enough or shall we revert to SHA256, but that would generate a huge QR code?
+    // FIXME: is SHA1 safe enough for this or shall we revert to SHA256, but that would generate a huge QR code?
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
@@ -448,11 +450,11 @@ window.onload = function() {
 
   document.getElementById('endorse-me-button').addEventListener('click', function(event) {
     showPage('endorse-me');
-    scanner.start();
+    challengeScanner.start();
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
-    scanner.stop();
+    challengeScanner.stop();
     showPage('card');
   });
   
@@ -480,10 +482,25 @@ window.onload = function() {
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: image.outerHTML,
-          buttons: [{text: 'Done'}, {text: 'Cancel'}]
+          buttons: [{text: 'Done', onClick: function() {
+            console.log('Scanning answer to challenge');
+            document.getElementById('endorse-page').addClass('display-none');
+            document.getElementById('endorse-scanner').removeClass('display-none');
+          }}]
         }).open();
       }}, {text: 'Cancel'}]
     }).open();
+  });
+
+  const answerVideo = document.getElementById('answer-video');
+  answerVideo.addEventListener('loadedmetadata', qrVideo);
+
+  answerScanner = new QrScanner(answerVideo, function(value) {
+    answerScanner.stop();
+    showPage('card');
+    console.log('checking signature...');
+    // check signature
+
   });
 
   function validateRegistration() {
@@ -587,45 +604,7 @@ window.onload = function() {
     document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
     citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
     getReputationFromTrustee();
-    let list = document.getElementById('citizen-endorsements-list');
-    let badge = document.getElementById('endorsed-badge');
-    if (citizenEndorsements.length == 0) {
-      list.innerHTML =
-        `<div class="block-title" data-i18n="not-endorsed">${translator.translate('not-endorsed')}</div>` +
-        `<div class="block" data-i18n="ask-others-to-endorse-you">${translator.translate('ask-others-to-endorse-you')}</div>`;
-      badge.style.background = 'red';
-      badge.innerHTML = '0';
-      return;
-    }
-    let revokeCount = 0;
-    citizenEndorsements.forEach(function(endorsement) {
-      if (endorsement.revoke)
-        revokeCount++;
-    });
-    let endorsementCount = citizenEndorsements.length - revokeCount;
-    badge.innerHTML = endorsementCount;
-    const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
-    let title = newElement(list, 'div', 'block-title', endorsementCount + '/' + citizenEndorsements.length + ' ' +
-      plural);
-    citizenEndorsements.forEach(function(endorsement) {
-      let card = newElement(list, 'div', 'card');
-      if (endorsement.revoke)
-        card.classList.add('revoked');
-      let content = newElement(card, 'div', 'card-content card-content-padding');
-      let row = newElement(content, 'div', 'row');
-      let col = newElement(row, 'div', 'col-25');
-      let img = newElement(col, 'img');
-      img.src = endorsement.picture;
-      img.style.width = '100%';
-      col = newElement(row, 'div', 'col-75');
-      let a = newElement(col, 'a', 'link external',
-        `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
-      a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
-      a.target = '_blank';
-      row = newElement(col, 'div', 'row');
-      const t = new Date(endorsement.published).toISOString().slice(0, 10);
-      newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
-    });
+    updateCitizenEndorsements();
   }
 }
 
@@ -648,6 +627,48 @@ function getReputationFromTrustee() {
     }})
   .catch((error) => {
     app.dialog.alert(error, 'Could not get reputation from trustee.');
+  });
+}
+
+function updateCitizenEndorsements() {
+  let list = document.getElementById('citizen-endorsements-list');
+  let badge = document.getElementById('endorsed-badge');
+  if (citizenEndorsements.length == 0) {
+    list.innerHTML =
+      `<div class="block-title" data-i18n="not-endorsed">${translator.translate('not-endorsed')}</div>` +
+      `<div class="block" data-i18n="ask-others-to-endorse-you">${translator.translate('ask-others-to-endorse-you')}</div>`;
+    badge.style.background = 'red';
+    badge.innerHTML = '0';
+    return;
+  }
+  let revokeCount = 0;
+  citizenEndorsements.forEach(function(endorsement) {
+    if (endorsement.revoke)
+      revokeCount++;
+  });
+  let endorsementCount = citizenEndorsements.length - revokeCount;
+  badge.innerHTML = endorsementCount;
+  const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
+  let title = newElement(list, 'div', 'block-title', endorsementCount + '/' + citizenEndorsements.length + ' ' +
+    plural);
+  citizenEndorsements.forEach(function(endorsement) {
+    let card = newElement(list, 'div', 'card');
+    if (endorsement.revoke)
+      card.classList.add('revoked');
+    let content = newElement(card, 'div', 'card-content card-content-padding');
+    let row = newElement(content, 'div', 'row');
+    let col = newElement(row, 'div', 'col-25');
+    let img = newElement(col, 'img');
+    img.src = endorsement.picture;
+    img.style.width = '100%';
+    col = newElement(row, 'div', 'col-75');
+    let a = newElement(col, 'a', 'link external',
+      `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
+    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
+    a.target = '_blank';
+    row = newElement(col, 'div', 'row');
+    const t = new Date(endorsement.published).toISOString().slice(0, 10);
+    newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
   });
 }
 
