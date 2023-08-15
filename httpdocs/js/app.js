@@ -428,7 +428,7 @@ window.onload = function() {
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
-      value: citizenCrypt.getPublicKey() + signature,
+      value: citizenFingerprint + signature,
       level: 'M',
       size: 512,
       padding: 0
