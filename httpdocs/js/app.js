@@ -33,7 +33,6 @@ if (!trustee) {
   trustee = 'https://trustee.directdemocracy.vote';
   localStorage.setItem('trustee', trustee);
 }
-let station = null;
 let station = localStorage.getItem('station');
 if (!station) {
   station = 'https://station.directdemocracy.vote';
