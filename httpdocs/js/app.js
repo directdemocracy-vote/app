@@ -468,7 +468,7 @@ window.onload = function() {
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
         console.log('Challenge 1 = ' + randomString);
-        console.log('Challenge 2 = ' + btoa(randomBytes));
+        console.log('Challenge 2 = ' + btoa(Array.from(randomBytes, (x) => String.fromCodePoint(x)).join("")));
         let qr = new QRious({
           value: randomString,
           level: 'M',
