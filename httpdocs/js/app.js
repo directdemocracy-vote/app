@@ -426,6 +426,7 @@ window.onload = function() {
     showPage('card');
     const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
     // FIXME: is SHA1 safe enough for this or shall we revert to SHA256, but that would generate a huge QR code?
+    console.log('signature = ' + signature);
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
