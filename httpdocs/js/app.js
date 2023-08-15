@@ -7,6 +7,38 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let scanner = null;
 let translator = new Translator('/i18n');
+const DIRECTDEMOCRACY_VERSION = '0.0.2';
+let citizen = {
+  schema: '',
+  key: '',
+  signature: '',
+  published: 0,
+  givenNames: '',
+  familyName: '',
+  picture: '',
+  latitude: 0,
+  longitude: 0
+};
+let citizenCrypt = null;
+let citizenFingerprint = null;
+let citizenEndorsements = [];
+let endorsements = [];
+let publisher = localStorage.getItem('publisher');
+if (!publisher) {
+  publisher = 'https://publisher.directdemocracy.vote';
+  localStorage.setItem('publisher', publisher);
+}
+let trustee = localStorage.getItem('trustee');
+if (!trustee) {
+  trustee = 'https://trustee.directdemocracy.vote';
+  localStorage.setItem('trustee', trustee);
+}
+let station = null;
+let station = localStorage.getItem('station');
+if (!station) {
+  station = 'https://station.directdemocracy.vote';
+  localStorage.setItem('station', station);
+}
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -105,48 +137,16 @@ window.addEventListener('offline', () => {
 });
 
 window.onload = function() {
-  const DIRECTDEMOCRACY_VERSION = '0.0.2';
-  let citizen = {
-    schema: '',
-    key: '',
-    signature: '',
-    published: 0,
-    givenNames: '',
-    familyName: '',
-    picture: '',
-    latitude: 0,
-    longitude: 0
-  };
-  let citizenCrypt = null;
-  let citizenFingerprint = null;
-  let citizenEndorsements = [];
-  let endorsements = [];
-
-  let publisher = localStorage.getItem('publisher');
-  if (!publisher) {
-    publisher = 'https://publisher.directdemocracy.vote';
-    localStorage.setItem('publisher', publisher);
-  }
   document.getElementById('publisher').value = publisher;
   document.getElementById('publisher').addEventListener('input', function(event) {
     publisher = event.target.value;
     localStorage.setItem('publisher', publisher);
   });
-  let trustee = localStorage.getItem('trustee');
-  if (!trustee) {
-    trustee = 'https://trustee.directdemocracy.vote';
-    localStorage.setItem('trustee', trustee);
-  }
   document.getElementById('trustee').value = trustee;
   document.getElementById('trustee').addEventListener('input', function(event) {
     trustee = event.target.value;
     localStorage.setItem('trustee', trustee);
   });
-  let station = localStorage.getItem('station');
-  if (!station) {
-    station = 'https://station.directdemocracy.vote';
-    localStorage.setItem('station', station);
-  }
   document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
     station = event.target.value;
