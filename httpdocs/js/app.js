@@ -422,14 +422,12 @@ window.onload = function() {
   scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
-    const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
-    const signatureFingerprint = CryptoJS.SHA1(signature).toString();
-    console.log(value);
-    console.log(signatureFingerprint);
+    const signature = CryptoJS.SHA1(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256')).toString();
+    // FIXME: it this safe enough? If yes, can we instead use citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1')?
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
-      value: citizenFingerprint + signatureFingerprint,
+      value: citizenFingerprint + signature,
       level: 'M',
       size: 512,
       padding: 0
@@ -440,7 +438,9 @@ window.onload = function() {
     app.dialog.create({
       title: 'Ask the citizen to scan this QR-code',
       content: image.outerHTML,
-      buttons: [{text: 'Done'}, {text: 'Cancel'}]
+      buttons: [{text: 'Done', onClick: function() {
+        app.dialog.alert('You can now safely turn on the airplane mode again.', 'Airplane mode not needed any more');
+      }}]
     }).open();
   });
 
