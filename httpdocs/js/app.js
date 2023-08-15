@@ -486,6 +486,7 @@ window.onload = function() {
             console.log('Scanning answer to challenge');
             hide('endorse-page');
             show('endorse-scanner');
+            answerVideo.start();
           }}]
         }).open();
       }}, {text: 'Cancel'}]
