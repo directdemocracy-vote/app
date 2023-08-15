@@ -426,11 +426,14 @@ window.onload = function() {
     console.log('Value = ' + value);
     challengeScanner.stop();
     showPage('card');
-    const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
+    const signature = atob(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256'));
+    let fingerprint = '';
+    for(i = 0; i < 20; i++)
+      fingerprint += fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
     // signature is pretty long, e.g., 256 bytes while the citizen fingerprint is only 20 bytes
     // so the QR code is pretty huge...
     const qr = new QRious({
-      value: citizenFingerprint + signature,
+      value: fingerprint + signature,
       level: 'M',
       size: 512,
       padding: 0
