@@ -435,11 +435,13 @@ window.onload = function() {
     image.style.width = '100%';
     image.style.height = '100%';
     image.classList.add('margin-top');
+    const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
+    const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
     app.dialog.create({
       title: 'Ask the citizen to scan this QR-code',
       content: image.outerHTML,
       buttons: [{text: 'Done', onClick: function() {
-        app.dialog.alert('You can now safely turn on the airplane mode again.', 'Airplane mode not needed any more');
+        app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
       }}]
     }).open();
   });
