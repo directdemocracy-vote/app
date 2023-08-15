@@ -97,6 +97,7 @@ let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
   disable('endorse-me-button');
+  // FIXME: update reputation from trustee
 });
 
 window.addEventListener('offline', () => {
