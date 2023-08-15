@@ -468,21 +468,16 @@ window.onload = function() {
         let randomString = '', hex = '0123456789abcdef';
         randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
         console.log('Challenge = ' + randomString);
-        let image = document.createElement('img');
         let qr = new QRious({
-          element: image,
           value: randomString,
           level: 'M',
           size: 512,
           padding: 0
         });
-        console.log(image.src);
-        image.style.width = '100%';
-        image.style.height = '100%';
-        image.classList.add('margin-top');
+        console.log(qr.toDataURL());
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
-          content: image.outerHTML,
+          content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
           buttons: [{text: 'Done', onClick: function() {
             console.log('Scanning answer to challenge');
             hide('endorse-page');
