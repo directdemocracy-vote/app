@@ -448,17 +448,17 @@ window.onload = function() {
     }).open();
   });
 
-  document.getElementById('endorse-me-button').addEventListener('click', function(event) {
+  document.getElementById('endorse-me-button').addEventListener('click', function() {
     showPage('endorse-me');
     challengeScanner.start();
   });
 
-  document.getElementById('cancel-endorse-me-button').addEventListener('click', function(event) {
+  document.getElementById('cancel-endorse-me-button').addEventListener('click', function() {
     challengeScanner.stop();
     showPage('card');
   });
   
-  document.getElementById('endorse-button').addEventListener('click', function(event) {
+  document.getElementById('endorse-button').addEventListener('click', function() {
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
@@ -498,10 +498,17 @@ window.onload = function() {
 
   answerScanner = new QrScanner(answerVideo, function(value) {
     answerScanner.stop();
-    showPage('card');
+    hide('endorse-scanner');
+    show('endorse-page');
     console.log('checking signature...');
     // check signature
 
+  });
+
+  document.getElementById('cancel-endorse-button').addEventListener('click', function() {
+    answerScanner.stop();
+    hide('endorse-scanner');
+    show('endorse-page');
   });
 
   function validateRegistration() {
