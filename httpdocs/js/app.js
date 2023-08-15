@@ -429,7 +429,7 @@ window.onload = function() {
     const signature = atob(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
     for(let i = 0; i < 20; i++)
-      fingerprint += fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
+      fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
     const payload = fingerprint + signature;
     console.log('length = ' + payload.length);
     // signature is pretty long, e.g., 256 bytes while the citizen fingerprint is only 20 bytes
