@@ -405,29 +405,6 @@ window.onload = function() {
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
   function qrVideo() { // display video as a square centered in the video rectangle
-    console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
-    console.log('app: ' + app.width + "x" + app.height);
-    if (this.videoWidth > this.videoHeight) {
-      const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
-      const size = -2 * margin + 100;
-      this.style.width = size + '%';
-      this.style.marginLeft = margin + '%';
-      this.style.marginRight = margin + '%';
-      /*
-      const ratio = this.videoWidth / this.videoHeight;
-      const width = app.width * ratio;
-      this.style.width = width + 'px';
-      const margin = Math.round((app.width - width) / 2);
-      this.style.marginLeft = margin + 'px';
-      this.style.marginRight = margin + 'px'; 
-      */
-    } else {
-      const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
-      this.style.width = '100%';
-      this.style.marginTop = margin + '%';
-      this.style.marginBottom = margin + '%';
-    }
-    /*
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
       const size = -2 * margin + 100;
@@ -440,7 +417,6 @@ window.onload = function() {
       this.style.marginTop = margin + '%';
       this.style.marginBottom = margin + '%';
     }
-    */
   }
 
   scanner = new QrScanner(video, function(value) {
