@@ -484,8 +484,8 @@ window.onload = function() {
           content: image.outerHTML,
           buttons: [{text: 'Done', onClick: function() {
             console.log('Scanning answer to challenge');
-            document.getElementById('endorse-page').addClass('display-none');
-            document.getElementById('endorse-scanner').removeClass('display-none');
+            hide('endorse-page');
+            show('endorse-scanner');
           }}]
         }).open();
       }}, {text: 'Cancel'}]
