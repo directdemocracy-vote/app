@@ -401,9 +401,8 @@ window.onload = function() {
   });
 
 
-  const video = document.getElementById('test-video');
-  video.addEventListener('loadedmetadata', function() {
-    console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
+  document.getElementById('test-video').addEventListener('loadedmetadata', function() {
+    console.log('test-video: ' + this.videoWidth + 'x' + this.videoHeight);
     console.log('app: ' + app.width + "x" + app.height);
     if (this.videoWidth > this.videoHeight) {
       const ratio = this.videoWidth / this.videoHeight;
@@ -424,7 +423,6 @@ window.onload = function() {
     }
   });
 
-/*
   const video = document.getElementById('endorse-me-video');
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
@@ -444,7 +442,7 @@ window.onload = function() {
       this.style.marginTop = margin + '%';
       this.style.marginBottom = margin + '%';
     }
-    
+    /*
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
       const size = -2 * margin + 100;
@@ -457,9 +455,9 @@ window.onload = function() {
       this.style.marginTop = margin + '%';
       this.style.marginBottom = margin + '%';
     }
-    
+    */
   }
-*/
+
   scanner = new QrScanner(video, function(value) {
     scanner.stop();
     showPage('card');
