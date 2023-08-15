@@ -436,8 +436,8 @@ window.onload = function() {
     // so the QR code is pretty huge...
     const qr = new QRious({
       value: payload,
-      level: 'M',
-      size: 512,
+      level: 'L',
+      size: 1024,
       padding: 0
     });
     const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
@@ -474,7 +474,7 @@ window.onload = function() {
         console.log('Challenge 1 = ' + challenge);
         const qr = new QRious({
           value: challenge,
-          level: 'M',
+          level: 'L',
           size: 512,
           padding: 0
         });
