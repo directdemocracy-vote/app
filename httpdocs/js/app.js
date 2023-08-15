@@ -587,41 +587,7 @@ window.onload = function() {
     let published = new Date(citizen.published);
     document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
     citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
-    let qrImage = document.getElementById('citizen-qr-code');
-    const rect = qrImage.getBoundingClientRect();
-    const rect2 = document.getElementById('tabbar').getBoundingClientRect();
-    const height = rect2.top - rect.top;
-    const width = screen.width - 30;
-    const size = width > height ? height : width;
-    let qr = new QRious({
-      element: qrImage,
-      value: citizenFingerprint,
-      level: 'M',
-      size,
-      padding: 0
-    });
-    // get reputation from trustee
-    fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
-      .then((response) => response.json())
-      .then((answer) => {
-        let reputation = document.getElementById('citizen-reputation');
-        let badge = document.getElementById('endorsed-badge');
-        if (answer.error) {
-          reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
-          badge.classList.remove('color-blue');
-          badge.classList.add('color-red');
-        } else {
-          const color = answer.endorsed ? 'blue' : 'red';
-          reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
-          badge.classList.remove('color-red');
-          badge.classList.remove('color-blue');
-          badge.classList.add('color-' + color);
-        }
-      })
-      .catch((error) => {
-        console.error('Could not publish citizen card.');
-        console.error(error);
-      });
+    getReputationFromTrustee();
     let list = document.getElementById('citizen-endorsements-list');
     let badge = document.getElementById('endorsed-badge');
     if (citizenEndorsements.length == 0) {
@@ -662,6 +628,28 @@ window.onload = function() {
       newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
     });
   }
+}
+
+function getReputationFromTrustee() {
+  fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
+  .then((response) => response.json())
+  .then((answer) => {
+    let reputation = document.getElementById('citizen-reputation');
+    let badge = document.getElementById('endorsed-badge');
+    if (answer.error) {
+      reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
+      badge.classList.remove('color-blue');
+      badge.classList.add('color-red');
+    } else {
+      const color = answer.endorsed ? 'blue' : 'red';
+      reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
+      badge.classList.remove('color-red');
+      badge.classList.remove('color-blue');
+      badge.classList.add('color-' + color);
+    }})
+  .catch((error) => {
+    app.dialog.alert(error, 'Could not get reputation from trustee.');
+  });
 }
 
 function removeClass(item, className) {
