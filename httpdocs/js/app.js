@@ -429,7 +429,7 @@ window.onload = function() {
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
-      value: citizenFingerprint + signatureFingerPrint,
+      value: citizenFingerprint + signatureFingerprint,
       level: 'M',
       size: 512,
       padding: 0
