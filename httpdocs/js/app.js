@@ -423,12 +423,13 @@ window.onload = function() {
     scanner.stop();
     showPage('card');
     const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
+    const signatureFingerprint = CryptoJS.SHA1(signature).toString();
     console.log(value);
-    console.log(signature);
+    console.log(signatureFingerprint);
     let image = document.createElement('img');
     let qr = new QRious({
       element: image,
-      value: citizenFingerprint + signature,
+      value: citizenFingerprint + signatureFingerPrint,
       level: 'M',
       size: 512,
       padding: 0
