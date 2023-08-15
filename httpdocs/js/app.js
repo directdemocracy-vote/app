@@ -400,6 +400,18 @@ window.onload = function() {
     return false;
   });
 
+
+  const video = document.getElementById('test-video');
+  video.addEventListener('loadedmetadata', function() {
+    console.log('video: ' + this.videoWidth + 'x' + this.videoHeight);
+    console.log('app: ' + app.width + "x" + app.height);
+    const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
+    this.style.width = '100%';
+    this.style.marginTop = margin + '%';
+    this.style.marginBottom = margin + '%';
+  });
+
+
   const video = document.getElementById('endorse-me-video');
   document.getElementById('endorse-me-video').addEventListener('loadedmetadata', qrVideo);
 
