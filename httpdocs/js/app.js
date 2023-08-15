@@ -6,6 +6,7 @@ let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
 let challengeScanner = null;
+let challenge = '';
 let answerScanner = null;
 let translator = new Translator('/i18n');
 const DIRECTDEMOCRACY_VERSION = '0.0.2';
@@ -424,8 +425,11 @@ window.onload = function() {
   challengeScanner = new QrScanner(challengeVideo, function(value) {
     challengeScanner.stop();
     showPage('card');
-    const signature = CryptoJS.SHA1(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256')).toString();
-    console.log('signature = ' + signature);
+    const signature = citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1');
+    console.log('signature SHA256 = ' + citizenCrypt.sign(value, CryptoJS.SHA1256, 'sha256'));
+    console.log('signature SHA1   = ' + citizenCrypt.sign(value, CryptoJS.SHA1, 'sha1'));
+    console.log('signature MD5    = ' + citizenCrypt.sign(value, CryptoJS.MD5, 'md5'));
+    console.log('signature MD2    = ' + citizenCrypt.sign(value, CryptoJS.MD2, 'md2'));
     const qr = new QRious({
       value: citizenFingerprint + signature,
       level: 'M',
@@ -460,11 +464,12 @@ window.onload = function() {
       buttons: [{text: 'Confirm', onClick: function() {
         const randomBytes = new Uint8Array(20);
         crypto.getRandomValues(randomBytes);
-        let randomString = '', hex = '0123456789abcdef';
-        randomBytes.forEach((v) => { randomString += hex[v >> 4] + hex[v & 15]; });
-        console.log('Challenge 1 = ' + randomString);
+        challenge = '';
+        const hex = '0123456789abcdef';
+        randomBytes.forEach((v) => { challenge += hex[v >> 4] + hex[v & 15]; });
+        console.log('Challenge 1 = ' + challenge);
         const qr = new QRious({
-          value: randomString,
+          value: challenge,
           level: 'M',
           size: 512,
           padding: 0
@@ -490,8 +495,35 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
-    console.log('checking signature...');
-    // check signature
+    const fingerprint = value.slice(0,20);
+    const signature = value.slice(20, 40);
+    console.log('fingerprint: ' + fingerprint);
+    console.log('signature:   ' + signature);
+    // get endorsee from fingerprint
+    fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
+     .then((response) => response.json())
+     .then((endorsed) => {
+       if (endorsed.hasOwnProperty('error')) {
+         app.dialog.alert(error, 'Error getting citizen from publisher');
+         return;
+       }
+       // verify signature of endorsed
+       let endorsedSignature = endorsed.signature;
+       endorsed.signature = '';
+       let verify = new JSEncrypt();
+       verify.setPublicKey(publicKey(endorsed.key));
+       if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
+        app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
+        return;
+       }
+       if (!verify.verify(signature, endorsedSignature, CryptoJS.SHA1)) {
+         app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+         return;         
+       }
+     })
+     .catch((error) => {
+      app.dialog.alert(error, 'Could not get citizen from publisher');
+     } 
 
   });
 
