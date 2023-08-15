@@ -430,6 +430,8 @@ window.onload = function() {
     let fingerprint = '';
     for(i = 0; i < 20; i++)
       fingerprint += fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
+    const value = fingerprint + signature;
+    console.log('length = ' + value.length);
     // signature is pretty long, e.g., 256 bytes while the citizen fingerprint is only 20 bytes
     // so the QR code is pretty huge...
     const qr = new QRious({
