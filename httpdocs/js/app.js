@@ -493,6 +493,8 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
+    console.log('value.length = ' + value.length);
+    console.log('value = ' + value);
     const binaryFingerprint = value.slice(0,20);
     let fingerprint = '';
     const hex = '0123456789abcdef';
@@ -524,7 +526,7 @@ window.onload = function() {
        }
      })
      .catch((error) => {
-      app.dialog.alert(error, 'Could not get citizen from publisher');
+       app.dialog.alert(error, 'Could not get citizen from publisher');
      });
   });
 
