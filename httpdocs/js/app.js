@@ -155,15 +155,6 @@ window.addEventListener('offline', () => {
   enable('endorse-me-button');
 });
 
-function reorient(e) {
-  const portrait = (window.orientation % 180 == 0);
-  console.log('portrait = ' + portrait);
-  if (!portrait)
-    document.querySelector('body > div').style.rotate='-90deg';
-}
-window.onorientationchange = reorient;
-window.setTimeout(reorient, 0);
-
 window.onload = function() {
   document.getElementById('publisher').value = publisher;
   document.getElementById('publisher').addEventListener('input', function(event) {
