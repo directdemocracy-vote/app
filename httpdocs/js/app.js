@@ -423,13 +423,14 @@ window.onload = function() {
   }
 
   challengeScanner = new QrScanner(challengeVideo, function(value) {
-    console.log('Value = ' + value);
+    console.log('data = ' + value.data);
+    console.log('bytes = ' + value.bytes);
     challengeScanner.stop();
     showPage('card');
-    const signature = atob(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256'));
+    const signature = atob(citizenCrypt.sign(value.data, CryptoJS.SHA256, 'sha256'));
 
 
-    // const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
+    // const signature = citizenCrypt.sign(value.data, CryptoJS.SHA256, 'sha256');
 
 
     let fingerprint = '';
@@ -439,7 +440,7 @@ window.onload = function() {
 
     // let fingerprint = citizenFingerprint;
 
-    
+
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
@@ -457,7 +458,7 @@ window.onload = function() {
         app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
       }}]
     }).open();
-  });
+  }, {returnDetailedScanResult: true});
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
     showPage('endorse-me');
@@ -505,14 +506,15 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
-    console.log('value.length = ' + value.length);
-    console.log('value = ' + value);
-    const binaryFingerprint = value.slice(0,20);
+    console.log('data.length = ' + value.data.length);
+    console.log('data = ' + value.data);
+    console.log('bytes = ' + value.bytes);
+    const binaryFingerprint = value.data.slice(0,20);
     let fingerprint = '';
     const hex = '0123456789abcdef';
     for(const v of binaryFingerprint)
       fingerprint += hex[v >> 4] + hex[v & 15];
-    const signature = btoa(value.slice(20, 276));
+    const signature = btoa(value.data.slice(20, 276));
     console.log('fingerprint: ' + fingerprint);
     console.log('signature:   ' + signature);
     // get endorsee from fingerprint
@@ -540,7 +542,7 @@ window.onload = function() {
      .catch((error) => {
        app.dialog.alert(error, 'Could not get citizen from publisher');
      });
-  });
+  },{returnDetailedScanResult: true});
 
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
     answerScanner.stop();
