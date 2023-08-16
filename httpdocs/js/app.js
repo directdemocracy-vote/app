@@ -2,11 +2,19 @@ import QrScanner from './qr-scanner.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
 
-if (typeof ScreenOrientation.lock === 'function')
-  ScreenOrientation.lock('portrait');
+if (typeof screen.orientation.lock === 'function')
+  screen.orientation.lock('portrait-primary')
+    .then(() => {
+      console.log('Locked screen to portrait orientation.');
+    })
+    .catch((error) => {
+      console.log('Cannot lock screen to portrait orientation.');
+    });
 else {
   screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
-  screen.lockOrientationUniversal('portrait');
+  if (!screen.lockOrientationUniversal('portrait-primary')) {
+    console.log('Failed to lock screen to portrait orientation.');
+  }
 }
 
 let languagePicker;
