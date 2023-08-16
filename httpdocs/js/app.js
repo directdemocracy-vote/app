@@ -493,9 +493,11 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
+    const binaryFingerprint = value.slice(0,20);
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    value.slice(0,20).forEach((v) => { fingerprint += hex[v >> 4] + hex[v & 15]; });
+    for(const v of binaryFingerprint)
+      fingerprint += hex[v >> 4] + hex[v & 15];
     const signature = btoa(value.slice(20, 276));
     console.log('fingerprint: ' + fingerprint);
     console.log('signature:   ' + signature);
