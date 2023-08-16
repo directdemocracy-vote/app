@@ -512,14 +512,11 @@ window.onload = function() {
     console.log('signature:   ' + signature);
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
-      .then((response) => {
-        console.log(response);
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((endorsed) => {
         console.log(endorsed);
         if (endorsed.hasOwnProperty('error')) {
-          app.dialog.alert(error, 'Error getting citizen from publisher');
+          app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
           return;
         }
         // verify signature of endorsed
