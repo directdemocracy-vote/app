@@ -588,10 +588,7 @@ window.onload = function() {
         xhttp.open('GET', `https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`,
           true);
         xhttp.send();
-      })
-      .catch((error) => {
-        app.dialog.alert(error, 'Could not get citizen from publisher');
-       });
+      });
   },{returnDetailedScanResult: true});
 
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
