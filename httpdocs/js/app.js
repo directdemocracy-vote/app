@@ -1,6 +1,14 @@
 import QrScanner from './qr-scanner.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
+
+if (typeof ScreenOrientation.lock === 'function')
+  ScreenOrientation.lock('portrait');
+else {
+  screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+  screen.lockOrientationUniversal('portrait');
+}
+
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
@@ -422,7 +430,6 @@ window.onload = function() {
   }
 
   challengeScanner = new QrScanner(challengeVideo, function(value) {
-    console.log('bytes = ' + value.bytes);
     challengeScanner.stop();
     showPage('card');
     let challenge = '';
@@ -438,8 +445,6 @@ window.onload = function() {
       size: 1024,
       padding: 0
     });
-    console.log('length = ' + (fingerprint + signature).length);
-    console.log('value = ' + fingerprint + signature);
     const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
     const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
     app.dialog.create({
@@ -497,7 +502,6 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
-    console.log('bytes = ' + value.bytes);
     let fingerprint = '';
     const hex = '0123456789abcdef';
     for(let i=0; i < 20; i++) {
