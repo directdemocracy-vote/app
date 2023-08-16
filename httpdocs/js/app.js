@@ -426,21 +426,20 @@ window.onload = function() {
     console.log('Value = ' + value);
     challengeScanner.stop();
     showPage('card');
-    // const signature = atob(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256'));
+    const signature = atob(citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256'));
 
 
-    const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
+    // const signature = citizenCrypt.sign(value, CryptoJS.SHA256, 'sha256');
 
 
-    /*
     let fingerprint = '';
     for(let i = 0; i < 20; i++)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
-    */
 
 
-    let fingerprint = citizenFingerprint;
+    // let fingerprint = citizenFingerprint;
 
+    
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
