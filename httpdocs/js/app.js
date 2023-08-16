@@ -2,7 +2,7 @@ import QrScanner from './qr-scanner.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
 
-if (typeof screen.orientation.lock === 'function')
+if (typeof screen.orientation.lock === 'functionz')
   screen.orientation.lock('portrait-primary')
     .then(() => {
       console.log('Locked screen to portrait orientation.');
