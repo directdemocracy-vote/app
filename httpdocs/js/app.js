@@ -523,13 +523,13 @@ window.onload = function() {
         endorsed.signature = '';
         let verify = new JSEncrypt();
         verify.setPublicKey(publicKey(endorsed.key));
+        if (!verify.verify(signature, endorsedSignature, CryptoJS.SHA256)) {
+          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+          return;         
+        }
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           return;
-        }
-        if (!verify.verify(signature, endorsedSignature, CryptoJS.SHA1)) {
-          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-          return;         
         }
       })
       .catch((error) => {
