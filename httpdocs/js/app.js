@@ -539,8 +539,9 @@ window.onload = function() {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
           return;
         }
-        console.log('fingerprint: ' + fingerprint);
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
+          console.log('signature: ' + endorsedSignature);
+          console.log('citizen: ' + JSON.stringify(endorsed));
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           return;
         }
