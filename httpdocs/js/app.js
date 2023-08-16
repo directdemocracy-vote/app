@@ -57,6 +57,7 @@ if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
 }
+let endorsed = null;
 let endorseMap = null;
 let endorseMarker = null;
 
@@ -525,9 +526,12 @@ window.onload = function() {
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
-      .then((response) => response.json())
-      .then((endorsed) => {
-        if (endorsed.hasOwnProperty('error')) {
+      .then((response) => {
+        endorsed = response.json();
+        return endorsed;
+      })
+      .then((answer) => {
+        if (answer.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
           return;
         }
@@ -609,7 +613,6 @@ window.onload = function() {
       key: citizen.key,
       signature: '',
       published: new Date().getTime(),
-      expires: endorsed.expires,
       publication: {
         key: endorsed.key,
         signature: endorsed.signature
