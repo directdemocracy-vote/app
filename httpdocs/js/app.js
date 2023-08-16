@@ -739,3 +739,23 @@ function show(item) {
 function hide(item) {
   addClass(item, 'display-none');
 }
+
+function publicKey(key) {
+  let pkey = '-----BEGIN PUBLIC KEY-----\n';
+  const l = key.length;
+  for (let i = 0; i < l; i += 64)
+    pkey += key.substr(i, 64) + '\n';
+  pkey += '-----END PUBLIC KEY-----';
+  return pkey;
+}
+
+function strippedKey(publicKey) {
+  let stripped = '';
+  const header = '-----BEGIN PUBLIC KEY-----\n'.length;
+  const footer = '-----END PUBLIC KEY-----'.length;
+  const l = publicKey.length - footer;
+  for (let i = header; i < l; i += 65)
+    stripped += publicKey.substr(i, 64);
+  stripped = stripped.slice(0, -1 - footer);
+  return stripped;
+}
