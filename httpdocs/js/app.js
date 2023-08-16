@@ -608,7 +608,6 @@ window.onload = function() {
       signature: '',
       published: new Date().getTime(),
       publication: endorsed.signature
-      }
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
@@ -839,10 +838,7 @@ function updateEndorsements() {
             published: new Date().getTime(),
             expires: endorsement.expires,
             revoke: true,
-            publication: {
-              key: endorsement.key,
-              signature: endorsement.signature
-            }
+            publication: endorsement.signature
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
           let xhttp = new XMLHttpRequest();
