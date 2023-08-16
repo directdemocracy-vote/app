@@ -514,6 +514,7 @@ window.onload = function() {
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
      .then((response) => response.json())
      .then((endorsed) => {
+      console.log(endorsed);
        if (endorsed.hasOwnProperty('error')) {
          app.dialog.alert(error, 'Error getting citizen from publisher');
          return;
@@ -650,7 +651,10 @@ window.onload = function() {
 
 function getReputationFromTrustee() {
   fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
-  .then((response) => response.json())
+  .then((response) => {
+    console.log(response);
+    return response.json();
+  })
   .then((answer) => {
     let reputation = document.getElementById('citizen-reputation');
     let badge = document.getElementById('endorsed-badge');
