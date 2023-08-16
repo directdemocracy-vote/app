@@ -2,7 +2,8 @@ import QrScanner from './qr-scanner.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
 
-if (typeof screen.orientation.lock === 'functionz')
+/* This doesn't work on Android/firefox
+if (typeof screen.orientation.lock === 'function')
   screen.orientation.lock('portrait-primary')
     .then(() => {
       console.log('Locked screen to portrait orientation.');
@@ -16,6 +17,7 @@ else {
     console.log('Failed to lock screen to portrait orientation.');
   }
 }
+*/
 
 let languagePicker;
 let homePageIsReady = false;
@@ -151,6 +153,15 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
   enable('endorse-me-button');
+});
+
+document.onready(function () {
+  function reorient(e) {
+    const portrait = (window.orientation % 180 == 0);
+    document.querySelector('body > div').css('-webkit-transform', !portrait ? 'rotate(-90deg)' : '');
+  }
+  window.onorientationchange = reorient;
+  window.setTimeout(reorient, 0);
 });
 
 window.onload = function() {
