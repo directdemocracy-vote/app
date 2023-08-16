@@ -58,6 +58,7 @@ if (!station) {
   localStorage.setItem('station', station);
 }
 let endorseMap = null;
+let endorseMarker = null;
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
