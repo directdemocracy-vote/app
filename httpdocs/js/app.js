@@ -2,7 +2,7 @@ import QrScanner from './qr-scanner.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
 
-/* This doesn't work on Android/firefox
+/* This doesn't work on Android/firefox, should be implemented with Cordova
 if (typeof screen.orientation.lock === 'function')
   screen.orientation.lock('portrait-primary')
     .then(() => {
