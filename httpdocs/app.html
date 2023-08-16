@@ -196,7 +196,7 @@
                 <div id="endorse-message" class="item-label display-flex justify-content-center" style="width:100%" data-i18n="endorse-message"></div>
               </div>
               <div id="endorse-citizen" class="display-none">
-                <div class="display-flex">
+                <div class="block display-flex margin-top-half margin-bottom-half">
                   <img id="endorse-picture" style="width:150px;height:200px">
                   <div class="margin-left">
                     <div data-i18n="given-names"></div>
@@ -210,7 +210,7 @@
                   </div>
                 </div>
                 <div id="endorse-map" style="width:100%;height:400px"></div>
-                <div class="list margin-top-half">
+                <div class="block list margin-top-half">
                   <ul>
                     <li>
                       <label class="item-checkbox item-content">
@@ -240,14 +240,11 @@
                       </label>
                     </li>
                   </ul>
-                  <div class="block margin-top-half">
-                    <div class="grid grid-cols-2 grid-gap">
-                      <button class="button button-fill" id="endorse-confirm">Endorse<div id="endorse-button-preloader display-none" class="preloader text-color-white padding-left display-none"></div></button>
-                      <button class="button button-fill color-red" id="endorse-cancel">Cancel</button>
-                    </div>
-                    <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">Warning: wrongly endorsing a citizen is likely to affect your own endorsements by trustees.</div>
+                  <div class="grid grid-cols-2 grid-gap">
+                    <button class="button button-fill" id="endorse-confirm">Endorse<div id="endorse-button-preloader display-none" class="preloader text-color-white padding-left display-none"></div></button>
+                    <button class="button button-fill color-red" id="endorse-cancel">Cancel</button>
                   </div>
-            
+                  <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">Warning: wrongly endorsing a citizen is likely to affect your own endorsements by trustees.</div>
                 </div>
               </div>
               <div id="endorsements-list">
