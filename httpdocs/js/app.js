@@ -526,8 +526,9 @@ window.onload = function() {
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
-      .then((response) => {
-        endorsed = JSON.parse(response.body);
+      .then((response) => response.text())
+      .then((answer) => {
+        endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
           return;
