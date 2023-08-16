@@ -497,7 +497,6 @@ window.onload = function() {
           title: 'Ask the citizen to scan this QR-code',
           content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
           buttons: [{text: 'Done', onClick: function() {
-            console.log('Scanning answer to challenge');
             hide('endorse-page');
             show('endorse-scanner');
             answerScanner.start();
@@ -608,20 +607,18 @@ window.onload = function() {
       key: citizen.key,
       signature: '',
       published: new Date().getTime(),
-      publication: {
-        key: endorsed.key,
-        signature: endorsed.signature
+      publication: endorsed.signature
       }
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-      .then((response) => response.json())
+      .then((response) => response.text())
       .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+        endorsements = JSON.parse(answer);
+        if (endorsements.error)
+          app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
         else {
           app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-          endorsements = answer;
           updateEndorsements();
         }
       })
