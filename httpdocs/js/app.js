@@ -527,11 +527,8 @@ window.onload = function() {
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
       .then((response) => {
-        endorsed = response.json();
-        return endorsed;
-      })
-      .then((answer) => {
-        if (answer.hasOwnProperty('error')) {
+        endorsed = JSON.parse(response.body);
+        if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
           return;
         }
