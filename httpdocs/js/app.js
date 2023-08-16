@@ -437,6 +437,7 @@ window.onload = function() {
       padding: 0
     });
     console.log('length = ' + (fingerprint + signature).length);
+    console.log('value = ' + fingerprint + signature);
     const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
     const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
     app.dialog.create({
