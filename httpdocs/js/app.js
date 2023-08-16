@@ -157,7 +157,7 @@ window.addEventListener('offline', () => {
 
 function reorient(e) {
   const portrait = (window.orientation % 180 == 0);
-  if (portrait)
+  if (!portrait)
     document.querySelector('body > div').style.rotate='-90deg';
 }
 window.onorientationchange = reorient;
