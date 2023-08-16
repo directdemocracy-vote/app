@@ -557,9 +557,7 @@ window.onload = function() {
         const lon = endorsed.longitude;
         document.getElementById('endorse-coords').innerHTML = lat + ', ' + lon;
         let published = new Date(endorsed.published);
-        let expires = new Date(endorsed.expires);
         document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
-        document.getElementById('endorse-expires').innerHTML = expires.toISOString().slice(0, 10);
         if (endorseMap == null) {
           endorseMap = L.map('endorse-map', {dragging: false});
           endorseMap.whenReady(function() {setTimeout(() => {this.invalidateSize();}, 0);});
