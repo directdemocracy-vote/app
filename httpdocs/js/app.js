@@ -512,30 +512,33 @@ window.onload = function() {
     console.log('signature:   ' + signature);
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
-     .then((response) => response.json())
-     .then((endorsed) => {
-      console.log(endorsed);
-       if (endorsed.hasOwnProperty('error')) {
-         app.dialog.alert(error, 'Error getting citizen from publisher');
-         return;
-       }
-       // verify signature of endorsed
-       let endorsedSignature = endorsed.signature;
-       endorsed.signature = '';
-       let verify = new JSEncrypt();
-       verify.setPublicKey(publicKey(endorsed.key));
-       if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
-        app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
-        return;
-       }
-       if (!verify.verify(signature, endorsedSignature, CryptoJS.SHA1)) {
-         app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-         return;         
-       }
-     })
-     .catch((error) => {
-       app.dialog.alert(error, 'Could not get citizen from publisher');
-     });
+      .then((response) => {
+        console.log(response);
+        return response.json();
+      })
+      .then((endorsed) => {
+        console.log(endorsed);
+        if (endorsed.hasOwnProperty('error')) {
+          app.dialog.alert(error, 'Error getting citizen from publisher');
+          return;
+        }
+        // verify signature of endorsed
+        let endorsedSignature = endorsed.signature;
+        endorsed.signature = '';
+        let verify = new JSEncrypt();
+        verify.setPublicKey(publicKey(endorsed.key));
+        if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
+          app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
+          return;
+        }
+        if (!verify.verify(signature, endorsedSignature, CryptoJS.SHA1)) {
+          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+          return;         
+        }
+      })
+      .catch((error) => {
+        app.dialog.alert(error, 'Could not get citizen from publisher');
+       });
   },{returnDetailedScanResult: true});
 
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
@@ -651,27 +654,24 @@ window.onload = function() {
 
 function getReputationFromTrustee() {
   fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
-  .then((response) => {
-    console.log(response);
-    return response.json();
-  })
-  .then((answer) => {
-    let reputation = document.getElementById('citizen-reputation');
-    let badge = document.getElementById('endorsed-badge');
-    if (answer.error) {
-      reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
-      badge.classList.remove('color-blue');
-      badge.classList.add('color-red');
-    } else {
-      const color = answer.endorsed ? 'blue' : 'red';
-      reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
-      badge.classList.remove('color-red');
-      badge.classList.remove('color-blue');
-      badge.classList.add('color-' + color);
-    }})
-  .catch((error) => {
-    app.dialog.alert(error, 'Could not get reputation from trustee.');
-  });
+    .then((response) => response.json())
+    .then((answer) => {
+      let reputation = document.getElementById('citizen-reputation');
+      let badge = document.getElementById('endorsed-badge');
+      if (answer.error) {
+        reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
+        badge.classList.remove('color-blue');
+        badge.classList.add('color-red');
+      } else {
+        const color = answer.endorsed ? 'blue' : 'red';
+        reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
+        badge.classList.remove('color-red');
+        badge.classList.remove('color-blue');
+        badge.classList.add('color-' + color);
+      }})
+    .catch((error) => {
+      app.dialog.alert(error, 'Could not get reputation from trustee.');
+    });
 }
 
 function updateCitizenEndorsements() {
