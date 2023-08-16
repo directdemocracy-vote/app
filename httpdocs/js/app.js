@@ -57,6 +57,7 @@ if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
 }
+let endorseMap = null;
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -540,11 +541,51 @@ window.onload = function() {
           return;
         }
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
-          console.log('signature: ' + endorsedSignature);
-          console.log('citizen: ' + JSON.stringify(endorsed));
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           return;
         }
+        hide('endorse-page');
+        show('endorse-citizen');
+        document.getElementById('endorse-picture-check').checked = false;
+        document.getElementById('endorse-name-check').checked = false;
+        document.getElementById('endorse-coords-check').checked = false;
+        document.getElementById('endorse-citizen').style.display = '';
+        document.getElementById('endorse-picture').src = endorsed.picture;
+        document.getElementById('endorse-family-name').innerHTML = endorsed.familyName;
+        document.getElementById('endorse-given-names').innerHTML = endorsed.givenNames;
+        const lat = endorsed.latitude;
+        const lon = endorsed.longitude;
+        document.getElementById('endorse-coords').innerHTML = lat + ', ' + lon;
+        let published = new Date(endorsed.published);
+        let expires = new Date(endorsed.expires);
+        document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
+        document.getElementById('endorse-expires').innerHTML = expires.toISOString().slice(0, 10);
+        if (endorseMap == null) {
+          endorseMap = L.map('endorse-map', {dragging: false});
+          endorseMap.whenReady(function() {setTimeout(() => {this.invalidateSize();}, 0);});
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+          }).addTo(endorseMap);
+          endorseMarker = L.marker([lat, lon]).addTo(endorseMap);
+        } else
+          endorseMarker.setLatLng([lat, lon]);
+        endorseMarker.bindPopup(lat + ', ' + lon);
+        endorseMap.setView([lat, lon], 18);
+        endorseMap.on('contextmenu', function(event) {
+          return false;
+        });
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            const a = JSON.parse(this.responseText);
+            const address = a.display_name;
+            endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">(' +
+              lat + ', ' + lon + ')</center>').openPopup();
+          }
+        };
+        xhttp.open('GET', `https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`,
+          true);
+        xhttp.send();
       })
       .catch((error) => {
         app.dialog.alert(error, 'Could not get citizen from publisher');
