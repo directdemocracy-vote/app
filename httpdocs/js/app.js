@@ -1,5 +1,4 @@
 import QrScanner from './qr-scanner.min.js';
-QrScanner.WORKER_PATH = 'js/qr-scanner-worker.min.js';
 
 import Translator from 'https://directdemocracy.vote/js/translator.js';
 let languagePicker;
