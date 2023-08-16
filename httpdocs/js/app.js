@@ -430,12 +430,8 @@ window.onload = function() {
     let fingerprint = '';
     for(let i = 0; i < 20; i++)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
-    const payload = fingerprint + signature;
-    console.log('length = ' + payload.length);
-    // signature is pretty long, e.g., 256 bytes while the citizen fingerprint is only 20 bytes
-    // so the QR code is pretty huge...
     const qr = new QRious({
-      value: payload,
+      value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
       size: 1024,
       padding: 0
@@ -469,9 +465,7 @@ window.onload = function() {
         const randomBytes = new Uint8Array(20);
         crypto.getRandomValues(randomBytes);
         challenge = '';
-        const hex = '0123456789abcdef';
-        randomBytes.forEach((v) => { challenge += hex[v >> 4] + hex[v & 15]; });
-        console.log('Challenge 1 = ' + challenge);
+        randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
         const qr = new QRious({
           value: challenge,
           level: 'L',
@@ -500,7 +494,7 @@ window.onload = function() {
     hide('endorse-scanner');
     show('endorse-page');
     const fingerprint = value.slice(0,20);
-    const signature = value.slice(20, 40);
+    const signature = btoa(value.slice(20, 276));
     console.log('fingerprint: ' + fingerprint);
     console.log('signature:   ' + signature);
     // get endorsee from fingerprint
