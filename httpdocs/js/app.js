@@ -428,7 +428,9 @@ window.onload = function() {
     let challenge = '';
     for(let i=0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
+    console.log('challenge = ' + btoa(challenge) + '(received');
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
+    console.log('signature = ' + btoa(signature) + '(sent)');
     let fingerprint = '';
     for(let i = 0; i < 40; i+=2)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
@@ -476,6 +478,7 @@ window.onload = function() {
           size: 512,
           padding: 0
         });
+        console.log('challenge = ' + btoa(challenge) + ' (sent)');
         app.dialog.create({
           title: 'Ask the citizen to scan this QR-code',
           content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
@@ -508,8 +511,6 @@ window.onload = function() {
     for(let i=20; i < 276; i++)
       binarySignature += String.fromCharCode(value.bytes[i]);
     const signature = btoa(binarySignature);
-    console.log('fingerprint: ' + fingerprint);
-    console.log('signature:   ' + signature);
     // get endorsee from fingerprint
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.json())
@@ -523,10 +524,13 @@ window.onload = function() {
         endorsed.signature = '';
         let verify = new JSEncrypt();
         verify.setPublicKey(publicKey(endorsed.key));
+        console.log('challenge = ' + btoa(challenge) + '(as sent)');
+        console.log('signature = ' + signature + '(received)');
         if (!verify.verify(challenge, signature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-          return;         
+          return;
         }
+        console.log('fingerprint: ' + fingerprint);
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           return;
