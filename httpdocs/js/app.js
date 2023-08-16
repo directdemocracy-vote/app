@@ -430,7 +430,7 @@ window.onload = function() {
       challenge += String.fromCharCode(value.bytes[i]);
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
-    for(let i = 0; i < 20; i++)
+    for(let i = 0; i < 40; i+=2)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
@@ -514,7 +514,6 @@ window.onload = function() {
     fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.json())
       .then((endorsed) => {
-        console.log(endorsed);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
           return;
