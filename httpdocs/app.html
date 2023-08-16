@@ -212,39 +212,35 @@
                 <div id="endorse-map" style="width:100%;height:400px"></div>
                 <div class="list">
                   <ul>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input id="endorse-picture-check" type="checkbox">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">I know this person.</div>
-                        </div>
-                      </label>
+                    <li class="item-content item-input">
+                      <div class="item-inner">
+                        <label class="checkbox display-flex"><input type="checkbox" id="endorse-picture-check">
+                          <i class="icon-checkbox margin-right-half"></i><div class="item-label">I know this person.</div>
+                        </label>
+                      </div>
                     </li>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input id="endorse-name-check" type="checkbox">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">The name is correct.</div>
-                        </div>
-                      </label>
+                    <li class="item-content item-input">
+                      <div class="item-inner">
+                        <label class="checkbox display-flex"><input type="checkbox" id="endorse-name-check">
+                          <i class="icon-checkbox margin-right-half"></i><div class="item-label">The name is correct.</div>
+                        </label>
+                      </div>
                     </li>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input id="endorse-coords-check" type="checkbox">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">The address is correct.</div>
-                        </div>
-                      </label>
+                    <li class="item-content item-input">
+                      <div class="item-inner">
+                        <label class="checkbox display-flex"><input type="checkbox" id="endorse-coords-check">
+                          <i class="icon-checkbox margin-right-half"></i><div class="item-label">The address is correct.</div>
+                        </label>
+                      </div>
+                    </li>
+                    <li class="item-content item-input">
+                      <div class="item-inner">
+                        <button class="button button-fill disabled" id="endorse-confirm"><div id="endorse-button-text">Endorse</div><div id="endorse-button-preloader" class="preloader text-color-white padding-left"></div></button>
+                        <button class="button button-fill disabled" id="endorse-cancel">Cancel</button>
+                        <div id="endorse-button-message" class="item-label display-flex justify-content-center" style="width:100%">Warning: wrongly endorsing a citizen is likely to affect your own endorsements by trustees.</div>
+                      </div>
                     </li>
                   </ul>
-                </div>
-                <div class="row">
-                  <button id="endorse-confirm" class="col button button-fill color-green disabled">Endorse</button>
-                  <button id="endorse-cancel" class="col button button-fill color-blue">Cancel</button>
-                  <div>Warning: wrongly endorsing a citizen is likely to affect your own endorsements by trustees.</div>
                 </div>
               </div>
               <div id="endorsements-list">
