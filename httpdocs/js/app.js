@@ -422,24 +422,16 @@ window.onload = function() {
   }
 
   challengeScanner = new QrScanner(challengeVideo, function(value) {
-    console.log('data = ' + value.data);
     console.log('bytes = ' + value.bytes);
     challengeScanner.stop();
     showPage('card');
-    const signature = atob(citizenCrypt.sign(value.data, CryptoJS.SHA256, 'sha256'));
-
-
-    // const signature = citizenCrypt.sign(value.data, CryptoJS.SHA256, 'sha256');
-
-
+    let challenge = '';
+    for(let i=0; i < 20; i++)
+      challenge += String.fromCharCode(value.bytes[i]);
+    const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
     for(let i = 0; i < 20; i++)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
-
-
-    // let fingerprint = citizenFingerprint;
-
-
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
@@ -505,15 +497,17 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
-    console.log('data.length = ' + value.data.length);
-    console.log('data = ' + value.data);
     console.log('bytes = ' + value.bytes);
-    const binaryFingerprint = value.data.slice(0,20);
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    for(const v of binaryFingerprint)
-      fingerprint += hex[v >> 4] + hex[v & 15];
-    const signature = btoa(value.data.slice(20, 276));
+    for(let i=0; i < 20; i++) {
+      const b = value.bytes[i];
+      fingerprint += hex[b >> 4] + hex[b & 15];
+    }
+    let binarySignature = '';
+    for(let i=20; i < 276; i++)
+      binarySignature += String.fromCharCode(value.bytes[i]);
+    const signature = btoa(binarySignature);
     console.log('fingerprint: ' + fingerprint);
     console.log('signature:   ' + signature);
     // get endorsee from fingerprint
