@@ -607,7 +607,7 @@ window.onload = function() {
       key: citizen.key,
       signature: '',
       published: new Date().getTime(),
-      publication: endorsed.signature
+      endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
