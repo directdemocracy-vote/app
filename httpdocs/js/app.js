@@ -199,8 +199,7 @@ window.onload = function() {
             app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
           citizenEndorsements = answer.citizen_endorsements;
           updateCitizenCard();
-          // FIXME
-          // updateEndorsements();
+          updateEndorsements();
           // updateArea();
         }
       })
@@ -605,6 +604,33 @@ window.onload = function() {
   document.getElementById('endorse-confirm').addEventListener('click', function() {
     hide('endorse-citizen');
     show('endorse-page');
+    let endorsement = {
+      schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+      key: citizen.key,
+      signature: '',
+      published: new Date().getTime(),
+      expires: endorsed.expires,
+      publication: {
+        key: endorsed.key,
+        signature: endorsed.signature
+      }
+    };
+    endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
+    fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+      .then((response) => response.json())
+      .then((answer) => {
+        if (answer.error)
+          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+        else {
+          app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+          endorsements = answer;
+          updateEndorsements();
+        }
+      })
+      .catch((error) => {
+        console.error(`Could publish citizen card.`);
+        console.error(error);
+      });
   });
 
   function validateRegistration() {
@@ -774,6 +800,123 @@ function updateCitizenEndorsements() {
     const t = new Date(endorsement.published).toISOString().slice(0, 10);
     newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
   });
+}
+
+function updateEndorsements() {
+  let list = document.getElementById('endorsements-list');
+  list.innerHTML = ''; // clear
+  let count = 0;
+  endorsements.forEach(function(endorsement) {
+    let card = newElement(list, 'div', 'card');
+    if (endorsement.revoke)
+      card.classList.add('revoked');
+    else
+      count++;
+    let content = newElement(card, 'div', 'card-content card-content-padding');
+    let row = newElement(content, 'div', 'row');
+    let col = newElement(row, 'div', 'col-25');
+    let img = newElement(col, 'img');
+    img.src = endorsement.picture;
+    img.style.width = '100%';
+    col = newElement(row, 'div', 'col-75');
+    let a = newElement(col, 'a', 'link external',
+      `<span style="font-weight:bold">${endorsement.familyName}</span> <span>${endorsement.givenNames}</span>`);
+    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
+    a.target = '_blank';
+    row = newElement(col, 'div', 'row');
+    const t = new Date(endorsement.published).toISOString().slice(0, 10);
+    newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked: ' : 'Endorsed: ') + t);
+    if (!endorsement.revoke) {
+      row = newElement(col, 'div', 'row');
+      newElement(row, 'div', 'col', 'Expires: ' + new Date(endorsement.expires).toISOString().slice(0, 10));
+      row = newElement(col, 'div', 'row');
+      let c = newElement(row, 'div', 'col text-align-right');
+      a = newElement(c, 'a', 'link', 'Revoke');
+      a.href = '#';
+      a.style.fontWeight = 'bold';
+      a.style.textTransform = 'uppercase';
+      a.addEventListener('click', function() {
+        function revoke() {
+          let e = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: new Date().getTime(),
+            expires: endorsement.expires,
+            revoke: true,
+            publication: {
+              key: endorsement.key,
+              signature: endorsement.signature
+            }
+          };
+          e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
+          let xhttp = new XMLHttpRequest();
+          xhttp.onload = function() {
+            if (this.status == 200) {
+              let answer = JSON.parse(this.responseText);
+              if (answer.error)
+                app.dialog.alert(answer.error + '.<br>Please try again.', 'Revocation error');
+              else {
+                app.dialog.alert('You successfully revoked ' + endorsement.givenNames + ' ' +
+                  endorsement.familyName, 'Revocation success');
+                endorsements = answer;
+                updateEndorsements();
+              }
+            }
+          };
+          xhttp.open('POST', publisher + '/publish.php', true);
+          xhttp.send(JSON.stringify(e));
+        }
+        const text = "<p>You should revoke only a citizen who has moved or " +
+          "changed her citizen card. This might affect her ability to vote.</p>" +
+          "<p>Do you really want to revoke <b>" + endorsement.givenNames + ' ' + endorsement.familyName +
+          "</b>?</p>" +
+          "<p>Please type <b>I understand</b> here:</p>";
+        app.dialog.create({
+          title: 'Revoke Citizen',
+          text,
+          content: '<div class="dialog-input-field item-input"><div class="item-input-wrap">' +
+            '<input type="text" class="dialog-input"></div></div>',
+          buttons: [{
+              text: app.params.dialog.buttonCancel,
+              keyCodes: app.keyboardActions ? [27] : null
+            },
+            {
+              text: app.params.dialog.buttonOk,
+              bold: true,
+              keyCodes: app.keyboardActions ? [13] : null
+            }],
+          destroyOnClose: true,
+          onClick: function(dialog, index) {
+            if (index === 1) // OK
+              revoke();
+          },
+          on: {
+            open: function(d) {
+              let input = d.$el.find('.dialog-input')[0];
+              let okButton = d.$el.find('.dialog-button')[1];
+              disable(okButton);
+              input.addEventListener('input', function(event) {
+                if (event.target.value === 'I understand')
+                  enable(okButton);
+                else
+                  disable(okButton);
+              });
+              input.addEventListener('change', function(event) {
+                if (event.target.value === 'I understand') {
+                  d.close();
+                  revoke();
+                }
+              });
+            }
+          }
+        }).open();
+      });
+    }
+  });
+  let badge = document.getElementById('endorse-badge');
+  badge.innerHTML = count;
+  badge.style.display = (count == 0) ? 'none' : '';
 }
 
 function removeClass(item, className) {
