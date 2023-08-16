@@ -597,6 +597,16 @@ window.onload = function() {
     show('endorse-page');
   });
 
+  document.getElementById('endorse-cancel-confirm').addEventListener('click', function() {
+    hide('endorse-citizen');
+    show('endorse-page');
+  });
+
+  document.getElementById('endorse-confirm').addEventListener('click', function() {
+    hide('endorse-citizen');
+    show('endorse-page');
+  });
+
   function validateRegistration() {
     disable('register-button');
     if (document.getElementById('register-given-names').value.trim() === '')
