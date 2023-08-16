@@ -155,14 +155,11 @@ window.addEventListener('offline', () => {
   enable('endorse-me-button');
 });
 
-document.onready(function () {
-  function reorient(e) {
-    const portrait = (window.orientation % 180 == 0);
-    document.querySelector('body > div').css('-webkit-transform', !portrait ? 'rotate(-90deg)' : '');
-  }
-  window.onorientationchange = reorient;
-  window.setTimeout(reorient, 0);
-});
+window.onorientationchange = function() {
+  const portrait = (window.orientation % 180 == 0);
+  document.querySelector('body > div').css('-webkit-transform', !portrait ? 'rotate(-90deg)' : '');
+};
+window.setTimeout(reorient, 0);
 
 window.onload = function() {
   document.getElementById('publisher').value = publisher;
