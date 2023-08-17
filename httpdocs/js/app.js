@@ -344,7 +344,7 @@ window.onload = function() {
             .then((response) => {
               if (geolocation)
                 return;
-              const coords = response.split(',');
+              const coords = response.text().split(',');
               getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
             })
             .catch((error) => {
