@@ -150,8 +150,8 @@ let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
   disable('endorse-me-button');
+  downloadCitizen();
   getReputationFromTrustee();
-  updateCitizenEndorsements();
 });
 
 window.addEventListener('offline', () => {
@@ -187,27 +187,7 @@ window.onload = function() {
     showPage('register');
   else {
     showPage('splash');
-    fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
-        else {
-          citizen = answer.citizen;
-          citizen.key = strippedKey(citizenCrypt.getPublicKey());
-          endorsements = answer.endorsements;
-          if (endorsements.error)
-            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
-          citizenEndorsements = answer.citizen_endorsements;
-          updateCitizenCard();
-          updateEndorsements();
-          // updateArea();
-        }
-      })
-      .catch((error) => {
-        app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
-        console.error(error);
-      });
+    downloadCitizen();
   }
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
@@ -426,6 +406,30 @@ window.onload = function() {
 
   const challengeVideo = document.getElementById('challenge-video');
   challengeVideo.addEventListener('loadedmetadata', qrVideo);
+
+  function downloadCitizen() {
+    fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+      .then((response) => response.json())
+      .then((answer) => {
+        if (answer.error)
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+        else {
+          citizen = answer.citizen;
+          citizen.key = strippedKey(citizenCrypt.getPublicKey());
+          endorsements = answer.endorsements;
+          if (endorsements.error)
+            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
+          citizenEndorsements = answer.citizen_endorsements;
+          updateCitizenCard();
+          updateEndorsements();
+          // updateArea();
+        }
+      })
+      .catch((error) => {
+        app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
+        console.error(error);
+      });
+  }
 
   function qrVideo() { // display video as a square centered in the video rectangle
     if (this.videoWidth > this.videoHeight) {
@@ -768,7 +772,7 @@ function updateCitizenEndorsements() {
     if (endorsement.revoke)
       revokeCount++;
   });
-
+  list.innerHTML = '';
   let endorsementCount = citizenEndorsements.length - revokeCount;
   badge.innerHTML = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
