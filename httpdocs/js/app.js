@@ -575,18 +575,12 @@ window.onload = function() {
         endorseMap.on('contextmenu', function(event) {
           return false;
         });
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            const a = JSON.parse(this.responseText);
-            const address = a.display_name;
-            endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">(' +
-              lat + ', ' + lon + ')</center>').openPopup();
-          }
-        };
-        xhttp.open('GET', `https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          true);
-        xhttp.send();
+        fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+          .then((response) => response.json())
+          .then((answer) => {
+            const address = answer.display_name;
+            endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">' + `(${lat}, ${lon})` + '</center>').openPopup();
+          });
       });
   },{returnDetailedScanResult: true});
 
