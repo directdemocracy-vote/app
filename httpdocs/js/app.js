@@ -811,10 +811,11 @@ function updateCitizenEndorsements() {
     img.src = endorsement.picture;
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
-    let innerDiv = newElement(div, 'div', 'item-title');
-    let a = newElement(innerDiv, 'a', 'link external', `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
+    let a = newElement(div, 'a', 'link external');
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
+    newElement(a, 'div', 'item-title', endorsement.givenNames);
+    newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published).toISOString().slice(0, 10);
     let subtitle = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
     subtitle.style.fontSize='82.353%';
