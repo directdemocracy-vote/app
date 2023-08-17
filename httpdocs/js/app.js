@@ -864,11 +864,11 @@ function updateEndorsements() {
           xhttp.open('POST', publisher + '/publish.php', true);
           xhttp.send(JSON.stringify(e));
         }
-        const text = "<p text-align-left>You should revoke only a citizen who has moved or " +
-          "changed her citizen card. This might affect her ability to vote.</p>" +
-          "<p>Do you really want to revoke <b>" + endorsement.givenNames + ' ' + endorsement.familyName +
-          "</b>?</p>" +
-          "<p>Please type <b>I understand</b> here:</p>";
+        const text = '<p class="text-align-left">' +
+          "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
+          `</p><p>${endorsement.givenNames}<br>${endorsement.familyName}</p><p>` +
+          "Please type <b>I understand</b> here:" +
+          '</p>';
         app.dialog.create({
           title: 'Revoke Citizen',
           text,
