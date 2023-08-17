@@ -407,30 +407,6 @@ window.onload = function() {
   const challengeVideo = document.getElementById('challenge-video');
   challengeVideo.addEventListener('loadedmetadata', qrVideo);
 
-  function downloadCitizen() {
-    fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
-        else {
-          citizen = answer.citizen;
-          citizen.key = strippedKey(citizenCrypt.getPublicKey());
-          endorsements = answer.endorsements;
-          if (endorsements.error)
-            app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
-          citizenEndorsements = answer.citizen_endorsements;
-          updateCitizenCard();
-          updateEndorsements();
-          // updateArea();
-        }
-      })
-      .catch((error) => {
-        app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
-        console.error(error);
-      });
-  }
-
   function qrVideo() { // display video as a square centered in the video rectangle
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
@@ -732,6 +708,30 @@ window.onload = function() {
     getReputationFromTrustee();
     updateCitizenEndorsements();
   }
+}
+
+function downloadCitizen() {
+  fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+    .then((response) => response.json())
+    .then((answer) => {
+      if (answer.error)
+        app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+      else {
+        citizen = answer.citizen;
+        citizen.key = strippedKey(citizenCrypt.getPublicKey());
+        endorsements = answer.endorsements;
+        if (endorsements.error)
+          app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
+        citizenEndorsements = answer.citizen_endorsements;
+        updateCitizenCard();
+        updateEndorsements();
+        // updateArea();
+      }
+    })
+    .catch((error) => {
+      app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
+      console.error(error);
+    });
 }
 
 function getReputationFromTrustee() {
