@@ -812,7 +812,7 @@ function updateCitizenEndorsements() {
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
     let innerDiv = newElement(div, 'div', 'item-title');
-    let a = newElement(innerDIv, 'a', 'link external', `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
+    let a = newElement(innerDiv, 'a', 'link external', `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
     newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
