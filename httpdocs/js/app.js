@@ -341,10 +341,11 @@ window.onload = function() {
           if (navigator.geolocation)
             navigator.geolocation.getCurrentPosition(getGeolocationPosition);
           fetch(`https://ipinfo.io/loc`)
-            .then((response) => {
+            .then((response) => response.text())
+            .then((answer) => {
               if (geolocation)
                 return;
-              const coords = response.text().split(',');
+              const coords = answer.split(',');
               getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
             })
             .catch((error) => {
