@@ -611,10 +611,11 @@ window.onload = function() {
       endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    console.log("publish endorsement for " + CryptoJS.SHA1(endorsed.signature).toString());
+    console.log("publish endorsement for " + CryptoJS.SHA1(endorsed.signature).toString() + " with signature " + CryptoJS.SHA1(endorsement.signature).toString());
     fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
       .then((response) => response.text())
       .then((answer) => {
+        console.log(answer);
         endorsements = JSON.parse(answer);
         if (endorsements.error)
           app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
