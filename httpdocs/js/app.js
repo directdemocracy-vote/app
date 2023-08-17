@@ -808,7 +808,7 @@ function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
   list.innerHTML = ''; // clear
   let count = 0;
-  let medias = newElement(list, 'div', 'list media-list');
+  let medias = newElement(list, 'div', 'list media-list block');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
     let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right');
