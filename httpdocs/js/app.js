@@ -775,28 +775,6 @@ function updateCitizenEndorsements() {
       revokeCount++;
   });
 
-/*
-    <div id="citizen-endorsements-list">
-      <div class="block-title no-margin-left">1/1 endorsement</div>
-      <div class="list media-list">
-        <ul>
-          <li class="item-content no-padding-left">
-            <div class="item-media" style="width:20%"><img src="https://cdn.framework7.io/placeholder/fashion-88x88-4.jpg" style="width:100%">
-            </div>
-            <div class="item-inner">
-              <div class="item-title-row">
-                <div class="item-title">Yellow Submarine</div>
-              </div>
-              <div class="item-subtitle">Beatles</div>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-*/
-
-
-
   let endorsementCount = citizenEndorsements.length - revokeCount;
   badge.innerHTML = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
@@ -817,8 +795,12 @@ function updateCitizenEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published).toISOString().slice(0, 10);
-    let subtitle = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
-    subtitle.style.fontSize='82.353%';
+    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
+    message.style.fontSize='82.353%';
+    if (endorsement.revoke) {
+      message.style.fontWeight = 'bold';
+      message.style.color = 'red';
+    }
   });
 }
 
