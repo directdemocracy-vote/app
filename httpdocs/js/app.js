@@ -811,7 +811,7 @@ function updateCitizenEndorsements() {
     img.src = endorsement.picture;
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
-    let a = newElement(div, 'a', 'link external');
+    let a = newElement(div, 'a', 'link external display-block');
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
