@@ -546,6 +546,7 @@ window.onload = function() {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           return;
         }
+        endorsed.signature = endorsedSignature;
         hide('endorse-page');
         show('endorse-citizen');
         document.getElementById('endorse-picture-check').checked = false;
