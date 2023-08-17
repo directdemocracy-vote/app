@@ -623,32 +623,6 @@ window.onload = function() {
       return;
     enable('register-button');
   }
-
-  // show either:
-  // 1. the register page when the citizen has not yet registered
-  // 2. the splash page when downloading registered citizen data
-  // 3. the card page once registered citizen data is available
-  // 4. the video scan page to get endorsed
-  function showPage(page) {
-    const pages = ['splash', 'register', 'card', 'endorse-me'];
-    if (!pages.includes(page)) {
-      console.error(`Page '${page}' not found`);
-      return;
-    }
-    show(`${page}-page`);
-    pages.forEach(function(p) {
-      if (p !== page)
-        hide(`${p}-page`);
-    });
-    const cards = ['endorse', 'vote', 'sign'];
-    cards.forEach(function(i) {
-      const tabbar = `tabbar-${i}`;
-      if (page === 'card')
-        enable(tabbar);
-      else
-        disable(tabbar);
-    });
-  }
   
   function uploadPicture() {
     document.getElementById('register-picture-upload').click();
@@ -906,6 +880,32 @@ function updateEndorsements() {
   let badge = document.getElementById('endorse-badge');
   badge.innerHTML = count;
   badge.style.display = (count == 0) ? 'none' : '';
+}
+
+// show either:
+// 1. the register page when the citizen has not yet registered
+// 2. the splash page when downloading registered citizen data
+// 3. the card page once registered citizen data is available
+// 4. the video scan page to get endorsed
+function showPage(page) {
+  const pages = ['splash', 'register', 'card', 'endorse-me'];
+  if (!pages.includes(page)) {
+    console.error(`Page '${page}' not found`);
+    return;
+  }
+  show(`${page}-page`);
+  pages.forEach(function(p) {
+    if (p !== page)
+      hide(`${p}-page`);
+  });
+  const cards = ['endorse', 'vote', 'sign'];
+  cards.forEach(function(i) {
+    const tabbar = `tabbar-${i}`;
+    if (page === 'card')
+      enable(tabbar);
+    else
+      disable(tabbar);
+  });
 }
 
 function removeClass(item, className) {
