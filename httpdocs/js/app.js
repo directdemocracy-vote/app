@@ -774,29 +774,48 @@ function updateCitizenEndorsements() {
     if (endorsement.revoke)
       revokeCount++;
   });
+
+/*
+    <div id="citizen-endorsements-list">
+      <div class="block-title no-margin-left">1/1 endorsement</div>
+      <div class="list media-list">
+        <ul>
+          <li class="item-content no-padding-left">
+            <div class="item-media" style="width:20%"><img src="https://cdn.framework7.io/placeholder/fashion-88x88-4.jpg" style="width:100%">
+            </div>
+            <div class="item-inner">
+              <div class="item-title-row">
+                <div class="item-title">Yellow Submarine</div>
+              </div>
+              <div class="item-subtitle">Beatles</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+*/
+
+
+
   let endorsementCount = citizenEndorsements.length - revokeCount;
   badge.innerHTML = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
-  let title = newElement(list, 'div', 'block-title', endorsementCount + '/' + citizenEndorsements.length + ' ' +
-    plural);
+  newElement(list, 'div', 'block-title no-margin-left no-margin-right', `${endorsementCount}/${citizenEndorsements.length} ${plural}`);
+  let medias = newElement(list, 'div', 'list media-list')
+  let ul = newElement(medias, 'ul');
   citizenEndorsements.forEach(function(endorsement) {
-    let card = newElement(list, 'div', 'card');
-    if (endorsement.revoke)
-      card.classList.add('revoked');
-    let content = newElement(card, 'div', 'card-content card-content-padding');
-    let row = newElement(content, 'div', 'row');
-    let col = newElement(row, 'div', 'col-25');
-    let img = newElement(col, 'img');
+    let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right');
+    let div = newElement(li, 'div', 'item-media');
+    div.style.width = '20%';
+    let img = newElement(div, 'img');
     img.src = endorsement.picture;
     img.style.width = '100%';
-    col = newElement(row, 'div', 'col-75');
-    let a = newElement(col, 'a', 'link external',
-      `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
+    div = newElement(li, 'div', 'item-inner');
+    let innerDiv = newElement(div, 'div', 'item-title');
+    let a = newElement(innerDIv, 'a', 'link external', `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
-    row = newElement(col, 'div', 'row');
-    const t = new Date(endorsement.published).toISOString().slice(0, 10);
-    newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
+    newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
   });
 }
 
@@ -838,7 +857,6 @@ function updateEndorsements() {
             key: citizen.key,
             signature: '',
             published: new Date().getTime(),
-            expires: endorsement.expires,
             revoke: true,
             publication: endorsement.signature
           };
