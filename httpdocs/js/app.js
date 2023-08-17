@@ -779,7 +779,7 @@ function updateCitizenEndorsements() {
   badge.innerHTML = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
   newElement(list, 'div', 'block-title no-margin-left no-margin-right', `${endorsementCount}/${citizenEndorsements.length} ${plural}`);
-  let medias = newElement(list, 'div', 'list media-list')
+  let medias = newElement(list, 'div', 'list media-list');
   let ul = newElement(medias, 'ul');
   citizenEndorsements.forEach(function(endorsement) {
     let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right');
@@ -808,30 +808,30 @@ function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
   list.innerHTML = ''; // clear
   let count = 0;
+  let medias = newElement(list, 'div', 'list media-list');
+  let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
-    let card = newElement(list, 'div', 'card');
-    if (endorsement.revoke)
-      card.classList.add('revoked');
-    else
-      count++;
-    let content = newElement(card, 'div', 'card-content card-content-padding');
-    let row = newElement(content, 'div', 'row');
-    let col = newElement(row, 'div', 'col-25');
-    let img = newElement(col, 'img');
+    let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right');
+    let div = newElement(li, 'div', 'item-media');
+    div.style.width = '20%';
+    let img = newElement(div, 'img');
     img.src = endorsement.picture;
     img.style.width = '100%';
-    col = newElement(row, 'div', 'col-75');
-    let a = newElement(col, 'a', 'link external',
-      `<span style="font-weight:bold">${endorsement.familyName}</span> <span>${endorsement.givenNames}</span>`);
+    div = newElement(li, 'div', 'item-inner');
+    let a = newElement(div, 'a', 'link external display-block');
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
-    row = newElement(col, 'div', 'row');
+    newElement(a, 'div', 'item-title', endorsement.givenNames);
+    newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published).toISOString().slice(0, 10);
-    newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked: ' : 'Endorsed: ') + t);
-    if (!endorsement.revoke) {
-      row = newElement(col, 'div', 'row');
-      let c = newElement(row, 'div', 'col text-align-right');
-      a = newElement(c, 'a', 'link', 'Revoke');
+    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
+    message.style.fontSize='82.353%';
+    if (endorsement.revoke) {
+      message.style.fontWeight = 'bold';
+      message.style.color = 'red';
+      count ++;
+    } else {
+      a = newElement(div, 'a', 'link', 'Revoke');
       a.href = '#';
       a.style.fontWeight = 'bold';
       a.style.textTransform = 'uppercase';
