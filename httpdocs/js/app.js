@@ -842,7 +842,7 @@ function updateEndorsements() {
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
           fetch(`${publisher}/publisher.php`, {method: 'POST', body: JSON.stringify(e)})
-            .then((response) => json.reponse())
+            .then((response) => reponse.json())
             .then((answer) => {
               if (answer.error) {
                 app.dialog.alert(answer.error, 'Revocation error');
