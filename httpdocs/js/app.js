@@ -866,7 +866,7 @@ function updateEndorsements() {
         }
         const text = '<p class="text-align-left">' +
           "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
-          `</p><p>${endorsement.givenNames}<br>${endorsement.familyName}</p><p>` +
+          `</p><p><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
           "Please type <b>I understand</b> here:" +
           '</p>';
         app.dialog.create({
