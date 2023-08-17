@@ -844,25 +844,20 @@ function updateEndorsements() {
             signature: '',
             published: new Date().getTime(),
             revoke: true,
-            publication: endorsement.signature
+            endorsedSignature: endorsement.signature
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          let xhttp = new XMLHttpRequest();
-          xhttp.onload = function() {
-            if (this.status == 200) {
-              let answer = JSON.parse(this.responseText);
-              if (answer.error)
-                app.dialog.alert(answer.error + '.<br>Please try again.', 'Revocation error');
-              else {
-                app.dialog.alert('You successfully revoked ' + endorsement.givenNames + ' ' +
-                  endorsement.familyName, 'Revocation success');
-                endorsements = answer;
-                updateEndorsements();
+          fetch(`${publisher}/publisher.php}`, {method: 'POST', body: JSON.stringify(e)})
+            .then((response) => json.reponse())
+            .then((answer) => {
+              if (answer.error) {
+                app.dialog.alert(answer.error, 'Revocation error');
+                return;
               }
-            }
-          };
-          xhttp.open('POST', publisher + '/publish.php', true);
-          xhttp.send(JSON.stringify(e));
+              app.dialog.alert(`You successfully revoked ${endorsement.givenNames} ${endorsement.familyName}`, 'Revocation success');
+              endorsements = answer;
+              updateEndorsements();
+            });
         }
         const text = '<p class="text-align-left">' +
           "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
