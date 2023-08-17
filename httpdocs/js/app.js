@@ -864,7 +864,7 @@ function updateEndorsements() {
           xhttp.open('POST', publisher + '/publish.php', true);
           xhttp.send(JSON.stringify(e));
         }
-        const text = "<p>You should revoke only a citizen who has moved or " +
+        const text = "<p text-align-left>You should revoke only a citizen who has moved or " +
           "changed her citizen card. This might affect her ability to vote.</p>" +
           "<p>Do you really want to revoke <b>" + endorsement.givenNames + ' ' + endorsement.familyName +
           "</b>?</p>" +
