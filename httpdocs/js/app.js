@@ -826,8 +826,6 @@ function updateEndorsements() {
     newElement(row, 'div', 'col', (endorsement.revoke ? 'Revoked: ' : 'Endorsed: ') + t);
     if (!endorsement.revoke) {
       row = newElement(col, 'div', 'row');
-      newElement(row, 'div', 'col', 'Expires: ' + new Date(endorsement.expires).toISOString().slice(0, 10));
-      row = newElement(col, 'div', 'row');
       let c = newElement(row, 'div', 'col text-align-right');
       a = newElement(c, 'a', 'link', 'Revoke');
       a.href = '#';
