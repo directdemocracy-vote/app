@@ -815,6 +815,7 @@ function updateCitizenEndorsements() {
     let a = newElement(innerDiv, 'a', 'link external', `<span style="font-weight:bold">${endorsement.givenNames}</span> <span>${endorsement.familyName}</span>`);
     a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
     a.target = '_blank';
+    const t = new Date(endorsement.published).toISOString().slice(0, 10);
     newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
   });
 }
