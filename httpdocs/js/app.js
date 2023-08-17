@@ -688,26 +688,26 @@ window.onload = function() {
     stripped = stripped.slice(0, -1 - footer);
     return stripped;
   }
+}
 
-  function updateCitizenCard() {
-    showPage('card');
-    document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
-    document.getElementById('register-picture').setAttribute('src', citizen.picture);
-    document.getElementById('citizen-given-names').innerHTML = citizen.givenNames;
-    document.getElementById('register-given-names').value = citizen.givenNames;
-    document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
-    document.getElementById('register-family-name').value = citizen.familyName;
-    document.getElementById('citizen-coords').innerHTML =
-      '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
-      citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
-      citizen.latitude + ', ' + citizen.longitude + '</a>';
-    document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
-    let published = new Date(citizen.published);
-    document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-    citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
-    getReputationFromTrustee();
-    updateCitizenEndorsements();
-  }
+function updateCitizenCard() {
+  showPage('card');
+  document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
+  document.getElementById('register-picture').setAttribute('src', citizen.picture);
+  document.getElementById('citizen-given-names').innerHTML = citizen.givenNames;
+  document.getElementById('register-given-names').value = citizen.givenNames;
+  document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
+  document.getElementById('register-family-name').value = citizen.familyName;
+  document.getElementById('citizen-coords').innerHTML =
+    '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
+    citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
+    citizen.latitude + ', ' + citizen.longitude + '</a>';
+  document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+  let published = new Date(citizen.published);
+  document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
+  citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
+  getReputationFromTrustee();
+  updateCitizenEndorsements();
 }
 
 function downloadCitizen() {
