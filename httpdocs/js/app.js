@@ -821,7 +821,6 @@ function updateEndorsements() {
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
-      message.style.fontWeight = 'bold';
       message.style.color = 'red';
       count ++;
     } else {
