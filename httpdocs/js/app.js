@@ -961,3 +961,18 @@ function strippedKey(publicKey) {
   stripped = stripped.slice(0, -1 - footer);
   return stripped;
 }
+
+function newElement(parent, type, classes, innerHTML) {
+  let element = document.createElement(type);
+  if (parent)
+    parent.appendChild(element);
+  if (classes) {
+    const classArray = classes.split(' ');
+    classArray.forEach(function(c) {
+      element.classList.add(c);
+    });
+  }
+  if (typeof innerHTML !== 'undefined')
+    element.innerHTML = innerHTML;
+  return element;
+}
