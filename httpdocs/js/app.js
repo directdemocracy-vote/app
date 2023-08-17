@@ -831,7 +831,8 @@ function updateEndorsements() {
       message.style.color = 'red';
       count ++;
     } else {
-      a = newElement(div, 'a', 'link', 'Revoke');
+      d = newElement(div, 'div', 'item-label text-align-right');
+      a = newElement(d, 'a', 'link', 'Revoke');
       a.href = '#';
       a.style.fontWeight = 'bold';
       a.style.textTransform = 'uppercase';
