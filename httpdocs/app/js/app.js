@@ -42,14 +42,14 @@ let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
-let publisher = localStorage.getItem('publisher');
-if (!publisher) {
-  publisher = 'https://publisher.directdemocracy.vote';
-  localStorage.setItem('publisher', publisher);
+let notary = localStorage.getItem('notary');
+if (!notary) {
+  notary = 'https://notary.directdemocracy.vote';
+  localStorage.setItem('notary', notary);
 }
 let judge = localStorage.getItem('judge');
 if (!judge) {
-  judge = 'https://trustee.directdemocracy.vote';
+  judge = 'https://judge.directdemocracy.vote';
   localStorage.setItem('judge', judge);
 }
 let station = localStorage.getItem('station');
@@ -159,10 +159,10 @@ window.addEventListener('offline', () => {
 });
 
 window.onload = function() {
-  document.getElementById('publisher').value = publisher;
-  document.getElementById('publisher').addEventListener('input', function(event) {
-    publisher = event.target.value;
-    localStorage.setItem('publisher', publisher);
+  document.getElementById('notary').value = notary;
+  document.getElementById('notary').addEventListener('input', function(event) {
+    notary = event.target.value;
+    localStorage.setItem('notary', notary);
   });
   document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
@@ -385,7 +385,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+    fetch(`${notary}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -505,12 +505,12 @@ window.onload = function() {
       binarySignature += String.fromCharCode(value.bytes[i]);
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
-    fetch(`${publisher}/publication.php?fingerprint=${fingerprint}`)
+    fetch(`${notary}/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
       .then((answer) => {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
-          app.dialog.alert(endorsed.error, 'Error getting citizen from publisher');
+          app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
           return;
         }
         // verify signature of endorsed
@@ -587,7 +587,7 @@ window.onload = function() {
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     console.log("publish endorsement for " + CryptoJS.SHA1(endorsed.signature).toString() + " with signature " + CryptoJS.SHA1(endorsement.signature).toString());
-    fetch(`${publisher}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+    fetch(`${notary}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
       .then((response) => response.text())
       .then((answer) => {
         console.log(answer);
@@ -685,7 +685,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${publisher}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${notary}/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -703,7 +703,7 @@ function downloadCitizen() {
       }
     })
     .catch((error) => {
-      app.dialog.alert('Cannot connect to the publisher.<br>Please try again.', 'Citizen Error');
+      app.dialog.alert('Cannot connect to the notary.<br>Please try again.', 'Citizen Error');
       console.error(error);
     });
 }
@@ -762,7 +762,7 @@ function updateCitizenEndorsements() {
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
+    a.href = `${notary}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -791,7 +791,7 @@ function updateEndorsements() {
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
+    a.href = `${notary}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -818,7 +818,7 @@ function updateEndorsements() {
             endorsedSignature: endorsement.signature
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          fetch(`${publisher}/publish.php`, {method: 'POST', body: JSON.stringify(e)})
+          fetch(`${notary}/publish.php`, {method: 'POST', body: JSON.stringify(e)})
             .then((response) => response.json())
             .then((answer) => {
               if (answer.error) {
