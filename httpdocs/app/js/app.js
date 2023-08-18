@@ -531,6 +531,7 @@ window.onload = function() {
         show('endorse-citizen');
         document.getElementById('endorse-picture-check').checked = false;
         document.getElementById('endorse-name-check').checked = false;
+        document.getElementById('endorse-adult-check').checked = false;
         document.getElementById('endorse-coords-check').checked = false;
         document.getElementById('endorse-citizen').style.display = '';
         document.getElementById('endorse-picture').src = endorsed.picture;
