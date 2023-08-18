@@ -25,7 +25,7 @@ let translatorIsReady = false;
 let challengeScanner = null;
 let challenge = '';
 let answerScanner = null;
-let translator = new Translator('/i18n');
+let translator = new Translator('i18n');
 const DIRECTDEMOCRACY_VERSION = '0.0.2';
 let citizen = {
   schema: '',
