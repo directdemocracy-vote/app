@@ -830,14 +830,13 @@ function updateEndorsements() {
         }
         const text = '<p class="text-align-left">' +
           "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
-          `</p><p><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
+          `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
           "Please type <b>I understand</b> here:" +
           '</p>';
         app.dialog.create({
           title: 'Revoke Citizen',
           text,
-          content: '<div class="dialog-input-field item-input"><div class="item-input-wrap">' +
-            '<input type="text" class="dialog-input"></div></div>',
+          content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
           buttons: [{
               text: app.params.dialog.buttonCancel,
               keyCodes: app.keyboardActions ? [27] : null
