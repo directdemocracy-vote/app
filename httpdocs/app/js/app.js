@@ -47,10 +47,10 @@ if (!publisher) {
   publisher = 'https://publisher.directdemocracy.vote';
   localStorage.setItem('publisher', publisher);
 }
-let trustee = localStorage.getItem('trustee');
-if (!trustee) {
-  trustee = 'https://trustee.directdemocracy.vote';
-  localStorage.setItem('trustee', trustee);
+let judge = localStorage.getItem('judge');
+if (!judge) {
+  judge = 'https://trustee.directdemocracy.vote';
+  localStorage.setItem('judge', judge);
 }
 let station = localStorage.getItem('station');
 if (!station) {
@@ -151,7 +151,7 @@ let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 window.addEventListener('online', () => {
   disable('endorse-me-button');
   downloadCitizen();
-  getReputationFromTrustee();
+  getReputationFromJudge();
 });
 
 window.addEventListener('offline', () => {
@@ -164,10 +164,10 @@ window.onload = function() {
     publisher = event.target.value;
     localStorage.setItem('publisher', publisher);
   });
-  document.getElementById('trustee').value = trustee;
-  document.getElementById('trustee').addEventListener('input', function(event) {
-    trustee = event.target.value;
-    localStorage.setItem('trustee', trustee);
+  document.getElementById('judge').value = judge;
+  document.getElementById('judge').addEventListener('input', function(event) {
+    judge = event.target.value;
+    localStorage.setItem('judge', judge);
   });
   document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
@@ -680,7 +680,7 @@ function updateCitizenCard() {
   let published = new Date(citizen.published);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
   citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
-  getReputationFromTrustee();
+  getReputationFromJudge();
   updateCitizenEndorsements();
 }
 
@@ -708,8 +708,8 @@ function downloadCitizen() {
     });
 }
 
-function getReputationFromTrustee() {
-  fetch(`${trustee}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
+function getReputationFromJudge() {
+  fetch(`${judge}/reputation.php?key=${encodeURIComponent(citizen.key)}`)
     .then((response) => response.json())
     .then((answer) => {
       let reputation = document.getElementById('citizen-reputation');
@@ -726,7 +726,7 @@ function getReputationFromTrustee() {
         badge.classList.add('color-' + color);
       }})
     .catch((error) => {
-      app.dialog.alert(error, 'Could not get reputation from trustee.');
+      app.dialog.alert(error, 'Could not get reputation from judge.');
     });
 }
 
@@ -762,7 +762,7 @@ function updateCitizenEndorsements() {
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
+    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -791,7 +791,7 @@ function updateEndorsements() {
     img.style.width = '100%';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&trustee=${encodeURIComponent(trustee)}`;
+    a.href = `${publisher}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
