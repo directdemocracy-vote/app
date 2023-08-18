@@ -794,7 +794,8 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
+    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke == 1 ? 'Revoked : ' : 'Endorsed: ') + t);
+    console.log(endorsement);
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
       message.style.color = 'red';
