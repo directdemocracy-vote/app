@@ -590,7 +590,6 @@ window.onload = function() {
     fetch(`${notary}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
       .then((response) => response.text())
       .then((answer) => {
-        console.log(answer);
         endorsements = JSON.parse(answer);
         if (endorsements.error)
           app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
