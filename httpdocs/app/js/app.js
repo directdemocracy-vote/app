@@ -385,7 +385,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json", "Access-Control-Allow-Origin" : "*"}, body: JSON.stringify(citizen)})
+    fetch(`${notary}/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
