@@ -267,7 +267,7 @@ window.onload = function() {
   });
 
   // setting-up the home location
-  document.getElementById('register-location-button').addEventListener('click', function(event) {
+  document.getElementById('register-location-button').addEventListener('click', function() {
     disable('register-location-button');
     let content = {};
     content.innerHTML = `<div class="sheet-modal" style="height: 100%">
