@@ -60,6 +60,7 @@ if (!station) {
 let endorsed = null;
 let endorseMap = null;
 let endorseMarker = null;
+let online = true;
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -149,12 +150,14 @@ app.on('pageAfterIn', function(page) {
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
+  online = true;
   disable('endorse-me-button');
   downloadCitizen();
   getReputationFromJudge();
 });
 
 window.addEventListener('offline', () => {
+  online = false;
   enable('endorse-me-button');
 });
 
@@ -268,6 +271,7 @@ window.onload = function() {
 
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', function() {
+    disable('register-location-button');
     let content = {};
     content.innerHTML = `<div class="sheet-modal" style="height: 100%">
   <div class="toolbar">
@@ -360,6 +364,7 @@ window.onload = function() {
         },
         close: function() {
           document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+          enable('register-location-button');
           validateRegistration();
         }
       }
@@ -372,12 +377,12 @@ window.onload = function() {
 
   // registering
   document.getElementById('register-button').addEventListener('click', function(event) {
+    disable('register-button');
     let text = document.getElementById('register-button-text');
     const registration = 'registration';
     text.innerHTML = translator.translate(registration);
     text.setAttribute('data-i18n', registration);
     show('register-button-preloader');
-    disable(event.currentTarget);
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = new Date().getTime();
@@ -445,11 +450,14 @@ window.onload = function() {
       content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
       buttons: [{text: 'Done', onClick: function() {
         app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
+        if (!online)
+          enable('endorse-me-button');
       }}]
     }).open();
   }, {returnDetailedScanResult: true});
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
+    disable('endorse-me-button');
     showPage('endorse-me');
     challengeScanner.start();
   });
@@ -457,9 +465,12 @@ window.onload = function() {
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function() {
     challengeScanner.stop();
     showPage('card');
+    if (!online)
+      enable('endorse-me-button');
   });
   
   document.getElementById('endorse-button').addEventListener('click', function() {
+    disable('endorse-button');
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
@@ -483,7 +494,9 @@ window.onload = function() {
             answerScanner.start();
           }}]
         }).open();
-      }}, {text: 'Cancel'}]
+      }}, {text: 'Cancel', onClick: function() {
+        enable('endorse-button');
+      }}]
     }).open();
   });
 
@@ -511,6 +524,7 @@ window.onload = function() {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
+          enable('endorse-button');
           return;
         }
         // verify signature of endorsed
@@ -520,10 +534,12 @@ window.onload = function() {
         verify.setPublicKey(publicKey(endorsed.key));
         if (!verify.verify(challenge, signature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+          enable('endorse-button');
           return;
         }
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
+          enable('endorse-button');
           return;
         }
         endorsed.signature = endorsedSignature;
@@ -569,11 +585,13 @@ window.onload = function() {
     answerScanner.stop();
     hide('endorse-scanner');
     show('endorse-page');
+    enable('endorse-button');
   });
 
   document.getElementById('endorse-cancel-confirm').addEventListener('click', function() {
     hide('endorse-citizen');
     show('endorse-page');
+    enable('endorse-button');
   });
 
   document.getElementById('endorse-confirm').addEventListener('click', function() {
@@ -597,6 +615,7 @@ window.onload = function() {
           app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
           updateEndorsements();
         }
+        enable('endorse-button');
       })
       .catch((error) => {
         console.error(`Could publish citizen card.`);
