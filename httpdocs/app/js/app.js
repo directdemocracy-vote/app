@@ -60,6 +60,7 @@ if (!station) {
 let endorsed = null;
 let endorseMap = null;
 let endorseMarker = null;
+let online = true;
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -149,12 +150,14 @@ app.on('pageAfterIn', function(page) {
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
+  online = true;
   disable('endorse-me-button');
   downloadCitizen();
   getReputationFromJudge();
 });
 
 window.addEventListener('offline', () => {
+  online = false;
   enable('endorse-me-button');
 });
 
@@ -447,7 +450,8 @@ window.onload = function() {
       content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
       buttons: [{text: 'Done', onClick: function() {
         app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-        enable('endorse-me-button');
+        if (!online)
+          enable('endorse-me-button');
       }}]
     }).open();
   }, {returnDetailedScanResult: true});
@@ -461,7 +465,8 @@ window.onload = function() {
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function() {
     challengeScanner.stop();
     showPage('card');
-    enable('endorse-me-button');
+    if (!online)
+      enable('endorse-me-button');
   });
   
   document.getElementById('endorse-button').addEventListener('click', function() {
