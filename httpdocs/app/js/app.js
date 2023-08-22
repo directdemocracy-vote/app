@@ -390,7 +390,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/ajax/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -518,7 +518,7 @@ window.onload = function() {
       binarySignature += String.fromCharCode(value.bytes[i]);
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
-    fetch(`${notary}/ajax/publication.php?fingerprint=${fingerprint}`)
+    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
       .then((answer) => {
         endorsed = JSON.parse(answer);
@@ -605,7 +605,7 @@ window.onload = function() {
       endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/ajax/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
       .then((response) => response.text())
       .then((answer) => {
         endorsements = JSON.parse(answer);
@@ -703,7 +703,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/ajax/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -727,7 +727,7 @@ function downloadCitizen() {
 }
 
 function getReputationFromJudge() {
-  fetch(`${judge}/ajax/reputation.php?key=${encodeURIComponent(citizen.key)}`)
+  fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`)
     .then((response) => response.json())
     .then((answer) => {
       let reputation = document.getElementById('citizen-reputation');
@@ -836,7 +836,7 @@ function updateEndorsements() {
             endorsedSignature: endorsement.signature
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/ajax/publish.php`, {method: 'POST', body: JSON.stringify(e)})
+          fetch(`${notary}/api/publish.php`, {method: 'POST', body: JSON.stringify(e)})
             .then((response) => response.json())
             .then((answer) => {
               if (answer.error) {
