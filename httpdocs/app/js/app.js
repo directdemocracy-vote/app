@@ -681,7 +681,7 @@ window.onload = function() {
          let content = `<div>${petition.title}</div><div>${petition.description}</div>`;
          app.dialog.confirm(content, 'Sign the petition', function() {
            console.log('Signing!');
-         });        
+         });
       });
   }
 
