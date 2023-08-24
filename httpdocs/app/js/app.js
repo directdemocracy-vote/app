@@ -645,22 +645,39 @@ window.onload = function() {
     hide('petition-page');
     show('petition-scanner');
     disable('petition-scan');
+    disable('petition-paste');
     petitionScanner.start();
   });
-
   document.getElementById('petition-paste').addEventListener('click', function() {
+    disable('petition-scan');
+    disable('petition-paste');
     app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(fingerprint) {
       console.log('Pasted: ' + fingerprint);
     });
-
+  });
   document.getElementById('cancel-petition-button').addEventListener('click', function() {
     petitionScanner.stop();
     hide('petition-scanner');
     show('petition-page');
     enable('petition-scan');
   });
-  
-});
+
+  function signPetition(fingerprint) {
+    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+      .then((response) => response.json())
+      .then((petition) => {
+         if (petition.error) {
+           console.log(`Petition error: ${petition.error}`);
+           return;
+         }
+         // check deadline
+         // check area
+         let content = `<div>${answer.title}</div><div>${answer.description}</div>`;
+         app.dialog.confirm(content, 'Sign the petition', function() {
+           console.log('Signing!');
+         });        
+      });
+  }
 
   function validateRegistration() {
     disable('register-button');
