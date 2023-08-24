@@ -626,8 +626,9 @@ window.onload = function() {
   });
 
   document.getElementById('petition-scan').addEventListener('click', function() {
-    document.getElementById('petition-page').style.display = 'none';
-    document.getElementById('petition-scanner').style.display = '';
+    hide('petition-page');
+    show('petition-scanner');
+    petitionScanner.start();
   });
 
   document.getElementById('petition-paste').addEventListener('click', function() {
