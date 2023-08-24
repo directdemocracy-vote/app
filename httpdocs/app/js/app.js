@@ -650,7 +650,7 @@ window.onload = function() {
 
   document.getElementById('petition-paste').addEventListener('click', function() {
     app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(fingerprint) {
-      console.log('pasted: ' + fingerprint);
+      console.log('Pasted: ' + fingerprint);
     });
 
   document.getElementById('cancel-petition-button').addEventListener('click', function() {
