@@ -148,7 +148,7 @@ app.on('pageAfterIn', function(page) {
   removeClass('tab-settings', 'swiper-slide-next');
   removeClass('tab-settings', 'swiper-slide-prev');
   let swiper = document.getElementById('swiper-container');
-  swiper.setAttrbute('allow-touch-move', false);
+  swiper.setAttribute('allow-touch-move', false);
   swiper.setAttribute('speed', 0);
 });
 
