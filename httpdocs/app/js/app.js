@@ -119,36 +119,6 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
-app.on('pageAfterIn', function(page) {
-  if (page.name !== 'home')
-    return;
-  addClass('tabbar-card', 'tab-link-active');
-  removeClass('tabbar-endorse', 'tab-link-active');
-  removeClass('tabbar-vote', 'tab-link-active');
-  removeClass('tabbar-sign', 'tab-link-active');
-  removeClass('tabbar-settings', 'tab-link-active');
-  addClass('tab-card', 'tab-active');
-  addClass('tab-card', 'swiper-slide-active');
-  removeClass('tab-card', 'swiper-slide-next');
-  removeClass('tab-card', 'swiper-slide-prev');
-  removeClass('tab-endorse', 'tab-active');
-  removeClass('tab-endorse', 'swiper-slide-active');
-  addClass('tab-endorse', 'swiper-slide-next');
-  removeClass('tab-endorse', 'swiper-slide-prev');
-  removeClass('tab-vote', 'tab-active');
-  removeClass('tab-vote', 'swiper-slide-active');
-  removeClass('tab-vote', 'swiper-slide-next');
-  removeClass('tab-vote', 'swiper-slide-prev');
-  removeClass('tab-sign', 'tab-active');
-  removeClass('tab-sign', 'swiper-slide-active');
-  removeClass('tab-sign', 'swiper-slide-next');
-  removeClass('tab-sign', 'swiper-slide-prev');
-  removeClass('tab-settings', 'tab-active');
-  removeClass('tab-settings', 'swiper-slide-active');
-  removeClass('tab-settings', 'swiper-slide-next');
-  removeClass('tab-settings', 'swiper-slide-prev');
-});
-
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
 
 window.addEventListener('online', () => {
