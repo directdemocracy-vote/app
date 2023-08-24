@@ -783,7 +783,6 @@ function downloadCitizen() {
         updateCitizenCard();
         updateEndorsements();
         let swiper = document.getElementById('swiper-container');
-        // swiper.setAttribute('allow-touch-move', 'true');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
         // updateArea();
