@@ -109,6 +109,7 @@ app.on('pageInit', function(page) {
     return;
   homePageIsReady = true;
   setupLanguagePicker();
+  app.popup.create({el: document.getElementById('info-popup')});
 });
 
 app.on('pageBeforeRemove', function(page) {
