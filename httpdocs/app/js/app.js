@@ -164,10 +164,6 @@ window.addEventListener('offline', () => {
 });
 
 window.onload = function() {
-  let swiper = document.getElementById('swiper-container');
-  swiper.setAttribute('allow-touch-move', false);
-  swiper.setAttribute('speed', 0);
-
   document.getElementById('notary').value = notary;
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = event.target.value;
@@ -786,6 +782,10 @@ function downloadCitizen() {
         citizenEndorsements = answer.citizen_endorsements;
         updateCitizenCard();
         updateEndorsements();
+        let swiper = document.getElementById('swiper-container');
+        swiper.setAttribute('allow-touch-move', 'true');
+        swiper.setAttribute('speed', '600');
+      
         // updateArea();
       }
     })
