@@ -668,23 +668,23 @@ window.onload = function() {
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.json())
       .then((petition) => {
-         if (petition.error) {
-           console.log(`Petition error: ${petition.error}`);
-           return;
-         }
-         const outdated = (petition.deadline < new Date().getTime());
-         const deadline = new Date(petition.deadline).toLocaleString();
-         if (outdated) {
-           app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
-           return;
-         }
-         // check area
-         let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
-         app.dialog.confirm(content, 'Sign the petition', function() {
-           console.log('Signing!');
-           enable('petition-scan');
-           enable('petition-paste');       
-         });
+        if (petition.error) {
+          console.log(`Petition error: ${petition.error}`);
+          return;
+        }
+        const outdated = (petition.deadline < new Date().getTime());
+        const deadline = new Date(petition.deadline).toLocaleString();
+        if (outdated)
+          app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
+        else {
+          // check area
+          let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
+          app.dialog.confirm(content, 'Sign the petition', function() {
+            console.log('Signing!');
+          });
+        }
+        enable('petition-scan');
+        enable('petition-paste');       
       });
   }
 
