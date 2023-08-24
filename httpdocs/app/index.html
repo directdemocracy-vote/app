@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>directdemocracy</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/framework7@8.2.0/framework7-bundle.min.css">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/framework7-icons@5.0.5/css/framework7-icons.css">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -47,7 +48,7 @@
             <div class="navbar-bg"></div>
             <div class="navbar-inner">
               <div class="title">
-                <img src="images/directdemocracy-logo.png" style="width:24px;height:24px;margin-bottom:4px;margin-right:10px;vertical-align:middle;">
+                <i class="f7-icons" style="font-size:140%;rotate:-90deg">hand_point_right</i>
                 <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span style="font-weight:normal">.vote</span>
               </div>
               <div class="right margin-right-half">
@@ -150,7 +151,7 @@
                   </ul>
                 </div>
               </div>
-              <div id="splash-page" class="text-align-center display-none"><img src="images/directdemocracy-logo.png" style="margin-top:50%"></div>
+              <div id="splash-page" class="text-align-center display-none"><i class="f7-icons" style="font-size:2000%;rotate:-90deg;margin-top:40%">hand_point_right</i></div>
               <div id="card-page" class="display-none">
                 <div class="block margin-top-half">
                   <div class="display-flex">
@@ -260,11 +261,39 @@
               </div>
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-vote">
-              Vote
+              <div id="referendum-page" class="block">
+                <div class="block-title">Vote at a referendum</div>
+                <div class="grid grid-cols-2 grid-gap">
+                  <button id="referendum-scan" class="button button-fill">Scan</button>
+                  <button id="referendum-paste" class="button button-fill">Paste</button>
+                </div>
+                <div id="referendum-scanner" class="display-none">
+                  <div style="overflow:hidden">
+                    <video muted playsinline id="referendum-video"></video>
+                  </div>
+                  <div class="block no-margin-top text-align-center">Scan the QR code of the referendum.
+                    <button class="button button-fill margin-top-half" id="cancel-scan-referendum-button">Cancel</button>
+                  </div>
+                </div>  
+              </div>
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-sign">
-              Sign
-            </swiper-slide>
+              <div class="block" id="petition-page">
+                <div class="block-title">Sign a petition</div>
+                <div class="grid grid-cols-2 grid-gap">
+                  <button id="petition-scan" class="button button-fill">Scan</button>
+                  <button id="petition-paste" class="button button-fill">Paste</button>
+                </div>
+              </div>
+              <div id="petition-scanner" class="display-none">
+                <div style="overflow:hidden">
+                  <video muted playsinline id="petition-video"></video>
+                </div>
+                <div class="block no-margin-top text-align-center">Scan the QR code of the petition.
+                  <button class="button button-fill margin-top-half" id="cancel-scan-petition-button">Cancel</button>
+                </div>
+              </div>  
+          </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-settings">
               <div class="block-title" data-i18n="webservices"></div>
               <div class="list list-dividers-ios list-outline-ios">
@@ -319,10 +348,10 @@
     <script src="//cdn.jsdelivr.net/npm/framework7@8.2.0/framework7-bundle.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="//cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
+    <script src="//directdemocracy.vote/js/jsencrypt.min.js"></script>
+    <script src="//directdemocracy.vote/js/crypto-js.js"></script>
+    <script src="//directdemocracy.vote/js/qrious.min.js"></script>
     <script src="js/croppie.min.js"></script>
-    <script src="js/jsencrypt.min.js"></script>
-    <script src="js/crypto-js.js"></script>
-    <script src="js/qrious.min.js"></script>
     <script type="module" src="js/app.js"></script>
   </body>
 </html>
