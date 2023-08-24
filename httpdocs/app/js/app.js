@@ -655,7 +655,7 @@ window.onload = function() {
       console.log('Pasted: ' + fingerprint);
     });
   });
-  document.getElementById('cancel-petition-button').addEventListener('click', function() {
+  document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
     petitionScanner.stop();
     hide('petition-scanner');
     show('petition-page');
