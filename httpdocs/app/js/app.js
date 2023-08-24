@@ -672,7 +672,11 @@ window.onload = function() {
            console.log(`Petition error: ${petition.error}`);
            return;
          }
-         // check deadline
+         const outdated = (petition.deadline > new Date().getTime());
+         if (outdated) {
+           app.alert('The deadline has passed', `<b>${petition.title}</b><br><br>The deadline for signing has passed. It was ${new Date(petition.deadline).toLocaleString()}. Therefore you cannot sign it.`);
+           return;
+         }
          // check area
          let content = `<div>${petition.title}</div><div>${petition.description}</div>`;
          app.dialog.confirm(content, 'Sign the petition', function() {
