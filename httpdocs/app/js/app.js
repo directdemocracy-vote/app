@@ -674,7 +674,7 @@ window.onload = function() {
          }
          // check deadline
          // check area
-         let content = `<div>${answer.title}</div><div>${answer.description}</div>`;
+         let content = `<div>${petition.title}</div><div>${petition.description}</div>`;
          app.dialog.confirm(content, 'Sign the petition', function() {
            console.log('Signing!');
          });        
