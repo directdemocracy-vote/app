@@ -673,6 +673,7 @@ window.onload = function() {
            return;
          }
          const outdated = (petition.deadline > new Date().getTime());
+         console.log(petition.deadline + ' > ' + new Date().getTime());
          const deadline = new Date(petition.deadline).toLocaleString();
          if (outdated) {
            app.alert('The deadline has passed', `<b>${petition.title}</b><br><br>The deadline for signing has passed. It was ${deadline}. Therefore you cannot sign it.`);
