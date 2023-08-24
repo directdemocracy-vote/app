@@ -147,9 +147,6 @@ app.on('pageAfterIn', function(page) {
   removeClass('tab-settings', 'swiper-slide-active');
   removeClass('tab-settings', 'swiper-slide-next');
   removeClass('tab-settings', 'swiper-slide-prev');
-  let swiper = document.getElementById('swiper-container');
-  swiper.setAttribute('allow-touch-move', false);
-  swiper.setAttribute('speed', 0);
 });
 
 let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
@@ -167,6 +164,10 @@ window.addEventListener('offline', () => {
 });
 
 window.onload = function() {
+  let swiper = document.getElementById('swiper-container');
+  swiper.setAttribute('allow-touch-move', false);
+  swiper.setAttribute('speed', 0);
+
   document.getElementById('notary').value = notary;
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = event.target.value;
