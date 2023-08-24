@@ -673,12 +673,13 @@ window.onload = function() {
            return;
          }
          const outdated = (petition.deadline > new Date().getTime());
+         const deadline = new Date(petition.deadline).toLocaleString();
          if (outdated) {
-           app.alert('The deadline has passed', `<b>${petition.title}</b><br><br>The deadline for signing has passed. It was ${new Date(petition.deadline).toLocaleString()}. Therefore you cannot sign it.`);
+           app.alert('The deadline has passed', `<b>${petition.title}</b><br><br>The deadline for signing has passed. It was ${deadline}. Therefore you cannot sign it.`);
            return;
          }
          // check area
-         let content = `<div>${petition.title}</div><div>${petition.description}</div>`;
+         let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
          app.dialog.confirm(content, 'Sign the petition', function() {
            console.log('Signing!');
            enable('petition-scan');
