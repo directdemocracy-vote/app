@@ -623,6 +623,17 @@ window.onload = function() {
       });
   });
 
+  document.getElementById('petition-scan').addEventListener('click', function() {
+    document.getElementById('petition-buttons').style.display = 'none';
+    document.getElementById('petition-scanner').style.display = '';
+  });
+
+  document.getElementById('petition-paste').addEventListener('click', function() {
+    app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(reference) {
+      console.log('pasted: ' + reference);
+    });
+});
+
   function validateRegistration() {
     disable('register-button');
     if (document.getElementById('register-given-names').value.trim() === '')

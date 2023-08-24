@@ -263,21 +263,37 @@
             <swiper-slide class="tab page-content" id="tab-vote">
               <div class="block-title">Vote at a referendum</div>
               <div class="block">
-                <div class="grid grid-cols-2 grid-gap">
+                <div id="referendum-buttons" class="grid grid-cols-2 grid-gap">
                   <button id="referendum-scan" class="button button-fill">Scan</button>
                   <button id="referendum-paste" class="button button-fill">Paste</button>
                 </div>
+                <div id="referendum-scanner" class="display-none">
+                  <div style="overflow:hidden">
+                    <video muted playsinline id="referendum-video"></video>
+                  </div>
+                  <div class="block no-margin-top text-align-center">Scan the QR code of the referendum.
+                    <button class="button button-fill margin-top-half" id="cancel-scan-referendum-button">Cancel</button>
+                  </div>
+                </div>  
               </div>
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-sign">
               <div class="block-title">Sign a petition</div>
               <div class="block">
-                <div class="grid grid-cols-2 grid-gap">
+                <div id="petition-buttons" class="grid grid-cols-2 grid-gap">
                   <button id="petition-scan" class="button button-fill">Scan</button>
                   <button id="petition-paste" class="button button-fill">Paste</button>
                 </div>
               </div>
-            </swiper-slide>
+              <div id="petition-scanner" class="display-none">
+                <div style="overflow:hidden">
+                  <video muted playsinline id="petition-video"></video>
+                </div>
+                <div class="block no-margin-top text-align-center">Scan the QR code of the petition.
+                  <button class="button button-fill margin-top-half" id="cancel-scan-petition-button">Cancel</button>
+                </div>
+              </div>  
+          </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-settings">
               <div class="block-title" data-i18n="webservices"></div>
               <div class="list list-dividers-ios list-outline-ios">
