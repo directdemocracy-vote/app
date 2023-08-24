@@ -639,6 +639,7 @@ window.onload = function() {
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     console.log('fingerprint=' + fingerprint);
+    signPetition(fingerprint);
   },{returnDetailedScanResult: true});
 
   document.getElementById('petition-scan').addEventListener('click', function() {
@@ -653,6 +654,7 @@ window.onload = function() {
     disable('petition-paste');
     app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(fingerprint) {
       console.log('Pasted: ' + fingerprint);
+      signPetition(fingerprint);
     });
   });
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
