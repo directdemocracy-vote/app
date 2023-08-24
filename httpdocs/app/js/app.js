@@ -624,14 +624,38 @@ window.onload = function() {
   });
 
   document.getElementById('petition-scan').addEventListener('click', function() {
-    document.getElementById('petition-buttons').style.display = 'none';
+    document.getElementById('petition-page').style.display = 'none';
     document.getElementById('petition-scanner').style.display = '';
   });
 
   document.getElementById('petition-paste').addEventListener('click', function() {
-    app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(reference) {
-      console.log('pasted: ' + reference);
+    app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(fingerprint) {
+      console.log('pasted: ' + fingerprint);
     });
+
+  const petitionVideo = document.getElementById('petition-video');
+  petitionVideo.addEventListener('loadedmetadata', qrVideo);
+
+  petitionScanner = new QrScanner(petitionVideo, function(value) {
+    petitionScanner.stop();
+    hide('petition-scanner');
+    show('petition-page');
+    let fingerprint = '';
+    const hex = '0123456789abcdef';
+    for(let i=0; i < 20; i++) {
+      const b = value.bytes[i];
+      fingerprint += hex[b >> 4] + hex[b & 15];
+    }
+    console.log('fingerprint=' + fingerprint);
+  },{returnDetailedScanResult: true});
+
+  document.getElementById('cancel-endorse-button').addEventListener('click', function() {
+    answerScanner.stop();
+    hide('endorse-scanner');
+    show('endorse-page');
+    enable('endorse-button');
+  });
+  
 });
 
   function validateRegistration() {
