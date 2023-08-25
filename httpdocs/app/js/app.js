@@ -665,10 +665,10 @@ window.onload = function() {
         }
         const outdated = (petition.deadline < new Date().getTime());
         const deadline = new Date(petition.deadline).toLocaleString();
+        console.log(petition);
         if (outdated)
           app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
         else {
-          console.log(petition);
           let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
           app.dialog.confirm(content, 'Sign the petition', function() {
             console.log('Signing!');
