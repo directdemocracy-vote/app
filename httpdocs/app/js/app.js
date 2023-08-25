@@ -815,7 +815,7 @@ function updateCitizenEndorsements() {
     div.style.width = '20%';
     let img = newElement(div, 'img');
     img.src = endorsement.picture;
-    img.style.width = '100%';
+    img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
     a.href = `${notary}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
