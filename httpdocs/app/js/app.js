@@ -656,7 +656,7 @@ window.onload = function() {
   });
 
   function getPetition(fingerprint) {
-    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
+    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
       .then((petition) => {
         if (petition.error) {
@@ -668,7 +668,7 @@ window.onload = function() {
         if (outdated)
           app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
         else {
-          // check area
+          console.log(petition);
           let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
           app.dialog.confirm(content, 'Sign the petition', function() {
             console.log('Signing!');
