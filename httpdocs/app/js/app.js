@@ -714,7 +714,7 @@ window.onload = function() {
     block.appendChild(p);
     const url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
     p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
-    grid = document.createElement('div');
+    let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid grid-cols-2 grid.gap');
     let button = document.createElement('button');
