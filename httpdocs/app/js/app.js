@@ -812,7 +812,6 @@ function updateCitizenEndorsements() {
   citizenEndorsements.forEach(function(endorsement) {
     let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right no-margin-left no-margin-right');
     let div = newElement(li, 'div', 'item-media');
-    //div.style.width = '20%';
     let img = newElement(div, 'img');
     img.src = endorsement.picture;
     img.style.width = '75px';
