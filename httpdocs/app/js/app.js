@@ -724,10 +724,14 @@ window.onload = function() {
     block.classList.add('block', 'no-padding');
     let p = document.createElement('p');
     block.appendChild(p);
+    let url = `${notary}/petition.html?fingerprint=${CryptoJS.SHA1(petition.signature).toString()}`;
+    p.innerHTML = `<a class="link external" href="${url}" target="_blank"><b>petition.title</b></a>`;
+    let p = document.createElement('p');
+    block.appendChild(p);
     p.innerHTML = petition.description;
     p = document.createElement('p');
     block.appendChild(p);
-    const url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
+    url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
     p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
