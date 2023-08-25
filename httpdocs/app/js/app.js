@@ -838,12 +838,11 @@ function updateEndorsements() {
   let medias = newElement(list, 'div', 'list media-list block');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
-    let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right');
+    let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right no-margin-left no-margin-right');
     let div = newElement(li, 'div', 'item-media');
-    div.style.width = '20%';
     let img = newElement(div, 'img');
     img.src = endorsement.picture;
-    img.style.width = '100%';
+    img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
     a.href = `${notary}/citizen.html?fingerprint=${endorsement.fingerprint}&judge=${encodeURIComponent(judge)}`;
