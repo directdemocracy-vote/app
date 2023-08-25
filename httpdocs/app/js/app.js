@@ -749,7 +749,7 @@ window.onload = function() {
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
     let button = document.createElement('button');
     grid.appendChild(button);
-    button.classList.add('button', 'button-fill');
+    button.classList.add('button', 'button-fill', 'color-green');
     button.innerHTML = 'Sign';
     button = document.createElement('button');
     grid.appendChild(button);
