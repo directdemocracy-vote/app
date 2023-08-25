@@ -668,6 +668,8 @@ window.onload = function() {
         console.log(petition);
         if (outdated)
           app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
+        else if (!petition.inside)
+          app.dialog.alert(`<b>${petition.title}</b><br><br>You are not inside the area of this petition which is ${petition.area[0].split('=')[1]}. Therefore you cannot sign it.`, 'Deadline expired');
         else {
           let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
           app.dialog.confirm(content, 'Sign the petition', function() {
