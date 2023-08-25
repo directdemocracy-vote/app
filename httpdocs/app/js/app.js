@@ -628,7 +628,13 @@ window.onload = function() {
     searchPetition();
   });
 
+  petitionSearch.addEventListener('search', function(event) {
+    console.log('search event');
+    searchPetition();
+  });
+  
   function searchPetition() {
+    console.log('search petition');
     disable('petition-scan');
     disable('petition-search');
     let value = document.getElementById('petition-search').value;
