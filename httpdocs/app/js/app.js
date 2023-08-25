@@ -716,15 +716,15 @@ window.onload = function() {
     p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
-    grid.classList.add('grid', 'grid-cols-2', 'grid.gap');
+    grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
     let button = document.createElement('button');
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     button.innerHTML = 'Sign';
     button = document.createElement('button');
     grid.appendChild(button);
-    button.classList.add('button', 'button-fill');
-    button.innerHTML = 'Delete';
+    button.classList.add('button');
+    button.innerHTML = 'Drop';
   }
 
   function validateRegistration() {
