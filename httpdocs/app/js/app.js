@@ -700,7 +700,21 @@ window.onload = function() {
     let block = document.createElement('div');
     content.appendChild(block);
     block.classList.add('block', 'no-padding');
-    block.innerHTML = petition.description;
+    let p = document.createElement('p');
+    block.appendChild(p);
+    p.innerHTML = petition.description;
+    p = document.createElement('p');
+    block.appendChild(p);
+    const deadline = new Date(petition.deadline).toLocaleString();
+    p.innerHTML = `<b>Deadline:</b> ${deadline}`;
+    p = document.createElement('p');
+    block.appendChild(p);
+    p.innerHTML = `<b>Judge:</b> <a href="${petition.judge}" target="_blank">${petition.judge}</a>`;
+    p = document.createElement('p');
+    block.appendChild(p);
+    url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
+    p.innerHTML = `<b>Area:</b> <a href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
+
   }
 
   function validateRegistration() {
