@@ -721,7 +721,7 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button button-fill');
     button.innerHTML = 'Sign';
-    let button = document.createElement('button');
+    button = document.createElement('button');
     grid.appendChild(button);
     button.classList.add('button button-fill');
     button.innerHTML = 'Delete';
