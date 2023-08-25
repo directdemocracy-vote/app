@@ -726,7 +726,7 @@ window.onload = function() {
     block.appendChild(a);
     a.setAttribute('href', `${notary}/petition.html?fingerprint=${CryptoJS.SHA1(petition.signature).toString()}`);
     a.setAttribute('target', '_blank');
-    a.style.fontSize = '140%';
+    a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
     a.classList.add('link', 'external');
     a.innerHTML = petition.title;
