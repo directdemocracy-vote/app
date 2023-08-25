@@ -622,7 +622,7 @@ window.onload = function() {
 
   let petitionSearch = document.getElementById('petition-search');
   petitionSearch.addEventListener('keyup', function(event) {
-    print('event.key = ' + event.key);
+    console.log('event.key = ' + event.key);
     if (event.key !== 'Enter')
       return;
     searchPetition();
@@ -632,7 +632,10 @@ window.onload = function() {
     disable('petition-scan');
     disable('petition-search');
     let value = document.getElementById('petition-search').value;
-    signPetition(value);
+    if (value.length === 40)
+      signPetition(value);
+    else
+      console.log('not found');
   }
 
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
