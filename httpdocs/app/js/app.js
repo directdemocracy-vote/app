@@ -725,6 +725,7 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button', 'button-tonal');
     button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
+    app.accordion.open(item);
   }
 
   function validateRegistration() {
