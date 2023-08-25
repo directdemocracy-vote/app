@@ -640,8 +640,11 @@ window.onload = function() {
     let value = document.getElementById('petition-search').value;
     if (value.length === 40)
       signPetition(value);
-    else
+    else {
       console.log('not found');
+      enable('petition-scan');
+      enable('petition-search');
+    }
   }
 
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
