@@ -665,20 +665,22 @@ window.onload = function() {
         }
         const outdated = (petition.deadline < new Date().getTime());
         const deadline = new Date(petition.deadline).toLocaleString();
-        console.log(petition);
+        const title = `<b>${petition.title}</b><br><br>`;
         if (outdated)
-          app.dialog.alert(`<b>${petition.title}</b><br><br>The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
+          app.dialog.alert(`${title}The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
         else if (!petition.inside)
-          app.dialog.alert(`<b>${petition.title}</b><br><br>You are not inside the area of this petition which is ${petition.area[0].split('=')[1]}. Therefore you cannot sign it.`, 'Deadline expired');
+          app.dialog.alert(`${title}You are not inside the area of this petition which is <i>${petition.area[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
         else {
-          let content = `<div><b>${petition.title}</b></div><div>${petition.description}</div><div>Deadline: ${deadline}</div>`;
-          app.dialog.confirm(content, 'Sign the petition', function() {
-            console.log('Signing!');
-          });
+          app.dialog.alert(`${title}The petition was added to your list of petitions, so that you can proceed with signature now.`, 'Petition added');
+          addPetition(petition);
         }
         enable('petition-scan');
         enable('petition-search');       
       });
+  }
+
+  function addPetition(petition) {
+    console.log("Adding petition");
   }
 
   function validateRegistration() {
