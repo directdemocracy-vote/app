@@ -693,7 +693,7 @@ window.onload = function() {
             petition.id = 0;
             petitions.unshift(petition);
             addPetition(petition);
-            localStorage.setItem(petitions);
+            localStorage.setItem('petitions', petitions);
           }
         }
         enable('petition-scan');
