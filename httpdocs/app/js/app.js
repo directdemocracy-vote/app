@@ -723,8 +723,8 @@ window.onload = function() {
     button.innerHTML = 'Sign';
     button = document.createElement('button');
     grid.appendChild(button);
-    button.classList.add('button');
-    button.innerHTML = '<i class="icon f7-icons">trash</i>';
+    button.classList.add('button', 'button-tonal');
+    button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
   }
 
   function validateRegistration() {
