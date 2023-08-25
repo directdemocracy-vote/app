@@ -735,7 +735,7 @@ window.onload = function() {
     p.innerHTML = petition.description;
     p = document.createElement('p');
     block.appendChild(p);
-    url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
+    let url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
     p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
