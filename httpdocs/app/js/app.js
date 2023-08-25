@@ -724,7 +724,7 @@ window.onload = function() {
     button = document.createElement('button');
     grid.appendChild(button);
     button.classList.add('button');
-    button.innerHTML = 'Drop';
+    button.innerHTML = '<i class="icon f7-icons">trash</i>';
   }
 
   function validateRegistration() {
