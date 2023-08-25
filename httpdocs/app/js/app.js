@@ -712,7 +712,7 @@ window.onload = function() {
     p.innerHTML = `<b>Judge:</b> <a href="${petition.judge}" target="_blank">${petition.judge}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
-    url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
+    const url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
     p.innerHTML = `<b>Area:</b> <a href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
 
   }
