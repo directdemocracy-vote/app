@@ -609,7 +609,7 @@ window.onload = function() {
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     console.log('fingerprint=' + fingerprint);
-    signPetition(fingerprint);
+    getPetition(fingerprint);
   },{returnDetailedScanResult: true});
 
   document.getElementById('petition-scan').addEventListener('click', function() {
@@ -639,7 +639,7 @@ window.onload = function() {
     disable('petition-search');
     let value = document.getElementById('petition-search').value;
     if (value.length === 40)
-      signPetition(value);
+      getPetition(value);
     else {
       console.log('not found');
       enable('petition-scan');
@@ -655,8 +655,8 @@ window.onload = function() {
     enable('petition-search');
   });
 
-  function signPetition(fingerprint) {
-    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+  function getPetition(fingerprint) {
+    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
       .then((response) => response.json())
       .then((petition) => {
         if (petition.error) {
