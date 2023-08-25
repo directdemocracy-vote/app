@@ -622,14 +622,11 @@ window.onload = function() {
 
   let petitionSearch = document.getElementById('petition-search');
   petitionSearch.addEventListener('keyup', function(event) {
-    console.log('event.key = ' + event.key);
-    if (event.key !== 'Enter')
-      return;
-    searchPetition();
+    if (event.key === 'Enter')
+      searchPetition();
   });
-
-  petitionSearch.addEventListener('search', function(event) {
-    console.log('search event');
+  petitionSearch.addEventListener('paste', function(event) {
+    console.log('paste');
     searchPetition();
   });
   
