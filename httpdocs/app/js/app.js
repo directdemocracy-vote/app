@@ -63,6 +63,7 @@ let endorsed = null;
 let endorseMap = null;
 let endorseMarker = null;
 let online = true;
+let petitions = [];
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -671,8 +672,29 @@ window.onload = function() {
         else if (!petition.inside)
           app.dialog.alert(`${title}You are not inside the area of this petition which is <i>${petition.area[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
         else {
-          app.dialog.alert(`${title}The petition was added to your list of petitions, so that you can proceed with signature now.`, 'Petition added');
-          addPetition(petition);
+          let already = false;
+          for (let p of petitions) {
+            if (p.signature == petition.signature) {
+              app.dialog.alert(`${title}You already have this petition.`);
+              app.accordion.open(document.getElementById(`petition-${p.id}`));
+              already = true;
+              break;
+            }
+          }
+          if (!already) {
+            // move petition id by one
+            let i = 1;
+            petitions.forEach(function(p) {
+              let e = document.getElementById(`petition-${p.id}`);
+              p.id = i++;
+              e.setAttribute('id', p.id);
+            });
+            // preprend new petition at id 0
+            petition.id = 0;
+            petitions.unshift(petition);
+            addPetition(petition);
+            localStorage.setItem(petitions);
+          }
         }
         enable('petition-scan');
         enable('petition-search');       
@@ -680,9 +702,9 @@ window.onload = function() {
   }
 
   function addPetition(petition) {
-    console.log("Adding petition");
     let item = document.createElement('div');
     document.getElementById('petitions').prepend(item);
+    item.setAttribute('id', `petition-${petition.id}`);
     item.classList.add('accordion-item');
     let a = document.createElement('a');
     item.appendChild(a);
