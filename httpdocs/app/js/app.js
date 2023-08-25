@@ -725,7 +725,7 @@ window.onload = function() {
     let p = document.createElement('p');
     block.appendChild(p);
     let url = `${notary}/petition.html?fingerprint=${CryptoJS.SHA1(petition.signature).toString()}`;
-    p.innerHTML = `<a class="link external" href="${url}" target="_blank"><b>petition.title</b></a>`;
+    p.innerHTML = `<a class="link external" href="${url}" target="_blank"><b>${petition.title}</b></a>`;
     p = document.createElement('p');
     block.appendChild(p);
     p.innerHTML = petition.description;
