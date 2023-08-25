@@ -616,17 +616,25 @@ window.onload = function() {
     hide('petition-page');
     show('petition-scanner');
     disable('petition-scan');
-    disable('petition-paste');
+    disable('petition-search');
     petitionScanner.start();
   });
-  document.getElementById('petition-paste').addEventListener('click', function() {
-    disable('petition-scan');
-    disable('petition-paste');
-    app.dialog.prompt('Paste the petition reference here:', 'Petition reference', function(fingerprint) {
-      console.log('Pasted: ' + fingerprint);
-      signPetition(fingerprint);
-    });
+
+  let petitionSearch = document.getElementById('petition-search');
+  petitionSearch.addEventListener('keyup', function(event) {
+    print('event.key = ' + event.key);
+    if (event.key !== 'Enter')
+      return;
+    searchPetition();
   });
+
+  function searchPetition() {
+    disable('petition-scan');
+    disable('petition-search');
+    let value = document.getElementById('petition-search').value;
+    signPetition(value);
+  }
+
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
     petitionScanner.stop();
     hide('petition-scanner');
@@ -654,7 +662,7 @@ window.onload = function() {
           });
         }
         enable('petition-scan');
-        enable('petition-paste');       
+        enable('petition-search');       
       });
   }
 
