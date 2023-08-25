@@ -649,6 +649,7 @@ window.onload = function() {
     hide('petition-scanner');
     show('petition-page');
     enable('petition-scan');
+    enable('petition-search');
   });
 
   function signPetition(fingerprint) {
