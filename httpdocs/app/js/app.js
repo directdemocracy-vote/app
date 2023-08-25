@@ -629,7 +629,6 @@ window.onload = function() {
     event.preventDefault();
     console.log('paste');
     let paste = (event.clipboardData || window.clipboardData).getData("text");
-    console.log(paste);
     document.getElementById('petition-search').value = paste;
     searchPetition();
   });
