@@ -681,6 +681,26 @@ window.onload = function() {
 
   function addPetition(petition) {
     console.log("Adding petition");
+    let item = document.createElement('div');
+    document.getElementById('petitions').prepend(item);
+    item.classList.add('accordion-item');
+    let a = document.createElement('a');
+    item.appendChild(a);
+    a.classList.add('item-link', 'item-content', 'no-padding');
+    let inner = document.createElement('div');
+    a.appendChild(inner);
+    inner.classList.add('item-inner');
+    let title = document.createElement('div');
+    inner.appendChild(title);
+    title.classList.add('item-title');
+    title.innerHTML = petition.title;
+    let content = document.createElement('div');
+    item.appendChild(content);
+    content.classList.add('accordion-item-content');
+    let block = document.createElement('div');
+    content.appendChild(block);
+    block.classList.add('block', 'no-padding');
+    block.innerHTML = petition.description;
   }
 
   function validateRegistration() {
