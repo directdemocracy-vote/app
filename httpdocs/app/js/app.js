@@ -635,7 +635,9 @@ window.onload = function() {
   });
 
   function updateProposalLink() {
-    document.getElementById('proposal').setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    let proposal = document.getElementById('proposal');
+    if (proposal)
+      proposal.setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   }
 
   function setNotary() {
