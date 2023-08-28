@@ -639,7 +639,7 @@ window.onload = function() {
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
-    document.getElementById('search-petition').setAttribute('url', `${notary}?tab=petitions`);
+    document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions`);
     updateProposalLink();
   }
 
@@ -830,7 +830,7 @@ function updateProposalLink() {
   let proposal = document.getElementById('proposal');
   console.log("yeah" + proposal);
   if (proposal)
-    proposal.setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    proposal.setAttribute('href', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
