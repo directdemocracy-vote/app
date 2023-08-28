@@ -639,7 +639,7 @@ window.onload = function() {
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
-    document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    updateSearchLinks();
     updateProposalLink();
   }
 
@@ -832,6 +832,10 @@ function updateProposalLink() {
     proposal.setAttribute('href', `${notary}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
+function updateSearchLinks() {
+  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+}
+
 function updateCitizenCard() {
   showPage('card');
   document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
@@ -868,6 +872,7 @@ function downloadCitizen() {
         updateCitizenCard();
         updateEndorsements();
         updateProposalLink();
+        updateSearchLinks();
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
