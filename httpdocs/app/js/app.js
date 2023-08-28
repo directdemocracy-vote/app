@@ -828,7 +828,7 @@ window.onload = function() {
 
 function updateProposalLink() {
   let proposal = document.getElementById('proposal');
-  print("yeah" + proposal);
+  console.log("yeah" + proposal);
   if (proposal)
     proposal.setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
