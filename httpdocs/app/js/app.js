@@ -639,7 +639,7 @@ window.onload = function() {
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
-    document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions`);
+    document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
     updateProposalLink();
   }
 
