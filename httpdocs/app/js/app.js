@@ -637,7 +637,7 @@ window.onload = function() {
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
-    document.getElementById('search-petition').setAttribute('url', `${notary}?citizen=${citizen.fingerprint}`);
+    document.getElementById('search-petition').setAttribute('url', `${notary}?tab=petitions`);
   }
 
   function searchPetition() {
@@ -676,7 +676,7 @@ window.onload = function() {
         if (outdated)
           app.dialog.alert(`${title}The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
         else if (!petition.inside)
-          app.dialog.alert(`${title}You are not inside the area of this petition which is <i>${petition.area[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
+          app.dialog.alert(`${title}You are not inside the area of this petition (which is <i>${petition.area[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
         else {
           let already = false;
           for (let p of petitions) {
