@@ -634,10 +634,15 @@ window.onload = function() {
     searchPetition();
   });
 
+  function updateProposalLink() {
+    document.getElementById('proposal').setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  }
+
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
     document.getElementById('search-petition').setAttribute('url', `${notary}?tab=petitions`);
+    updateProposalLink();
   }
 
   function searchPetition() {
@@ -858,6 +863,7 @@ function downloadCitizen() {
         citizenEndorsements = answer.citizen_endorsements;
         updateCitizenCard();
         updateEndorsements();
+        updateProposalLink();
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
