@@ -135,10 +135,10 @@ window.addEventListener('offline', () => {
 });
 
 window.onload = function() {
-  document.getElementById('notary').value = notary;
+  setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = event.target.value;
-    localStorage.setItem('notary', notary);
+    setNotary();
   });
   document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
@@ -633,7 +633,13 @@ window.onload = function() {
     document.getElementById('enter-petition').value = paste;
     searchPetition();
   });
-  
+
+  function setNotary() {
+    localStorage.setItem('notary', notary);
+    document.getElementById('notary').value = notary;
+    document.getElementById('search-petition').setAttribute('url') = `${notary}?citizen=${citizen.fingerprint}`;
+  }
+
   function searchPetition() {
     console.log('search petition');
     disable('scan-petition');
