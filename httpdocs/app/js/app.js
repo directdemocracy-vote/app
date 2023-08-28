@@ -637,7 +637,7 @@ window.onload = function() {
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
-    document.getElementById('search-petition').setAttribute('url') = `${notary}?citizen=${citizen.fingerprint}`;
+    document.getElementById('search-petition').setAttribute('url', `${notary}?citizen=${citizen.fingerprint}`);
   }
 
   function searchPetition() {
