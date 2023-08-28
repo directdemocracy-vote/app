@@ -613,15 +613,15 @@ window.onload = function() {
     getPetition(fingerprint);
   },{returnDetailedScanResult: true});
 
-  document.getElementById('petition-scan').addEventListener('click', function() {
+  document.getElementById('scan-petition').addEventListener('click', function() {
     hide('petition-page');
     show('petition-scanner');
-    disable('petition-scan');
-    disable('petition-search');
+    disable('scan-petition');
+    disable('enter-petition');
     petitionScanner.start();
   });
 
-  let petitionSearch = document.getElementById('petition-search');
+  let petitionSearch = document.getElementById('enter-petition');
   petitionSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
       searchPetition();
@@ -630,21 +630,21 @@ window.onload = function() {
     event.preventDefault();
     console.log('paste');
     let paste = (event.clipboardData || window.clipboardData).getData("text");
-    document.getElementById('petition-search').value = paste;
+    document.getElementById('enter-petition').value = paste;
     searchPetition();
   });
   
   function searchPetition() {
     console.log('search petition');
-    disable('petition-scan');
-    disable('petition-search');
-    let value = document.getElementById('petition-search').value;
+    disable('scan-petition');
+    disable('enter-petition');
+    let value = document.getElementById('enter-petition').value;
     if (value.length === 40)
       getPetition(value);
     else {
       console.log('not found');
-      enable('petition-scan');
-      enable('petition-search');
+      enable('scan-petition');
+      enable('enter-petition');
     }
   }
 
@@ -652,8 +652,8 @@ window.onload = function() {
     petitionScanner.stop();
     hide('petition-scanner');
     show('petition-page');
-    enable('petition-scan');
-    enable('petition-search');
+    enable('scan-petition');
+    enable('enter-petition');
   });
 
   function getPetition(fingerprint) {
@@ -696,8 +696,8 @@ window.onload = function() {
             localStorage.setItem('petitions', JSON.stringify(petitions));
           }
         }
-        enable('petition-scan');
-        enable('petition-search');       
+        enable('scan-petition');
+        enable('enter-petition');       
       });
   }
 
