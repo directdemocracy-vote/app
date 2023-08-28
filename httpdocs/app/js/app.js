@@ -634,12 +634,6 @@ window.onload = function() {
     searchPetition();
   });
 
-  function updateProposalLink() {
-    let proposal = document.getElementById('proposal');
-    if (proposal)
-      proposal.setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
-  }
-
   function setNotary() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
@@ -828,6 +822,12 @@ window.onload = function() {
     stripped = stripped.slice(0, -1 - footer);
     return stripped;
   }
+}
+
+function updateProposalLink() {
+  let proposal = document.getElementById('proposal');
+  if (proposal)
+    proposal.setAttribute('url', `${notary}/proposal?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
