@@ -728,6 +728,11 @@ window.onload = function() {
             });
             delete petition.schema;
             delete petition.key;
+            delete petition.inside;
+            if (petition.question === '')
+              delete petition.question;
+            if (petition.answers === '')
+              delete petition.answers;
             // preprend new petition at id 0
             petition.id = 0;
             petition.fingerprint = fingerprint;
