@@ -807,7 +807,7 @@ window.onload = function() {
     block.classList.add('block', 'no-padding');
     a = document.createElement('a');
     block.appendChild(a);
-    a.setAttribute('href', `${notary}/petition.html?fingerprint=${CryptoJS.SHA1(petition.signature).toString()}`);
+    a.setAttribute('href', `${notary}/petition.html?fingerprint=${petition.fingerprint}`);
     a.setAttribute('target', '_blank');
     a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
