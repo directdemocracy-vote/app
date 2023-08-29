@@ -827,7 +827,9 @@ window.onload = function() {
     let signButton = document.createElement('button');
     grid.appendChild(signButton);
     signButton.classList.add('button', 'button-fill');
-    signButton.innerHTML = 'Sign';
+    signButton.innerHTML = petition.signed ? 'Signed' : 'Sign';
+    if (petition.signed)
+      disable(signedButton);
     signButton.addEventListener('click', function() {
       app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
         let endorsement = {
@@ -848,6 +850,7 @@ window.onload = function() {
               app.dialog.alert(`You successfully signed the petition entitled "${petition.title}"`, 'Signed!');
               signButton.innerHTML = 'Signed';
               petition.signed = true;
+              localStorage.setItem('petitions', JSON.stringify(petitions));
               disable(signButton);
             }
           });
