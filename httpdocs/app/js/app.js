@@ -833,7 +833,7 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=petitions&latitude=${citizen.latitude}&longitude=${citizen.longitude}&judge=${judge}`);
+  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}&judge=${judge}`);
 }
 
 function updateCitizenCard() {
