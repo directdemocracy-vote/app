@@ -709,8 +709,12 @@ window.onload = function() {
                 p.corpus = petition.corpus;
                 p.participation = petition.participation;
                 p.published = petition.published;
-                p.answers = petition.answers;
-                p.question = petition.question;
+                if (petition.answers !== '')
+                  p.answers = petition.answers;
+                if (petition.questions !== '')
+                  p.question = petition.question;
+                if (petition.website !== '')
+                  p.website = petition.website;
                 addPetition(p, true);
                 localStorage.setItem('petitions', JSON.stringify(petitions));
               }
@@ -733,6 +737,8 @@ window.onload = function() {
               delete petition.question;
             if (petition.answers === '')
               delete petition.answers;
+            if (petition.website === '')
+              delete petition.website;
             // preprend new petition at id 0
             petition.id = 0;
             petition.fingerprint = fingerprint;
