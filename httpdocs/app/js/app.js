@@ -709,6 +709,7 @@ window.onload = function() {
                 p.corpus = petition.corpus;
                 p.participation = petition.participation;
                 p.published = petition.published;
+                p.judge = petition.judge;
                 if (petition.answers !== '')
                   p.answers = petition.answers;
                 if (petition.question !== '')
