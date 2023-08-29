@@ -829,7 +829,7 @@ window.onload = function() {
     signButton.classList.add('button', 'button-fill');
     signButton.innerHTML = petition.signed ? 'Signed' : 'Sign';
     if (petition.signed)
-      disable(signedButton);
+      disable(signButton);
     signButton.addEventListener('click', function() {
       app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
         let endorsement = {
