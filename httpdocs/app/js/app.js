@@ -678,6 +678,8 @@ window.onload = function() {
           console.log(`Petition error: ${petition.error}`);
           return;
         }
+        if (!verifyProposalSignature(petition))
+          return;
         const outdated = (petition.deadline < new Date().getTime());
         const deadline = new Date(petition.deadline).toLocaleString();
         const title = `<b>${petition.title}</b><br><br>`;
@@ -688,9 +690,28 @@ window.onload = function() {
         else {
           let already = false;
           for (let p of petitions) {
-            if (p.signature == petition.signature) {
-              app.dialog.alert(`${title}You already have this petition.`);
-              app.accordion.open(document.getElementById(`petition-${p.id}`));
+            if (p.fingerprint == fingerprint) {
+              if (p.visible) {
+                app.dialog.alert(`${title}You already have this petition.`);
+                app.accordion.open(document.getElementById(`petition-${p.id}`));
+              } else { // already there, reset the missing fields
+                p.visible = true;
+                p.id = 0;
+                let i = 0;
+                for(let p2 of petition)
+                  p2.id = i++;
+                p.title = petition.title;
+                p.description = petition.description;
+                p.area = petition.area;
+                p.deadline = petition.deadline;
+                p.corpus = petition.corpus;
+                p.participation = petition.participation;
+                p.published = petition.published;
+                p.answers = petition.answers;
+                p.question = petition.question;
+                addPetition(p, true);
+                localStorage.setItem('petitions', JSON.stringify(petitions));
+              }
               already = true;
               break;
             }
@@ -703,6 +724,9 @@ window.onload = function() {
               p.id = i++;
               e.setAttribute('id', p.id);
             });
+            delete petition.schema;
+            delete petition.key;
+            delete petition.signature;
             // preprend new petition at id 0
             petition.id = 0;
             petition.fingerprint = fingerprint;
@@ -716,6 +740,35 @@ window.onload = function() {
         enable('scan-petition');
         enable('enter-petition');       
       });
+  }
+
+  function verifyProposalSignature(proposal) {
+    let signature = proposal.signature;
+    let p = {
+      'schema': proposal.schema,
+      'key': proposal.key,
+      'signature': '',
+      'published': proposal.published,
+      'judge': proposal.judge,
+      'area': proposal.area,
+      'title': proposal.title,
+      'description': proposal.description
+    };
+    if (proposal.question)
+      p['question'] = proposal.question;
+    if (proposal.answers)
+      p['answers'] = proposal.answers;
+    p['secret'] = proposal.secret;
+    p['deadline'] = proposal.deadline;
+    if (p.website)
+      p['website'] = proposal.website;
+    let verify = new JSEncrypt();
+    verify.setPublicKey(publicKey(proposal.key));
+    if (!verify.verify(p, proposal.signature, CryptoJS.SHA256)) {
+      app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
+      return false;
+    }
+    return true;
   }
 
   function addPetition(petition, open) {
