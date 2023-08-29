@@ -383,7 +383,6 @@ window.onload = function() {
     return false;
   });
 
-
   const challengeVideo = document.getElementById('challenge-video');
   challengeVideo.addEventListener('loadedmetadata', qrVideo);
 
@@ -663,6 +662,11 @@ window.onload = function() {
     show('petition-page');
     enable('scan-petition');
     enable('enter-petition');
+  });
+
+  let petitions = localStorage.getItem('petitions');
+  petitions.forEach(function(petition) {
+    addPetition(petition);
   });
 
   function getPetition(fingerprint) {
