@@ -686,7 +686,7 @@ window.onload = function() {
         if (outdated)
           app.dialog.alert(`${title}The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
         else if (!petition.inside)
-          app.dialog.alert(`${title}You are not inside the area of this petition (which is <i>${petition.area[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
+          app.dialog.alert(`${title}You are not inside the area of this petition (which is <i>${petition.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
         else {
           let already = false;
           for (let p of petitions) {
@@ -702,7 +702,7 @@ window.onload = function() {
                   p2.id = i++;
                 p.title = petition.title;
                 p.description = petition.description;
-                p.area = petition.area;
+                p.areas = petitions.areas;
                 p.deadline = petition.deadline;
                 p.corpus = petition.corpus;
                 p.participation = petition.participation;
@@ -806,8 +806,8 @@ window.onload = function() {
     p.innerHTML = petition.description;
     p = document.createElement('p');
     block.appendChild(p);
-    let url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.area.join('&')}&polygon_geojson=1`;
-    p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.area[0].split('=')[1]}</a>`;
+    let url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.areas.join('&')}&polygon_geojson=1`;
+    p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.areas[0].split('=')[1]}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
     p.innerHTML = `<b>Judge:</b> <a class="link external" href="${petition.judge}" target="_blank">${petition.judge}</a>`;
@@ -864,7 +864,7 @@ window.onload = function() {
         } else {  // remove useless fields, keep only id, visible, signed and fingerprint
           delete petition.title;
           delete petition.description;
-          delete petition.area;
+          delete petition.areas;
           delete petition.deadline;
           delete petition.corpus;
           delete petition.participation;
