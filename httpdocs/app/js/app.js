@@ -760,15 +760,39 @@ window.onload = function() {
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
-    let button = document.createElement('button');
-    grid.appendChild(button);
-    button.classList.add('button', 'button-fill');
-    button.innerHTML = 'Sign';
-    button = document.createElement('button');
-    grid.appendChild(button);
-    button.classList.add('button', 'button-tonal');
-    button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
-    button.addEventListener('click', function() {
+    let signButton = document.createElement('button');
+    grid.appendChild(signButton);
+    signButton.classList.add('button', 'button-fill');
+    signButton.innerHTML = 'Sign';
+    signButton.addEventListener('click', function() {
+      app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
+        let endorsement = {
+          schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+          key: citizen.key,
+          signature: '',
+          published: new Date().getTime(),
+          endorsedSignature: petition.signature
+        };
+        endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
+        fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+          .then((response) => response.text())
+          .then((answer) => {
+            endorsements = JSON.parse(answer);
+            if (endorsements.error)
+              app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
+            else {
+              app.dialog.alert(`You successfully signed the petition entitled "${petition.title}"`, 'Signed!');
+              signButton.innerHTML = 'Signed';
+              disable(signButton);
+            }
+          });
+       });
+    });
+    let trashButton = document.createElement('button');
+    grid.appendChild(trashButton);
+    trashButton.classList.add('button', 'button-tonal');
+    trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
+    trashButton.addEventListener('click', function() {
       app.dialog.confirm('This petition will be removed from your list, but you can fetch it again if needed.', 'Remove Petition?', function() {
         document.getElementById('petitions').removeChild(item);
         const index = petitions.indexOf(petition);
