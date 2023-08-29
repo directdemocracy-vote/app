@@ -769,7 +769,7 @@ window.onload = function() {
     button.classList.add('button', 'button-tonal');
     button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
     button.addEventListener('click', function() {
-      app.dialog.confirm('This petition will be removed from your list, but you can fetch it again if needed.', 'Remove from list', function() {
+      app.dialog.confirm('This petition will be removed from your list, but you can fetch it again if needed.', 'Remove Petition?', function() {
         document.getElementById('petitions').removeChild(item);
         const index = petitions.indexOf(petition);
         petitions.splice(index, 1);
