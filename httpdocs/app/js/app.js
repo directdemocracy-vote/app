@@ -664,7 +664,7 @@ window.onload = function() {
     enable('enter-petition');
   });
 
-  let petitions = localStorage.getItem('petitions');
+  let petitions = JSON.parse(localStorage.getItem('petitions'));
   petitions.forEach(function(petition) {
     addPetition(petition);
   });
