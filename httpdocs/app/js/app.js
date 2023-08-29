@@ -871,6 +871,7 @@ window.onload = function() {
             p.id = i++;
           });
         } else {  // remove useless fields, keep only id, visible, signed and fingerprint
+          petition.visible = false;
           delete petition.published;
           delete petition.signature;
           delete petition.title;
