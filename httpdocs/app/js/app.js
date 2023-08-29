@@ -665,6 +665,8 @@ window.onload = function() {
   });
 
   let petitions = JSON.parse(localStorage.getItem('petitions'));
+  if (petitions == null)
+    petitions = [];
   petitions.forEach(function(petition) {
     if (petition.visible)
       addPetition(petition, false);
