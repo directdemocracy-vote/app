@@ -711,7 +711,7 @@ window.onload = function() {
                 p.published = petition.published;
                 if (petition.answers !== '')
                   p.answers = petition.answers;
-                if (petition.questions !== '')
+                if (petition.question !== '')
                   p.question = petition.question;
                 if (petition.website !== '')
                   p.website = petition.website;
