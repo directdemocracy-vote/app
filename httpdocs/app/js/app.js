@@ -728,7 +728,6 @@ window.onload = function() {
             });
             delete petition.schema;
             delete petition.key;
-            delete petition.signature;
             // preprend new petition at id 0
             petition.id = 0;
             petition.fingerprint = fingerprint;
@@ -864,13 +863,14 @@ window.onload = function() {
             p.id = i++;
           });
         } else {  // remove useless fields, keep only id, visible, signed and fingerprint
+          delete petition.published;
+          delete petition.signature;
           delete petition.title;
           delete petition.description;
           delete petition.areas;
           delete petition.deadline;
           delete petition.corpus;
           delete petition.participation;
-          delete petition.published;
           delete petition.answers;
           delete petition.question;
         }
