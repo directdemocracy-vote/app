@@ -700,7 +700,7 @@ window.onload = function() {
                 p.visible = true;
                 p.id = 0;
                 let i = 0;
-                for(let p2 of petition)
+                for(let p2 of petitions)
                   p2.id = i++;
                 p.title = petition.title;
                 p.description = petition.description;
@@ -876,11 +876,15 @@ window.onload = function() {
           delete petition.title;
           delete petition.description;
           delete petition.areas;
+          delete petition.area;
           delete petition.deadline;
           delete petition.corpus;
           delete petition.participation;
           delete petition.answers;
           delete petition.question;
+          delete petition.judge;
+          delete petition.secret;
+          delete petition.website;
         }
         localStorage.setItem('petitions', JSON.stringify(petitions));
       });
