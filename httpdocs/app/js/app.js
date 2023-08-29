@@ -666,7 +666,7 @@ window.onload = function() {
 
   let petitions = JSON.parse(localStorage.getItem('petitions'));
   petitions.forEach(function(petition) {
-    addPetition(petition);
+    addPetition(petition, false);
   });
 
   function getPetition(fingerprint) {
@@ -705,7 +705,7 @@ window.onload = function() {
             // preprend new petition at id 0
             petition.id = 0;
             petitions.unshift(petition);
-            addPetition(petition);
+            addPetition(petition, true);
             localStorage.setItem('petitions', JSON.stringify(petitions));
           }
         }
@@ -714,7 +714,7 @@ window.onload = function() {
       });
   }
 
-  function addPetition(petition) {
+  function addPetition(petition, open) {
     let item = document.createElement('div');
     document.getElementById('petitions').prepend(item);
     item.setAttribute('id', `petition-${petition.id}`);
@@ -768,7 +768,8 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button', 'button-tonal');
     button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
-    app.accordion.open(item);
+    if (open)
+      app.accordion.open(item);
   }
 
   function validateRegistration() {
