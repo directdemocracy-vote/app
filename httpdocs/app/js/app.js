@@ -770,7 +770,7 @@ window.onload = function() {
     button.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
     button.addEventListener('click', function() {
       document.getElementById('petitions').removeChild(item);
-      const index = petition.indexOf(petition);
+      const index = petitions.indexOf(petition);
       petitions.splice(index, 1);
       let i = 0;
       petitions.forEach(function(p) {
