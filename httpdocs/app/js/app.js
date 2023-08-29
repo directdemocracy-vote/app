@@ -666,7 +666,7 @@ window.onload = function() {
   });
 
   function getPetition(fingerprint) {
-    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
+    fetch(`${notary}/api/proposals.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
       .then((petition) => {
         if (petition.error) {
