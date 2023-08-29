@@ -666,7 +666,8 @@ window.onload = function() {
 
   let petitions = JSON.parse(localStorage.getItem('petitions'));
   petitions.forEach(function(petition) {
-    addPetition(petition, false);
+    if (petition.visible)
+      addPetition(petition, false);
   });
 
   function getPetition(fingerprint) {
@@ -704,6 +705,9 @@ window.onload = function() {
             });
             // preprend new petition at id 0
             petition.id = 0;
+            petition.fingerprint = fingerprint;
+            petition.signed = false;
+            petition.visible = true;
             petitions.unshift(petition);
             addPetition(petition, true);
             localStorage.setItem('petitions', JSON.stringify(petitions));
@@ -783,6 +787,7 @@ window.onload = function() {
             else {
               app.dialog.alert(`You successfully signed the petition entitled "${petition.title}"`, 'Signed!');
               signButton.innerHTML = 'Signed';
+              petition.signed = true;
               disable(signButton);
             }
           });
@@ -795,12 +800,24 @@ window.onload = function() {
     trashButton.addEventListener('click', function() {
       app.dialog.confirm('This petition will be removed from your list, but you can fetch it again if needed.', 'Remove Petition?', function() {
         document.getElementById('petitions').removeChild(item);
-        const index = petitions.indexOf(petition);
-        petitions.splice(index, 1);
-        let i = 0;
-        petitions.forEach(function(p) {
-          p.id = i++;
-        });
+        if (!petition.signed) {  // actually remove it
+          const index = petitions.indexOf(petition);
+          petitions.splice(index, 1);
+          let i = 0;
+          petitions.forEach(function(p) {
+            p.id = i++;
+          });
+        } else {  // remove useless fields, keep only id, visible, signed and fingerprint
+          delete petition.title;
+          delete petition.description;
+          delete petition.area;
+          delete petition.deadline;
+          delete petition.corpus;
+          delete petition.participation;
+          delete petition.published;
+          delete petition.answers;
+          delete petition.question;
+        }
         localStorage.setItem('petitions', JSON.stringify(petitions));
       });
     });
