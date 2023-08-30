@@ -826,7 +826,7 @@ window.onload = function() {
     block.appendChild(p);
     const deadline = new Date(petition.deadline).toLocaleString();
     const outdated = (petition.deadline < new Date().getTime());
-    p.innerHTML = `<b>Deadline:</b><span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
+    p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
