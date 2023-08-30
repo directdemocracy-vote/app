@@ -668,7 +668,7 @@ window.onload = function() {
   if (petitions == null)
     petitions = [];
   petitions.forEach(function(petition) {
-    if (petition.visible)
+    if (petition.id !== undefined)
       addPetition(petition, false);
   });
 
@@ -693,11 +693,10 @@ window.onload = function() {
           let already = false;
           for (let p of petitions) {
             if (p.fingerprint == fingerprint) {
-              if (p.visible) {
+              if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this petition.`);
                 app.accordion.open(document.getElementById(`petition-${p.id}`));
-              } else { // already there, reset the missing fields
-                p.visible = true;
+              } else { // already there, insert at position 0 and reset the missing fields
                 p.id = 0;
                 let i = 0;
                 for(let p2 of petitions)
@@ -744,7 +743,6 @@ window.onload = function() {
             petition.id = 0;
             petition.fingerprint = fingerprint;
             petition.signed = false;
-            petition.visible = true;
             petitions.unshift(petition);
             addPetition(petition, true);
             localStorage.setItem('petitions', JSON.stringify(petitions));
@@ -827,7 +825,8 @@ window.onload = function() {
     p = document.createElement('p');
     block.appendChild(p);
     const deadline = new Date(petition.deadline).toLocaleString();
-    p.innerHTML = `<b>Deadline:</b> ${deadline}`;
+    const outdated = (petition.deadline < new Date().getTime());
+    p.innerHTML = `<b>Deadline:</b><span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
@@ -835,7 +834,7 @@ window.onload = function() {
     grid.appendChild(signButton);
     signButton.classList.add('button', 'button-fill');
     signButton.innerHTML = petition.signed ? 'Signed' : 'Sign';
-    if (petition.signed)
+    if (petition.signed || outdated)
       disable(signButton);
     signButton.addEventListener('click', function() {
       app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
@@ -877,8 +876,8 @@ window.onload = function() {
           petitions.forEach(function(p) {
             p.id = i++;
           });
-        } else {  // remove useless fields, keep only id, visible, signed and fingerprint
-          petition.visible = false;
+        } else {  // remove useless fields, keep only signed and fingerprint
+          delete petition.id;  // hidden
           delete petition.published;
           delete petition.signature;
           delete petition.title;
