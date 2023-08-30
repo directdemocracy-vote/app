@@ -610,7 +610,6 @@ window.onload = function() {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
-    console.log('fingerprint=' + fingerprint);
     getPetition(fingerprint);
   },{returnDetailedScanResult: true});
 
@@ -629,9 +628,7 @@ window.onload = function() {
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    console.log('paste');
-    let paste = (event.clipboardData || window.clipboardData).getData("text");
-    document.getElementById('enter-petition').value = paste;
+    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData("text");
     searchPetition();
   });
 
@@ -643,14 +640,12 @@ window.onload = function() {
   }
 
   function searchPetition() {
-    console.log('search petition');
     disable('scan-petition');
     disable('enter-petition');
     let value = document.getElementById('enter-petition').value;
     if (value.length === 40)
       getPetition(value);
     else {
-      console.log('not found');
       enable('scan-petition');
       enable('enter-petition');
     }
@@ -777,7 +772,6 @@ window.onload = function() {
     verify.setPublicKey(publicKey(proposal.key));
     if (!verify.verify(JSON.stringify(p), proposal.signature, CryptoJS.SHA256)) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
-      console.log(JSON.stringify(p));
       return false;
     }
     return true;
