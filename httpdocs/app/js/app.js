@@ -805,7 +805,7 @@ window.onload = function() {
             // preprend new proposal at id 0
             proposal.id = 0;
             proposal.fingerprint = fingerprint;
-            proposal.signed = false;
+            proposal.done = false;
             proposals.unshift(proposal);
             addProposal(proposal, type, true);
             localStorage.setItem(`${type}s`, JSON.stringify(proposals));
@@ -892,14 +892,14 @@ window.onload = function() {
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
+    let button = document.createElement('button');
+    grid.appendChild(button);
+    button.classList.add('button', 'button-fill');
     if (type === 'petition') {
-      let signButton = document.createElement('button');
-      grid.appendChild(signButton);
-      signButton.classList.add('button', 'button-fill');
-      signButton.innerHTML = proposal.signed ? 'Signed' : 'Sign';
-      if (proposal.signed || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
-        disable(signButton);
-      signButton.addEventListener('click', function() {
+      button.innerHTML = proposal.done ? 'Signed' : 'Sign';
+      if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+        disable(button);
+        button.addEventListener('click', function() {
         app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
           let endorsement = {
             schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
@@ -917,10 +917,10 @@ window.onload = function() {
                 app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
               else {
                 app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
-                signButton.innerHTML = 'Signed';
-                proposal.signed = true;
+                button.innerHTML = 'Signed';
+                proposal.done = true;
                 localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-                disable(signButton);
+                disable(button);
               }
             });
         });
@@ -934,14 +934,14 @@ window.onload = function() {
       const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
       app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, 'Remove ${uppercaseType}?', function() {
         document.getElementById(`${type}s`).removeChild(item);
-        if ((type === 'petition' && !proposal.signed) || (type === 'referendum' && !proposal.voted)) {  // actually remove it
+        if (!proposal.done) {  // actually remove it
           const index = proposals.indexOf(proposal);
           proposals.splice(index, 1);
           let i = 0;
           proposals.forEach(function(p) {
             p.id = i++;
           });
-        } else {  // remove useless fields, keep only signed and fingerprint
+        } else {  // remove useless fields, keep only done and fingerprint
           delete proposal.id;  // hidden
           delete proposal.published;
           delete proposal.signature;
