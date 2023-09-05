@@ -847,7 +847,7 @@ window.onload = function() {
     grid.appendChild(signButton);
     signButton.classList.add('button', 'button-fill');
     signButton.innerHTML = petition.signed ? 'Signed' : 'Sign';
-    if (petition.signed || outdated)
+    if (petition.signed || outdated || (petition.judge == judge && !iAmEndorsedByJudge))
       disable(signButton);
     signButton.addEventListener('click', function() {
       app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
