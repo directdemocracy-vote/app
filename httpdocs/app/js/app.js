@@ -1057,12 +1057,9 @@ function getReputationFromJudge() {
 
 function updateProposals() {
   for(let petition of petitions) {
-    console.log('updating proposal');
     if (petition.judge == judge) {
-      console.log('judge OK');
       signButton = document.querySelector(`#petition-${petition.id} > button`);
       if (signButton) {
-        console.log('found sign button ' + iAmEndorsedByJudge);
         if (iAmEndorsedByJudge)
           enable(signButton);
         else
