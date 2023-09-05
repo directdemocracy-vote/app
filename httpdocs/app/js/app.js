@@ -59,6 +59,7 @@ if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
 }
+let iAmEndorsedByJudge = false;
 let endorsed = null;
 let endorseMap = null;
 let endorseMarker = null;
@@ -1041,15 +1042,31 @@ function getReputationFromJudge() {
         badge.classList.remove('color-blue');
         badge.classList.add('color-red');
       } else {
+        iAmEndorsedByJudge = answer.endorsed;
         const color = answer.endorsed ? 'blue' : 'red';
         reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
         badge.classList.remove('color-red');
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
+        updateProposals();
       }})
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
     });
+}
+
+function updateProposals() {
+  for(let petition of petitions) {
+    if (petition.judge == judge) {
+      signButton = document.querySelector(`#petition-${petition.id} > button`);
+      if (signButton) {
+        if (iAmEndorsedByJudge)
+          enable(signButton);
+        else
+          disable(signButton);
+      }
+    }
+  }
 }
 
 function updateCitizenEndorsements() {
