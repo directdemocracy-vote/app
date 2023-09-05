@@ -260,21 +260,36 @@
               </div>
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-vote">
-              <div id="referendum-page" class="block">
-                <div class="block-title">Vote at a referendum</div>
-                <div class="grid grid-cols-2 grid-gap">
-                  <button id="referendum-scan" class="button button-fill">Scan</button>
-                  <button id="referendum-paste" class="button button-fill">Paste</button>
+              <div class="block margin-top" id="referendum-page">
+                <div style="width:100%;display:flex;align-items:center;" >
+                  <div class="list" style="margin:0">
+                    <ul style="width:95%">
+                      <li class="item-content item-input item-input-outline" style="margin:0">
+                        <div class="item-inner">
+                          <div class="item-title item-label">Enter Petition</div>
+                          <div class="item-input-wrap">
+                            <input id="enter-referendum" type="text" size="40" maxlength="40" placeholder="Paste referendum reference here">
+                            <span class="input-clear-button"></span>
+                          </div>
+                          <div class="item-input-info">Search referendums <a id="search-referendum" class="link external" target="_blank">online</a></div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <button id="scan-referendum" class="button" style="width:5%"><i class="icon f7-icons">viewfinder</i></button>
                 </div>
-                <div id="referendum-scanner" class="display-none">
-                  <div style="overflow:hidden">
-                    <video muted playsinline id="referendum-video"></video>
-                  </div>
-                  <div class="block no-margin-top text-align-center">Scan the QR code of the referendum.
-                    <button class="button button-fill margin-top-half" id="cancel-scan-referendum-button">Cancel</button>
-                  </div>
-                </div>  
+                <div class="no-margin-left no-margin-right block-title">Your Petitions</div>
+                <div id="referendums" class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
+                </div>
               </div>
+              <div id="referendum-scanner" class="display-none">
+                <div style="overflow:hidden">
+                  <video muted playsinline id="referendum-video"></video>
+                </div>
+                <div class="block no-margin-top text-align-center">Scan the QR code of the referendum.
+                  <button class="button button-fill margin-top-half" id="cancel-scan-referendum-button">Cancel</button>
+                </div>
+              </div>  
             </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-sign">
               <div class="block margin-top" id="petition-page">
@@ -306,7 +321,7 @@
                 <div class="block no-margin-top text-align-center">Scan the QR code of the petition.
                   <button class="button button-fill margin-top-half" id="cancel-scan-petition-button">Cancel</button>
                 </div>
-              </div>  
+              </div>
           </swiper-slide>
             <swiper-slide class="tab page-content" id="tab-settings">
               <div class="block-title margin-top" data-i18n="webservices"></div>
