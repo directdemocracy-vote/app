@@ -609,12 +609,12 @@ window.onload = function() {
   petitionVideo.addEventListener('loadedmetadata', qrVideo);
   referendumVideo.addEventListener('loadedmetadata', qrVideo);
 
-  petitionScanner = new QrScanner(petitionVideo, function(value) {
-    console.log(this);
-    console.log(petitionScanner);
+  petitionScanner = new QrScanner(petitionVideo, scanProposal, {returnDetailedScanResult: true});
+  
+  function scanProposal(value) {
     console.log(this == petitionScanner);
     console.log(value);
-    petitionScanner.stop();
+    this.stop();
     hide('petition-scanner');
     show('petition-page');
     let fingerprint = '';
@@ -624,7 +624,7 @@ window.onload = function() {
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     getPetition(fingerprint);
-  },{returnDetailedScanResult: true});
+  }
 
   document.getElementById('scan-petition').addEventListener('click', function() {
     hide('petition-page');
