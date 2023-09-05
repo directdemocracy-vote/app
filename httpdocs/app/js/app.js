@@ -891,6 +891,7 @@ window.onload = function() {
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
+      // FIXME: create radio buttons for answers
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
