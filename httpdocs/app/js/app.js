@@ -612,6 +612,7 @@ window.onload = function() {
   petitionScanner = new QrScanner(petitionVideo, function(value) {
     console.log(this);
     console.log(petitionScanner);
+    console.log(this == petitionScanner);
     console.log(value);
     petitionScanner.stop();
     hide('petition-scanner');
