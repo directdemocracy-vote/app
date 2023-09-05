@@ -888,6 +888,7 @@ window.onload = function() {
       p = document.createElement('p');
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
+      block.appendChild(p);
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
     p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${proposal.areas[0].split('=')[1]}</a>`;
