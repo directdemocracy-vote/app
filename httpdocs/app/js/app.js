@@ -555,10 +555,10 @@ window.onload = function() {
       });
   },{returnDetailedScanResult: true});
 
-  document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseButton);
-  document.getElementById('endorse-name-check').addEventListener('change', updateEndorseButton);
-  document.getElementById('endorse-adult-check').addEventListener('change', updateEndorseButton);
-  document.getElementById('endorse-coords-check').addEventListener('change', updateEndorseButton);
+  document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
+  document.getElementById('endorse-name-check').addEventListener('change', updateEndorseConfirm);
+  document.getElementById('endorse-adult-check').addEventListener('change', updateEndorseConfirm);
+  document.getElementById('endorse-coords-check').addEventListener('change', updateEndorseConfirm);
 
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
     answerScanner.stop();
@@ -637,8 +637,8 @@ window.onload = function() {
     searchPetition();
   });
 
-  function updateEndorseButton(event) {
-    disable('endorse-button');
+  function updateEndorseConfirm(event) {
+    disable('endorse-confirm');
     if (!document.getElementById('endorse-picture-check').checked)
       return;
     if (!document.getElementById('endorse-name-check').checked)
@@ -647,7 +647,7 @@ window.onload = function() {
       return;
     if (!document.getElementById('endorse-coords-check').checked)
       return;
-    enable('endorse-button');
+    enable('endorse-confirm');
   }
 
   function setNotary() {
