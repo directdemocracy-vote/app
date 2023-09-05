@@ -555,6 +555,11 @@ window.onload = function() {
       });
   },{returnDetailedScanResult: true});
 
+  document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseButton);
+  document.getElementById('endorse-name-check').addEventListener('change', updateEndorseButton);
+  document.getElementById('endorse-adult-check').addEventListener('change', updateEndorseButton);
+  document.getElementById('endorse-coords-check').addEventListener('change', updateEndorseButton);
+
   document.getElementById('cancel-endorse-button').addEventListener('click', function() {
     answerScanner.stop();
     hide('endorse-scanner');
@@ -631,6 +636,19 @@ window.onload = function() {
     document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData("text");
     searchPetition();
   });
+
+  function updateEndorseButton(event) {
+    disable('endorse-button');
+    if (!document.getElementById('endorse-picture-check').checked)
+      return;
+    if (!document.getElementById('endorse-name-check').checked)
+      return;
+    if (!document.getElementById('endorse-adult-check').checked)
+      return;
+    if (!document.getElementById('endorse-coords-check').checked)
+      return;
+    enable('endorse-button');
+  }
 
   function setNotary() {
     localStorage.setItem('notary', notary);
