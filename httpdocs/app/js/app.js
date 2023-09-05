@@ -846,6 +846,7 @@ window.onload = function() {
   }
 
   function addProposal(proposal, type, open) {
+    let proposals = (type === 'petition') ? petitions : referendums;
     let item = document.createElement('div');
     document.getElementById(`${type}s`).prepend(item);
     item.setAttribute('id', `${type}-${proposal.id}`);
@@ -934,7 +935,7 @@ window.onload = function() {
     trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
     trashButton.addEventListener('click', function() {
       const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
-      app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, 'Remove ${uppercaseType}?', function() {
+      app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, `Remove ${uppercaseType}?`, function() {
         document.getElementById(`${type}s`).removeChild(item);
         if (!proposal.done) {  // actually remove it
           const index = proposals.indexOf(proposal);
