@@ -65,6 +65,7 @@ let endorseMap = null;
 let endorseMarker = null;
 let online = true;
 let petitions = [];
+let referendums = [];
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -604,9 +605,14 @@ window.onload = function() {
   });
 
   const petitionVideo = document.getElementById('petition-video');
+  const referendumVideo = document.getElementById('referendum-video');
   petitionVideo.addEventListener('loadedmetadata', qrVideo);
+  referendumVideo.addEventListener('loadedmetadata', qrVideo);
 
   petitionScanner = new QrScanner(petitionVideo, function(value) {
+    console.log(this);
+    console.log(petitionScanner);
+    console.log(value);
     petitionScanner.stop();
     hide('petition-scanner');
     show('petition-page');
@@ -980,6 +986,7 @@ function updateProposalLink() {
 
 function updateSearchLinks() {
   document.getElementById('search-petition').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-referendum').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
