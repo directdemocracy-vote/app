@@ -752,9 +752,9 @@ window.onload = function() {
                         : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Wrong area');
         } else if (type === 'petition' && proposal.secret) {
-          app.dialog.alert(`${title}This proposal is a referendum, not a petition, please scan it from the vote tab`, 'Not a petition');
+          app.dialog.alert(`${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`, 'Not a petition');
         } else if (type === 'referendum' && !proposal.secret) {
-          app.dialog.alert(`${title}This proposal is a petition, not a referendum, please scan it from the sign tab`, 'Not a referendum');
+          app.dialog.alert(`${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`, 'Not a referendum');
         } else {
           let already = false;
           let proposals = (type === 'petition') ? petitions : referendums;
