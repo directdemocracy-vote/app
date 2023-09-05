@@ -884,7 +884,9 @@ window.onload = function() {
     p.innerHTML = proposal.description;
     p = document.createElement('p');
     block.appendChild(p);
+    console.log(type);
     if (type === 'referendum') {
+      console.log('la');
       p = document.createElement('p');
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
