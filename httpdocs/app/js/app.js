@@ -604,27 +604,21 @@ window.onload = function() {
       });
   });
 
-  const petitionVideo = document.getElementById('petition-video');
   const referendumVideo = document.getElementById('referendum-video');
-  petitionVideo.addEventListener('loadedmetadata', qrVideo);
   referendumVideo.addEventListener('loadedmetadata', qrVideo);
+  referendumScanner = new QrScanner(referendumVideo, scanProposal, {returnDetailedScanResult: true});
 
+  const petitionVideo = document.getElementById('petition-video');
+  petitionVideo.addEventListener('loadedmetadata', qrVideo);
   petitionScanner = new QrScanner(petitionVideo, scanProposal, {returnDetailedScanResult: true});
-  
-  function scanProposal(value) {
-    console.log(this == petitionScanner);
-    console.log(value);
-    this.stop();
-    hide('petition-scanner');
-    show('petition-page');
-    let fingerprint = '';
-    const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
-      const b = value.bytes[i];
-      fingerprint += hex[b >> 4] + hex[b & 15];
-    }
-    getPetition(fingerprint);
-  }
+
+  document.getElementById('scan-referendum').addEventListener('click', function() {
+    hide('referendum-page');
+    show('referendum-scanner');
+    disable('scan-referendum');
+    disable('enter-referendum');
+    referendumScanner.start();
+  });
 
   document.getElementById('scan-petition').addEventListener('click', function() {
     hide('petition-page');
@@ -634,15 +628,26 @@ window.onload = function() {
     petitionScanner.start();
   });
 
+  let referendumSearch = document.getElementById('enter-referendum');
+  referendumSearch.addEventListener('keyup', function(event) {
+    if (event.key === 'Enter')
+      searchProposal('referendum');
+  });
+  referendumSearch.addEventListener('paste', function(event) {
+    event.preventDefault();
+    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData("text");
+    searchProposal('referendum');
+  });
+
   let petitionSearch = document.getElementById('enter-petition');
   petitionSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
-      searchPetition();
+      searchProposal('petition');
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData("text");
-    searchPetition();
+    searchProposal('petition');
   });
 
   function updateEndorseConfirm(event) {
@@ -665,17 +670,25 @@ window.onload = function() {
     updateProposalLink();
   }
 
-  function searchPetition() {
-    disable('scan-petition');
-    disable('enter-petition');
-    let value = document.getElementById('enter-petition').value;
+  function searchProposal(type) {
+    disable(`scan-${type}`);
+    disable(`enter-${type}`);
+    let value = document.getElementById(`enter-${type}`).value;
     if (value.length === 40)
-      getPetition(value);
+      getProposal(value, type);
     else {
-      enable('scan-petition');
-      enable('enter-petition');
+      enable(`scan-${type}`);
+      enable(`enter-${type}`);
     }
   }
+
+  document.getElementById('cancel-scan-referendum-button').addEventListener('click', function() {
+    referendumScanner.stop();
+    hide('referendum-scanner');
+    show('referendum-page');
+    enable('scan-referendum');
+    enable('enter-referendum');
+  });
 
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
     petitionScanner.stop();
@@ -685,92 +698,121 @@ window.onload = function() {
     enable('enter-petition');
   });
 
+  let referendums = JSON.parse(localStorage.getItem('referendums'));
+  if (referendums == null)
+  referendums = [];
+  referendums.forEach(function(referendum) {
+    if (referendum.id !== undefined)
+      addProposal(referendum, 'referendum', false);
+  });
+
   let petitions = JSON.parse(localStorage.getItem('petitions'));
   if (petitions == null)
     petitions = [];
   petitions.forEach(function(petition) {
     if (petition.id !== undefined)
-      addPetition(petition, false);
+      addProposal(petition, 'petition', false);
   });
 
-  function getPetition(fingerprint) {
+  function scanProposal(value) {
+    const type = (this === petitionScanner) ? 'petition' : 'referendum';
+    this.stop();
+    hide(`${type}-scanner`);
+    show(`${type}-page`);
+    let fingerprint = '';
+    const hex = '0123456789abcdef';
+    for(let i=0; i < 20; i++) {
+      const b = value.bytes[i];
+      fingerprint += hex[b >> 4] + hex[b & 15];
+    }
+    getProposal(fingerprint, type);
+  }
+
+  function getProposal(fingerprint, type) {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
-      .then((petition) => {
-        if (petition.error) {
-          console.log(`Petition error: ${petition.error}`);
+      .then((proposal) => {
+        if (proposal.error) {
+          console.log(`Proposal error: ${proposal.error}`);
           return;
         }
-        if (!verifyProposalSignature(petition))
+        if (!verifyProposalSignature(proposal))
           return;
-        const outdated = (petition.deadline < new Date().getTime());
-        const deadline = new Date(petition.deadline).toLocaleString();
-        const title = `<b>${petition.title}</b><br><br>`;
-        if (outdated)
-          app.dialog.alert(`${title}The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`, 'Deadline expired');
-        else if (!petition.inside)
-          app.dialog.alert(`${title}You are not inside the area of this petition (which is <i>${petition.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`, 'Wrong area');
-        else {
+        const outdated = (proposal.deadline < new Date().getTime());
+        const deadline = new Date(proposal.deadline).toLocaleString();
+        const title = `<b>${proposal.title}</b><br><br>`;
+        if (outdated) {
+          const message = (type === 'petition')
+                        ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
+                        : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;            
+          app.dialog.alert(`${title}${message}`, 'Deadline expired');
+        } else if (!proposal.inside) {
+          const message = (type === 'petition')
+                        ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
+                        : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
+          app.dialog.alert(`${title}${message}`, 'Wrong area');
+        } else {
           let already = false;
-          for (let p of petitions) {
+          let proposals = (type === 'petition') ? petitions : referendums;
+          for (let p of proposals) {
             if (p.fingerprint == fingerprint) {
               if (p.id !== undefined) {
-                app.dialog.alert(`${title}You already have this petition.`);
-                app.accordion.open(document.getElementById(`petition-${p.id}`));
+                app.dialog.alert(`${title}You already have this ${type}.`);
+                app.accordion.open(document.getElementById(`${type}-${p.id}`));
               } else { // already there, insert at position 0 and reset the missing fields
                 p.id = 0;
                 let i = 0;
-                for(let p2 of petitions)
+                for(let p2 of proposals)
                   p2.id = i++;
-                p.title = petition.title;
-                p.description = petition.description;
-                p.areas = petition.areas;
-                p.deadline = petition.deadline;
-                p.corpus = petition.corpus;
-                p.participation = petition.participation;
-                p.published = petition.published;
-                p.judge = petition.judge;
-                if (petition.answers !== '')
-                  p.answers = petition.answers;
-                if (petition.question !== '')
-                  p.question = petition.question;
-                if (petition.website !== '')
-                  p.website = petition.website;
-                addPetition(p, true);
-                localStorage.setItem('petitions', JSON.stringify(petitions));
+                p.title = proposal.title;
+                p.description = proposal.description;
+                p.areas = proposal.areas;
+                p.deadline = proposal.deadline;
+                p.corpus = proposal.corpus;
+                p.participation = proposal.participation;
+                p.published = proposal.published;
+                p.judge = proposal.judge;
+                if (proposal.answers !== '')
+                  p.answers = proposal.answers;
+                if (proposal.question !== '')
+                  p.question = proposal.question;
+                if (proposal.website !== '')
+                  p.website = proposal.website;
+                addProposal(p, type, true);
+                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
               }
               already = true;
               break;
             }
           }
           if (!already) {
-            // move petition id by one
+            // move proposals id by one
             let i = 1;
-            petitions.forEach(function(p) {
-              let e = document.getElementById(`petition-${p.id}`);
+            proposals.forEach(function(p) {
+              let e = document.getElementById(`${type}-${p.id}`);
               p.id = i++;
               e.setAttribute('id', p.id);
             });
-            delete petition.schema;
-            delete petition.key;
-            delete petition.inside;
-            if (petition.question === '')
-              delete petition.question;
-            if (petition.answers === '')
-              delete petition.answers;
-            if (petition.website === '')
-              delete petition.website;
-            // preprend new petition at id 0
-            petition.id = 0;
-            petition.fingerprint = fingerprint;
-            petition.signed = false;
-            petitions.unshift(petition);
-            addPetition(petition, true);
-            localStorage.setItem('petitions', JSON.stringify(petitions));
+            delete proposal.schema;
+            delete proposal.key;
+            delete proposal.inside;
+            if (proposal.question === '')
+              delete proposal.question;
+            if (proposal.answers === '')
+              delete proposal.answers;
+            if (proposal.website === '')
+              delete proposal.website;
+            // preprend new proposal at id 0
+            proposal.id = 0;
+            proposal.fingerprint = fingerprint;
+            proposal.signed = false;
+            proposals.unshift(proposal);
+            addProposal(proposal, type, true);
+            localStorage.setItem(`${type}s`, JSON.stringify(proposals));
           }
         }
-        enable('scan-petition');
-        enable('enter-petition');       
+        enable(`scan-${type}`);
+        enable(`enter-${type}`);       
       });
   }
 
@@ -803,10 +845,10 @@ window.onload = function() {
     return true;
   }
 
-  function addPetition(petition, open) {
+  function addProposal(proposal, type, open) {
     let item = document.createElement('div');
-    document.getElementById('petitions').prepend(item);
-    item.setAttribute('id', `petition-${petition.id}`);
+    document.getElementById(`${type}s`).prepend(item);
+    item.setAttribute('id', `${type}-${proposal.id}`);
     item.classList.add('accordion-item');
     let a = document.createElement('a');
     item.appendChild(a);
@@ -817,7 +859,7 @@ window.onload = function() {
     let title = document.createElement('div');
     inner.appendChild(title);
     title.classList.add('item-title');
-    title.innerHTML = petition.title;
+    title.innerHTML = proposal.title;
     let content = document.createElement('div');
     item.appendChild(content);
     content.classList.add('accordion-item-content');
@@ -826,94 +868,97 @@ window.onload = function() {
     block.classList.add('block', 'no-padding');
     a = document.createElement('a');
     block.appendChild(a);
-    a.setAttribute('href', `${notary}/petition.html?fingerprint=${petition.fingerprint}`);
+    a.setAttribute('href', `${notary}/proposal.html?fingerprint=${proposal.fingerprint}`);
     a.setAttribute('target', '_blank');
     a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
     a.classList.add('link', 'external');
-    a.innerHTML = petition.title;
+    a.innerHTML = proposal.title;
     let p = document.createElement('p');
     block.appendChild(p);
-    p.innerHTML = petition.description;
+    p.innerHTML = proposal.description;
     p = document.createElement('p');
     block.appendChild(p);
-    let url = `https://nominatim.openstreetmap.org/ui/search.html?${petition.areas.join('&')}&polygon_geojson=1`;
-    p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${petition.areas[0].split('=')[1]}</a>`;
+    let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
+    p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${proposal.areas[0].split('=')[1]}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
-    p.innerHTML = `<b>Judge:</b> <a class="link external" href="${petition.judge}" target="_blank">${petition.judge}</a>`;
+    p.innerHTML = `<b>Judge:</b> <a class="link external" href="${proposal.judge}" target="_blank">${proposal.judge}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
-    const deadline = new Date(petition.deadline).toLocaleString();
-    const outdated = (petition.deadline < new Date().getTime());
+    const deadline = new Date(proposal.deadline).toLocaleString();
+    const outdated = (proposal.deadline < new Date().getTime());
     p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
-    let signButton = document.createElement('button');
-    grid.appendChild(signButton);
-    signButton.classList.add('button', 'button-fill');
-    signButton.innerHTML = petition.signed ? 'Signed' : 'Sign';
-    if (petition.signed || outdated || (petition.judge == judge && !iAmEndorsedByJudge))
-      disable(signButton);
-    signButton.addEventListener('click', function() {
-      app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
-        let endorsement = {
-          schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
-          key: citizen.key,
-          signature: '',
-          published: new Date().getTime(),
-          endorsedSignature: petition.signature
-        };
-        endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-        fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-          .then((response) => response.text())
-          .then((answer) => {
-            endorsements = JSON.parse(answer);
-            if (endorsements.error)
-              app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
-            else {
-              app.dialog.alert(`You successfully signed the petition entitled "${petition.title}"`, 'Signed!');
-              signButton.innerHTML = 'Signed';
-              petition.signed = true;
-              localStorage.setItem('petitions', JSON.stringify(petitions));
-              disable(signButton);
-            }
-          });
-       });
-    });
+    if (type === 'petition') {
+      let signButton = document.createElement('button');
+      grid.appendChild(signButton);
+      signButton.classList.add('button', 'button-fill');
+      signButton.innerHTML = proposal.signed ? 'Signed' : 'Sign';
+      if (proposal.signed || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+        disable(signButton);
+      signButton.addEventListener('click', function() {
+        app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
+          let endorsement = {
+            schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+            key: citizen.key,
+            signature: '',
+            published: new Date().getTime(),
+            endorsedSignature: proposal.signature
+          };
+          endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
+          fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+            .then((response) => response.text())
+            .then((answer) => {
+              endorsements = JSON.parse(answer);
+              if (endorsements.error)
+                app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
+              else {
+                app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
+                signButton.innerHTML = 'Signed';
+                proposal.signed = true;
+                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+                disable(signButton);
+              }
+            });
+        });
+      });
+    }
     let trashButton = document.createElement('button');
     grid.appendChild(trashButton);
     trashButton.classList.add('button', 'button-tonal');
     trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
     trashButton.addEventListener('click', function() {
-      app.dialog.confirm('This petition will be removed from your list, but you can fetch it again if needed.', 'Remove Petition?', function() {
-        document.getElementById('petitions').removeChild(item);
-        if (!petition.signed) {  // actually remove it
-          const index = petitions.indexOf(petition);
-          petitions.splice(index, 1);
+      const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
+      app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, 'Remove ${uppercaseType}?', function() {
+        document.getElementById(`${type}s`).removeChild(item);
+        if ((type === 'petition' && !proposal.signed) || (type === 'referendum' && !proposal.voted)) {  // actually remove it
+          const index = proposals.indexOf(proposal);
+          proposals.splice(index, 1);
           let i = 0;
-          petitions.forEach(function(p) {
+          proposals.forEach(function(p) {
             p.id = i++;
           });
         } else {  // remove useless fields, keep only signed and fingerprint
-          delete petition.id;  // hidden
-          delete petition.published;
-          delete petition.signature;
-          delete petition.title;
-          delete petition.description;
-          delete petition.areas;
-          delete petition.area;
-          delete petition.deadline;
-          delete petition.corpus;
-          delete petition.participation;
-          delete petition.answers;
-          delete petition.question;
-          delete petition.judge;
-          delete petition.secret;
-          delete petition.website;
+          delete proposal.id;  // hidden
+          delete proposal.published;
+          delete proposal.signature;
+          delete proposal.title;
+          delete proposal.description;
+          delete proposal.areas;
+          delete proposal.area;
+          delete proposal.deadline;
+          delete proposal.corpus;
+          delete proposal.participation;
+          delete proposal.answers;
+          delete proposal.question;
+          delete proposal.judge;
+          delete proposal.secret;
+          delete proposal.website;
         }
-        localStorage.setItem('petitions', JSON.stringify(petitions));
+        localStorage.setItem(`${type}s`, JSON.stringify(proposals));
       });
     });
     if (open)
@@ -1056,22 +1101,24 @@ function getReputationFromJudge() {
         badge.classList.remove('color-red');
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
-        updateProposals();
+        updateProposals(petitions);
+        updateProposals(referendums);
       }})
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
     });
 }
 
-function updateProposals() {
-  for(let petition of petitions) {
-    if (petition.judge == judge) {
-      signButton = document.querySelector(`#petition-${petition.id} > button`);
-      if (signButton) {
+function updateProposals(proposals) {
+  const type = (proposals === petitions) ? 'petition' : 'referendum';
+  for(let proposal of proposals) {
+    if (proposal.judge == judge) {
+      let button = document.querySelector(`#${type}-${proposal.id} > button`);
+      if (button) {
         if (iAmEndorsedByJudge)
-          enable(signButton);
+          enable(button);
         else
-          disable(signButton);
+          disable(button);
       }
     }
   }
