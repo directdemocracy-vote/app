@@ -891,6 +891,8 @@ window.onload = function() {
       block.appendChild(p);
       let div = document.createElement('div');
       block.appendChild(div);
+      div.innerHTML = `<label class="radio"><input type="radio" name="demo-radio-inline"><i class="icon-radio"></i> Blah</label>`;
+/*
       div.classList.add('list', 'list-strong-ios', 'list-outline-ios', 'list-dividers-ios');
       let ul = document.createElement('ul');
       div.appendChild(ul);
@@ -909,6 +911,7 @@ window.onload = function() {
         input.innerHTML = `<i class="icon icon-radio"></i><div class="item-inner"><div class="item-title">${answer}</div></div>`;
         console.log(answer);
       }
+      */
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
