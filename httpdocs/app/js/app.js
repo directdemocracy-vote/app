@@ -963,15 +963,22 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          const voteNumber = new Uint8Array(20);
-          crypto.getRandomValues(voteNumber);
-          const encrypted_answer = citizenCrypt.encrypt(voteNumber + answer); // FIXME: should be encrypted for blind signature
-          let vote = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/vote.schema.json`,
-            signature: '',
-            published: new Date().getTime(),
-            content: encrypted_answer
-          }
+          fetch(`${notary}/api/participation.php?station=${station}&fingerprint=${proposal.fingerprint}`)
+            .then((response) => response.json())
+            .then((answer) => {
+              console.log('answer = ' + answer);
+              const participation = 'FIXME';
+              const voteNumber = new Uint8Array(20);
+              crypto.getRandomValues(voteNumber);
+              const encrypted_answer = citizenCrypt.encrypt(voteNumber + answer); // FIXME: should be encrypted for blind signature
+              let registration = {
+                schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
+                signature: '',
+                published: new Date().getTime(),
+                participation: participation,
+                content: encrypted_answer
+              }
+            });
         });
       });
     }
