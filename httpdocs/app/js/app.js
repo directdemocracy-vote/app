@@ -931,34 +931,38 @@ window.onload = function() {
         disable(button);
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
       button.addEventListener('click', function() {
-      app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
-        let endorsement = {
-          schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
-          key: citizen.key,
-          signature: '',
-          published: new Date().getTime(),
-          endorsedSignature: proposal.signature
-        };
-        endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-        fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-          .then((response) => response.text())
-          .then((answer) => {
-            endorsements = JSON.parse(answer);
-            if (endorsements.error)
-              app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
-            else {
-              app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
-              button.innerHTML = 'Signed';
-              proposal.done = true;
-              localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-              disable(button);
-            }
+        app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
+          let endorsement = {
+            schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+            key: citizen.key,
+            signature: '',
+            published: new Date().getTime(),
+            endorsedSignature: proposal.signature
+          };
+          endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
+          fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+            .then((response) => response.text())
+            .then((answer) => {
+              endorsements = JSON.parse(answer);
+              if (endorsements.error)
+                app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
+              else {
+                app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
+                button.innerHTML = 'Signed';
+                proposal.done = true;
+                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+                disable(button);
+              }
+            });
           });
-        });
       });
     } else {  // referendum
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
       disable(button);
+      button.addEventListener('click', function(event) {
+        app.dialog.confirm(`You won't be able to change your mind afterwards.`, 'Vote?', function() {
+        });
+      });
     }
     let trashButton = document.createElement('button');
     grid.appendChild(trashButton);
