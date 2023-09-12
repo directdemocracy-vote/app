@@ -884,6 +884,7 @@ window.onload = function() {
     p.innerHTML = proposal.description;
     p = document.createElement('p');
     block.appendChild(p);
+    let button = document.createElement('button');
     if (type === 'referendum') {
       p = document.createElement('p');
       p.style.fontWeight = 'bold';
@@ -901,6 +902,12 @@ window.onload = function() {
         i.classList.add('icon-radio', 'margin-right-half');
         label.appendChild(i);
         label.appendChild(document.createTextNode(answer));
+        input.addEventListener('change', function(event) {
+          if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+            disable(button);
+          else
+            enable(button);
+        });
       }
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
@@ -917,7 +924,6 @@ window.onload = function() {
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
-    let button = document.createElement('button');
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
