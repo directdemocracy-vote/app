@@ -890,7 +890,7 @@ window.onload = function() {
       p.innerHTML = proposal.question;
       block.appendChild(p);
       // FIXME: create radio buttons for answers
-      for(let answer in proposal.answers) {
+      for(let answer of proposal.answers) {
         console.log(answer);
       }
     }
