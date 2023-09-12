@@ -898,7 +898,7 @@ window.onload = function() {
         input.setAttribute('type', 'radio');
         input.setAttribute('name', `answer-${proposal.id}`);
         let i = document.createElement('i');
-        i.classList.add('icon-radio', 'maring-right-half');
+        i.classList.add('icon-radio', 'margin-right-half');
         label.appendChild(i);
         label.appendChild(document.createTextNode(answer));
       }
