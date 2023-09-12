@@ -893,8 +893,14 @@ window.onload = function() {
         let label = document.createElement('label');
         block.appendChild(label);
         label.classList.add('radio', 'display-flex', 'margin-bottom-half');
-        label.innerHTML = `<input type="radio" name="answer"><i class="icon-radio margin-right-half"></i>${answer}`;
-        console.log(answer);
+        let input = document.createElement('input');
+        label.appendChild(input);
+        input.setAttribute('type', 'radio');
+        input.setAttribute('name', `answer-${proposal.id}`);
+        let i = document.createElement('i');
+        i.classList.add('icon-radio', 'maring-right-half');
+        label.appendChild(i);
+        label.appendChild(document.createTextNode(answer));
       }
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
@@ -914,13 +920,9 @@ window.onload = function() {
     let button = document.createElement('button');
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
-    if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
-      disable(button);
-    console.log('done: ' + proposal.done);
-    console.log('outdated: ' + outdated);
-    console.log('endorsed' + iAmEndorsedByJudge);
-    console.log('judge' + (proposal.judge == judge));
     if (type === 'petition') {
+      if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+        disable(button);
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
       button.addEventListener('click', function() {
       app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
@@ -950,6 +952,7 @@ window.onload = function() {
       });
     } else {  // referendum
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
+      disable(button);
     }
     let trashButton = document.createElement('button');
     grid.appendChild(trashButton);
