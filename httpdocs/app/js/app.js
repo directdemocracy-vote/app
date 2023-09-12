@@ -965,7 +965,7 @@ window.onload = function() {
         // let answer = document.getElementById(`answer-${proposal.id}`).value;
         let answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         console.log(answer);
-        app.dialog.confirm(`You are about to vote "{answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
+        app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
         });
       });
     }
