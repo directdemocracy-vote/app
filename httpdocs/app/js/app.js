@@ -916,6 +916,10 @@ window.onload = function() {
     button.classList.add('button', 'button-fill');
     if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
       disable(button);
+    console.log('done: ' + proposal.done);
+    console.log('outdated: ' + outdated);
+    console.log('endorsed' + iAmEndorsedByJudge);
+    console.log('judge' + (proposal.judge == judge));
     if (type === 'petition') {
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
       button.addEventListener('click', function() {
