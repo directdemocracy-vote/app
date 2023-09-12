@@ -960,7 +960,8 @@ window.onload = function() {
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
       disable(button);
       button.addEventListener('click', function(event) {
-        app.dialog.confirm(`You won't be able to change your mind afterwards.`, 'Vote?', function() {
+        console.log(event.target.parentNode().getAttribute('id'));
+        app.dialog.confirm(`You are about to vote "{answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
         });
       });
     }
