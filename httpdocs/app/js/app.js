@@ -889,8 +889,21 @@ window.onload = function() {
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
+      let ul = document.createElement('ul');
+      block.appendChild(ul);
       // FIXME: create radio buttons for answers
       for(let answer of proposal.answers) {
+        let li = document.createElement('li');
+        ul.appendChild(li);
+        let label = document.createElement('label');
+        li.appendChild(label);
+        label.classList.add('item-radio', 'item-radio-icon-start', 'item-content');
+        let input = document.createElement('input');
+        label.appendChild(input);
+        input.setAttribute('type', 'radio');
+        input.setAttribute('value', answer);
+        input.setAttribute('name', 'answer');
+        input.innerHTML = `<i class="icon icon-radio"></i><div class="item-inner"><div class="item-title">${answer}</div></div>`;
         console.log(answer);
       }
     }
