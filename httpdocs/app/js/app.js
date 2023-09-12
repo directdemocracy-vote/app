@@ -892,8 +892,8 @@ window.onload = function() {
       for(let answer of proposal.answers) {
         let label = document.createElement('label');
         block.appendChild(label);
-        label.classList.add('radio', 'display-flex');
-        label.innerHTML = `<input type="radio" name="answer"><i class="icon-radio"></i> ${answer}`;
+        label.classList.add('radio', 'display-flex', 'margin-bottom-half');
+        label.innerHTML = `<input type="radio" name="answer"><i class="icon-radio margin-right-half"></i>${answer}`;
         console.log(answer);
       }
     }
