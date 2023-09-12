@@ -962,7 +962,8 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         console.log(event.target.parentNode.parentNode.parentNode.parentNode.getAttribute('id'));
         console.log(proposal.id);
-        let answer = document.getElementById(`answer-${proposal.id}`).value;
+        // let answer = document.getElementById(`answer-${proposal.id}`).value;
+        let answer = document.querySelector('input[name="answer-${proposal.id}"]:checked').value;
         console.log(answer);
         app.dialog.confirm(`You are about to vote "{answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
         });
