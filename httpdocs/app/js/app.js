@@ -884,14 +884,15 @@ window.onload = function() {
     p.innerHTML = proposal.description;
     p = document.createElement('p');
     block.appendChild(p);
-    console.log(type);
     if (type === 'referendum') {
-      console.log('la question est "' + proposal.question + '"');
       p = document.createElement('p');
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
       // FIXME: create radio buttons for answers
+      for(answer in proposal.answers) {
+        console.log(answer);
+      }
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
