@@ -891,7 +891,7 @@ window.onload = function() {
       block.appendChild(p);
       let div = document.createElement('div');
       block.appendChild(div);
-      div.classList.add('list', 'list-strong-ios', 'list-outline-ios', 'list-dividers-ios');
+      div.classList.add('list');
       let ul = document.createElement('ul');
       div.appendChild(ul);
       // FIXME: create radio buttons for answers
