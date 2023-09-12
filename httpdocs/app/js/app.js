@@ -889,27 +889,11 @@ window.onload = function() {
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
-      // let div = document.createElement('div');
-      // block.appendChild(div);
-      // div.classList.add('list');
-      // let ul = document.createElement('ul');
-      // div.appendChild(ul);
-      // FIXME: create radio buttons for answers
       for(let answer of proposal.answers) {
-        let line = document.createElement('span');
-        block.appendChild(line);
-        line.innerHTML = `<label class="radio"><input type="radio" name="demo-radio-inline"><i class="icon-radio"></i> ${answer}</label>`;
-        /*
         let label = document.createElement('label');
-        li.appendChild(label);
-        label.classList.add('item-radio', 'item-radio-icon-start', 'item-content');
-        let input = document.createElement('input');
-        label.appendChild(input);
-        input.setAttribute('type', 'radio');
-        input.setAttribute('value', answer);
-        input.setAttribute('name', 'answer');
-        input.innerHTML = `<i class="icon icon-radio"></i><div class="item-inner"><div class="item-title">${answer}</div></div>`;
-        */
+        block.appendChild(label);
+        label.classList.add('radio', 'display-flex');
+        label.innerHTML = `<input type="radio" name="answer"><i class="icon-radio"></i> ${answer}`;
         console.log(answer);
       }
     }
