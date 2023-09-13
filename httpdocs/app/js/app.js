@@ -966,7 +966,7 @@ window.onload = function() {
           fetch(`${notary}/api/participation.php?station=${station}&fingerprint=${proposal.fingerprint}`)
             .then((response) => response.json())
             .then((answer) => {
-              console.log('answer = ' + answer);
+              console.log('answer = ' + JSON.stringify(answer));
               const participation = 'FIXME';
               const voteNumber = new Uint8Array(20);
               crypto.getRandomValues(voteNumber);
