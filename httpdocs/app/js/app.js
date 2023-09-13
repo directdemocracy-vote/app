@@ -587,9 +587,8 @@ window.onload = function() {
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-      .then((response) => response.text())
-      .then((answer) => {
-        endorsements = JSON.parse(answer);
+      .then((response) => response.json())
+      .then((endorsements) => {
         if (endorsements.error)
           app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
         else {
@@ -942,9 +941,8 @@ window.onload = function() {
           };
           endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
           fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-            .then((response) => response.text())
-            .then((answer) => {
-              endorsements = JSON.parse(answer);
+            .then((response) => response.json())
+            .then((endorsements) => {
               if (endorsements.error)
                 app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
               else {
@@ -965,19 +963,47 @@ window.onload = function() {
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
           fetch(`${notary}/api/participation.php?station=${station}&referendum=${proposal.fingerprint}`)
             .then((response) => response.json())
-            .then((answer) => {
-              console.log('answer = ' + JSON.stringify(answer));
-              const participation = 'FIXME';
+            .then((participation) => {
+              if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
+                app.dialog.alert('Wrong participation schema', 'Vote error');
+                return;
+              }
+              const signature = participation.signature;
+              participation.signature = '';
+              let verify = new JSEncrypt();
+              verify.setPublicKey(publicKey(participation.key));
+              if (!verify.verify(participation, signature, CryptoJS.SHA256)) {
+                app.dialog.alert('Cannot verify participation signature', 'Vote error');
+                return;
+              }
               const voteNumber = new Uint8Array(20);
               crypto.getRandomValues(voteNumber);
-              const encrypted_answer = citizenCrypt.encrypt(voteNumber + answer); // FIXME: should be encrypted for blind signature
+              const encryptedVote = citizenCrypt.encrypt(voteNumber + answer); // FIXME: should be encrypted for blind signature
               let registration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
+                key: citizen.key,
                 signature: '',
                 published: new Date().getTime(),
-                participation: participation,
-                content: encrypted_answer
+                participation: participation.participation,
+                encryptedVote: encryptedVote
               }
+              registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
+              fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+                .then((response) => response.json())
+                .then((answer) => {
+                  if (answer.error) {
+                    app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
+                    return;
+                  }
+                  fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+                    .then((response) => response.json())
+                    .then((answer) => {
+                      if (answer.error) {
+                        app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
+                        return;
+                      }
+                    });
+                });
             });
         });
       });
