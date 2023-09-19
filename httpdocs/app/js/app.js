@@ -972,7 +972,7 @@ window.onload = function() {
               participation.signature = '';
               let verify = new JSEncrypt();
               verify.setPublicKey(publicKey(participation.key));
-              if (!verify.verify(participation, signature, CryptoJS.SHA256)) {
+              if (!verify.verify(JSON.stringify(participation), signature, CryptoJS.SHA256)) {
                 app.dialog.alert('Cannot verify participation signature', 'Vote error');
                 return;
               }
