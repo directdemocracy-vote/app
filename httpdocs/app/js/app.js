@@ -987,6 +987,8 @@ window.onload = function() {
                 number: btoa(String.fromCharCode(...voteNumber)),  // base64 encoding
                 answer: answer
               }
+              console.log('number = ' + btoa(String.fromCharCode(...voteNumber)).length);
+              console.log('message length = ' + JSON.stringify(vote).length);
               const encryptedVote = citizenCrypt.encrypt(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
               let registration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
