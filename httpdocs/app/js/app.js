@@ -1010,6 +1010,12 @@ window.onload = function() {
                         app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
                         return;
                       }
+
+
+
+
+
+                      
                     });
                 });
             });
