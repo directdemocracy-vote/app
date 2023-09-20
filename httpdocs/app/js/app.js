@@ -961,7 +961,8 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${station}&referendum=${proposal.fingerprint}`)
+          console.log(`station = "${station}"`);
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.fingerprint}`)
             .then((response) => response.json())
             .then((participation) => {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
