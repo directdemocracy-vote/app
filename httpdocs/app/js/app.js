@@ -978,13 +978,21 @@ window.onload = function() {
               }
               const voteNumber = new Uint8Array(20);
               crypto.getRandomValues(voteNumber);
-              const encryptedVote = citizenCrypt.encrypt(voteNumber + answer); // FIXME: should be encrypted for blind signature
+              let vote = {
+                schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/vote.schema.json`,
+                key: participation.blindKey,
+                signature: '',
+                published: proposal.deadline,
+                number: btoa(String.fromCharCode(...voteNumber)),  // base64 encoding
+                answer: answer
+              }
+              const encryptedVote = citizenCrypt.encrypt(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
               let registration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
                 key: citizen.key,
                 signature: '',
                 published: new Date().getTime(),
-                participation: participation.participation,
+                participation: participation.blindKey,
                 encryptedVote: encryptedVote
               }
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
