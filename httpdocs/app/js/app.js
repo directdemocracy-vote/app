@@ -989,7 +989,7 @@ window.onload = function() {
                 key: citizen.key,
                 signature: '',
                 published: new Date().getTime(),
-                participation: participation.blindKey,
+                blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
               }
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
