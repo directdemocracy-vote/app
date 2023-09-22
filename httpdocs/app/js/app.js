@@ -1142,7 +1142,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-  citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
+  citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
