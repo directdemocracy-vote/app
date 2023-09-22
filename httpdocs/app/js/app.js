@@ -362,7 +362,7 @@ window.onload = function() {
     show('register-button-preloader');
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
-    citizen.published = new Date().getTime();
+    citizen.published = new Date().getTime() / 1000;
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
@@ -532,7 +532,7 @@ window.onload = function() {
         const lat = endorsed.latitude;
         const lon = endorsed.longitude;
         document.getElementById('endorse-coords').innerHTML = lat + ', ' + lon;
-        let published = new Date(endorsed.published);
+        let published = new Date(endorsed.published * 1000);
         document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
         if (endorseMap == null) {
           endorseMap = L.map('endorse-map', {dragging: false});
@@ -582,7 +582,7 @@ window.onload = function() {
       schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
       key: citizen.key,
       signature: '',
-      published: new Date().getTime(),
+      published: new Date().getTime() / 1000,
       endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
@@ -936,7 +936,7 @@ window.onload = function() {
             schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
             key: citizen.key,
             signature: '',
-            published: new Date().getTime(),
+            published: new Date().getTime() / 1000,
             endorsedSignature: proposal.signature
           };
           endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
@@ -987,7 +987,7 @@ window.onload = function() {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
                 key: citizen.key,
                 signature: '',
-                published: new Date().getTime(),
+                published: new Date().getTime() / 1000,
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
               }
@@ -1140,7 +1140,7 @@ function updateCitizenCard() {
     citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
     citizen.latitude + ', ' + citizen.longitude + '</a>';
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
-  let published = new Date(citizen.published);
+  let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
   getReputationFromJudge();
@@ -1251,7 +1251,7 @@ function updateCitizenEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const t = new Date(endorsement.published).toISOString().slice(0, 10);
+    const t = new Date(endorsement. * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
@@ -1279,7 +1279,7 @@ function updateEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const t = new Date(endorsement.published).toISOString().slice(0, 10);
+    const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
@@ -1297,7 +1297,7 @@ function updateEndorsements() {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
             key: citizen.key,
             signature: '',
-            published: new Date().getTime(),
+            published: new Date().getTime() / 1000,
             revoke: true,
             endorsedSignature: endorsement.signature
           };
