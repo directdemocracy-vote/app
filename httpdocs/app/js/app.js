@@ -28,7 +28,7 @@ let answerScanner = null;
 let petitionScanner = null;
 let referendumScanner = null;
 let translator = new Translator('i18n');
-const DIRECTDEMOCRACY_VERSION = '0.2';
+const DIRECTDEMOCRACY_VERSION = '2';
 let citizen = {
   schema: '',
   key: '',
