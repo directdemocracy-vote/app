@@ -1251,7 +1251,7 @@ function updateCitizenEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const t = new Date(endorsement. * 1000).toISOString().slice(0, 10);
+    const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
