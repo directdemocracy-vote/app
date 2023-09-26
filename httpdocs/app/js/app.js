@@ -1142,7 +1142,10 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
+  let wordArray = CryptoJS.lib.WordArray.create(atob(citizen.signature));
+
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
+  console.log("SHA1(signature) * = " + CryptoJS.SHA1(wordArray).toString());
   console.log("SHA1(signature) = " + CryptoJS.SHA1(atob(citizen.signature)).toString());
   console.log("base64(signature) = " + citizen.signature);
   console.log("SHA1(base64(signature)) = " + CryptoJS.SHA1(citizen.signature).toString());
