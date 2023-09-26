@@ -1143,6 +1143,7 @@ function updateCitizenCard() {
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
+  console.log("citizen fingerprint = " + citizenFingerprint);
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
