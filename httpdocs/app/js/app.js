@@ -367,6 +367,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
+    citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
     fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
@@ -426,7 +427,7 @@ window.onload = function() {
 
 
 
-    
+
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
@@ -1157,7 +1158,6 @@ function updateCitizenCard() {
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
   citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
-  console.log("fingerprint = " + citizenFingerprint);
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
