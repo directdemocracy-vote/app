@@ -1146,6 +1146,7 @@ function updateCitizenCard() {
 
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
   console.log("SHA1(signature) * = " + CryptoJS.SHA1(wordArray).toString());
+  console.log("new = " +               CryptoJS.SHA1(wordArray).toString(CryptoJS.enc.Hex))
   console.log("SHA1(signature) = " + CryptoJS.SHA1(atob(citizen.signature)).toString());
   console.log("base64(signature) = " + citizen.signature);
   console.log("SHA1(base64(signature)) = " + CryptoJS.SHA1(citizen.signature).toString());
