@@ -413,6 +413,20 @@ window.onload = function() {
     let fingerprint = '';
     for(let i = 0; i < 40; i+=2)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
+
+
+    let decodedFingerprint = '';
+    const hex = '0123456789abcdef';
+    for(let i=0; i < 20; i++) {
+      const b = fingerprint[i];
+      decodedFingerprint += hex[b >> 4] + hex[b & 15];
+    }
+  
+    console.log("computed fingerprint = " + decodedFingerprint);
+
+
+
+    
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
