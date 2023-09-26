@@ -1145,8 +1145,9 @@ function updateCitizenCard() {
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
   console.log("citizen fingerprint = " + citizenFingerprint);
   console.log("citizen signature = " + citizen.signature);
-  console.log("binary = " + atob(citizen.signature));
+  console.log("base64 = " + CryptoJS.SHA1(citizen.signature));
   console.log("crypto = " + CryptoJS.SHA1(atob(citizen.signature)));
+  console.log("crypto = " + CryptoJS.SHA1(atob(citizen.signature)).toString());
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
