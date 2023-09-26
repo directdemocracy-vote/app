@@ -1143,11 +1143,9 @@ function updateCitizenCard() {
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
   citizenFingerprint = CryptoJS.SHA1(atob(citizen.signature)).toString();
-  console.log("citizen fingerprint = " + citizenFingerprint);
-  console.log("citizen signature = " + citizen.signature);
-  console.log("base64 = " + CryptoJS.SHA1(citizen.signature));
-  console.log("crypto = " + CryptoJS.SHA1(atob(citizen.signature)));
-  console.log("crypto = " + CryptoJS.SHA1(atob(citizen.signature)).toString());
+  console.log("SHA1(signature) = " + CryptoJS.SHA1(atob(citizen.signature)).toString());
+  console.log("base64(signature) = " + citizen.signature);
+  console.log("SHA1(base64(signature)) = " + CryptoJS.SHA1(citizen.signature).toString());
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
