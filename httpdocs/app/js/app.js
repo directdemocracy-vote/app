@@ -414,20 +414,6 @@ window.onload = function() {
     let fingerprint = '';
     for(let i = 0; i < 40; i+=2)
       fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
-
-
-    let decodedFingerprint = '';
-    const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
-      const b = fingerprint[i];
-      decodedFingerprint += hex[b >> 4] + hex[b & 15];
-    }
-  
-    console.log("computed fingerprint = " + decodedFingerprint);
-
-
-
-
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
@@ -603,11 +589,12 @@ window.onload = function() {
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
     fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
       .then((response) => response.json())
-      .then((endorsements) => {
-        if (endorsements.error)
-          app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
+      .then((answer) => {
+        if (answer.error)
+          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
         else {
           app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+          // FIXME: we should actually add the new endorsee in the endorsements list
           updateEndorsements();
         }
         enable('endorse-button');
@@ -957,9 +944,9 @@ window.onload = function() {
           endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
           fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
             .then((response) => response.json())
-            .then((endorsements) => {
-              if (endorsements.error)
-                app.dialog.alert(`${endorsements.error}<br>Please try again.`, 'Publication Error');
+            .then((answer) => {
+              if (answer.error)
+                app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
               else {
                 app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
                 button.innerHTML = 'Signed';
@@ -1299,7 +1286,7 @@ function updateEndorsements() {
     message.style.fontSize='82.353%';
     if (endorsement.revoke) {
       message.style.color = 'red';
-      count ++;
+      count++;
     } else {
       let d = newElement(div, 'div', 'item-label text-align-right');
       a = newElement(d, 'a', 'link', 'Revoke');
@@ -1325,7 +1312,7 @@ function updateEndorsements() {
                 return;
               }
               app.dialog.alert(`You successfully revoked ${endorsement.givenNames} ${endorsement.familyName}`, 'Revocation success');
-              endorsements = answer;
+              endorsements.splice(endorsements.indexOf(endorsement), 1);  // remove it from array
               updateEndorsements();
             });
         }
