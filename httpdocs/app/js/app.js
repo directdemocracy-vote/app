@@ -1262,7 +1262,7 @@ function updateCitizenEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.fingerprint).toString()}&judge=${encodeURIComponent(judge)}`;
+    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.fingerprint).toString()}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
