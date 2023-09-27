@@ -1262,7 +1262,7 @@ function updateCitizenEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}&citizenEndorsement=1`;
+    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -1290,7 +1290,7 @@ function updateEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}&endorsements=1`;
+    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
