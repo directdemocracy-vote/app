@@ -1219,8 +1219,7 @@ function updateProposals(proposals) {
   const type = (proposals === petitions) ? 'petition' : 'referendum';
   for(let proposal of proposals) {
     if (proposal.judge == judge) {
-      let button = document.querySelector(`#${type}-${proposal.id} > button`);
-      console.log(`#${type}-${proposal.id} > button` + iAmEndorsedByJudge + ' button = ' + button);
+      let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
         if (iAmEndorsedByJudge)
           enable(button);
