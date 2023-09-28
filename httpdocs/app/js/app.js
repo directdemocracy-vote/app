@@ -1157,7 +1157,6 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  console.log("petitions 6 = " + petitions);
   fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
@@ -1170,6 +1169,7 @@ function downloadCitizen() {
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
         citizenEndorsements = answer.citizen_endorsements;
+        console.log("petitions 6 = " + petitions);
         updateCitizenCard();
         updateEndorsements();
         updateProposalLink();
