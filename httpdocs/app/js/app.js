@@ -130,6 +130,7 @@ window.addEventListener('online', () => {
   online = true;
   disable('endorse-me-button');
   downloadCitizen();
+  console.log("online");
   getReputationFromJudge();
 });
 
@@ -1175,7 +1176,7 @@ function downloadCitizen() {
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
-        // updateArea();
+        // updateArea();  FIXME
       }
     })
     .catch((error) => {
