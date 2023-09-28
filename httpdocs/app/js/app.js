@@ -739,8 +739,8 @@ window.onload = function() {
         }
         if (!verifyProposalSignature(proposal))
           return;
-        const outdated = (proposal.deadline < new Date().getTime() / 1000);
-        const deadline = new Date(proposal.deadline).toLocaleString();
+        const outdated = (proposal.deadline * 1000 < new Date().getTime());
+        const deadline = new Date(proposal.deadline * 1000).toLocaleString();
         const title = `<b>${proposal.title}</b><br><br>`;
         if (type === 'petition' && proposal.secret)
           app.dialog.alert(`${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`, 'Not a petition');
