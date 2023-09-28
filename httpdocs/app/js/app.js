@@ -130,7 +130,6 @@ window.addEventListener('online', () => {
   online = true;
   disable('endorse-me-button');
   downloadCitizen();
-  console.log("online");
   getReputationFromJudge();
 });
 
@@ -1137,6 +1136,7 @@ function updateSearchLinks() {
 }
 
 function updateCitizenCard() {
+  console.log("petitions 7 = " + petitions);
   showPage('card');
   document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
   document.getElementById('register-picture').setAttribute('src', citizen.picture);
@@ -1157,6 +1157,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
+  console.log("petitions 6 = " + petitions);
   fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
