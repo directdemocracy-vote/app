@@ -739,7 +739,7 @@ window.onload = function() {
         }
         if (!verifyProposalSignature(proposal))
           return;
-        const outdated = (proposal.deadline < new Date().getTime());
+        const outdated = (proposal.deadline < new Date().getTime() / 1000);
         const deadline = new Date(proposal.deadline).toLocaleString();
         const title = `<b>${proposal.title}</b><br><br>`;
         if (type === 'petition' && proposal.secret)
