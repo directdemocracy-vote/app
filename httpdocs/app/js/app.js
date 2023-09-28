@@ -708,13 +708,14 @@ window.onload = function() {
   });
 
   let petitions = JSON.parse(localStorage.getItem('petitions'));
-  console.log("init petitions = " + petitions);
+  console.log("init petitions 0 = " + petitions);
   if (petitions == null)
     petitions = [];
   petitions.forEach(function(petition) {
     if (petition.id !== undefined)
       addProposal(petition, 'petition', false);
   });
+  console.log("init petitions 1 = " + petitions);
 
   function scanProposal(value) {
     const type = (this === petitionScanner) ? 'petition' : 'referendum';
@@ -1184,6 +1185,7 @@ function downloadCitizen() {
 }
 
 function getReputationFromJudge() {
+  console.log("petitions 8 = " + petitions);
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`)
     .then((response) => response.json())
     .then((answer) => {
@@ -1201,7 +1203,7 @@ function getReputationFromJudge() {
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
         console.log("Got endorsed: " + iAmEndorsedByJudge);
-        console.log("petitions: " + petitions);
+        console.log("petitions 9 = " + petitions);
         updateProposals(petitions);
         updateProposals(referendums);
       }})
