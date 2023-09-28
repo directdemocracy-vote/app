@@ -708,6 +708,7 @@ window.onload = function() {
   });
 
   let petitions = JSON.parse(localStorage.getItem('petitions'));
+  console.log("init petitions = " + petitions);
   if (petitions == null)
     petitions = [];
   petitions.forEach(function(petition) {
