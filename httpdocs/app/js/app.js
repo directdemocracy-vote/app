@@ -1208,9 +1208,11 @@ function getReputationFromJudge() {
 }
 
 function updateProposals(proposals) {
+  console.log("updateProposals");
   const type = (proposals === petitions) ? 'petition' : 'referendum';
   for(let proposal of proposals) {
     if (proposal.judge == judge) {
+      console.log("updateProposalsss");
       let button = document.querySelector(`#${type}-${proposal.id} > button`);
       if (button) {
         if (iAmEndorsedByJudge)
