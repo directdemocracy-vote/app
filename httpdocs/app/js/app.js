@@ -843,6 +843,7 @@ window.onload = function() {
       p['website'] = proposal.website;
     let verify = new JSEncrypt();
     verify.setPublicKey(publicKey(proposal.key));
+    console.log(JSON.stringify(p));
     if (!verify.verify(JSON.stringify(p), proposal.signature, CryptoJS.SHA256)) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
       return false;
