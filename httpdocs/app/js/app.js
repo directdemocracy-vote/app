@@ -708,14 +708,12 @@ window.onload = function() {
   });
 
   petitions = JSON.parse(localStorage.getItem('petitions'));
-  console.log("init petitions 0 = " + petitions);
   if (petitions == null)
     petitions = [];
   petitions.forEach(function(petition) {
     if (petition.id !== undefined)
       addProposal(petition, 'petition', false);
   });
-  console.log("init petitions 1 = " + petitions);
 
   function scanProposal(value) {
     const type = (this === petitionScanner) ? 'petition' : 'referendum';
@@ -931,10 +929,6 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
-      console.log('done = ' + proposal.done);
-      console.log('outdated = ' + outdated);
-      console.log(proposal.judge + ' == ', judge);
-      console.log('endorsed = ' + iAmEndorsedByJudge);
       if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
         disable(button);
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
@@ -1136,7 +1130,6 @@ function updateSearchLinks() {
 }
 
 function updateCitizenCard() {
-  console.log("petitions 7 = " + petitions);
   showPage('card');
   document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
   document.getElementById('register-picture').setAttribute('src', citizen.picture);
@@ -1169,7 +1162,6 @@ function downloadCitizen() {
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
         citizenEndorsements = answer.citizen_endorsements;
-        console.log("petitions 6 = " + petitions);
         updateCitizenCard();
         updateEndorsements();
         updateProposalLink();
@@ -1187,7 +1179,6 @@ function downloadCitizen() {
 }
 
 function getReputationFromJudge() {
-  console.log("petitions 8 = " + petitions);
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`)
     .then((response) => response.json())
     .then((answer) => {
@@ -1204,8 +1195,6 @@ function getReputationFromJudge() {
         badge.classList.remove('color-red');
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
-        console.log("Got endorsed: " + iAmEndorsedByJudge);
-        console.log("petitions 9 = " + petitions);
         updateProposals(petitions);
         updateProposals(referendums);
       }})
@@ -1215,7 +1204,6 @@ function getReputationFromJudge() {
 }
 
 function updateProposals(proposals) {
-  console.log("updateProposals");
   const type = (proposals === petitions) ? 'petition' : 'referendum';
   for(let proposal of proposals) {
     if (proposal.judge == judge) {
