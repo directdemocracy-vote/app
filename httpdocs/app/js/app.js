@@ -699,7 +699,7 @@ window.onload = function() {
     enable('enter-petition');
   });
 
-  let referendums = JSON.parse(localStorage.getItem('referendums'));
+  referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
   referendums = [];
   referendums.forEach(function(referendum) {
@@ -707,7 +707,7 @@ window.onload = function() {
       addProposal(referendum, 'referendum', false);
   });
 
-  let petitions = JSON.parse(localStorage.getItem('petitions'));
+  petitions = JSON.parse(localStorage.getItem('petitions'));
   console.log("init petitions 0 = " + petitions);
   if (petitions == null)
     petitions = [];
