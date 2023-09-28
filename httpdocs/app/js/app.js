@@ -1199,6 +1199,8 @@ function getReputationFromJudge() {
         badge.classList.remove('color-red');
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
+        console.log("Got endorsed: " + iAmEndorsedByJudge);
+        console.log("petitions: " + petitions);
         updateProposals(petitions);
         updateProposals(referendums);
       }})
