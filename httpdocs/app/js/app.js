@@ -1220,7 +1220,7 @@ function updateProposals(proposals) {
   for(let proposal of proposals) {
     if (proposal.judge == judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > button`);
-      console.log("updateProposalsss" + iAmEndorsedByJudge + ' button = ' + button);
+      console.log(`#${type}-${proposal.id} > button` + iAmEndorsedByJudge + ' button = ' + button);
       if (button) {
         if (iAmEndorsedByJudge)
           enable(button);
