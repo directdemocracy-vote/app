@@ -921,8 +921,8 @@ window.onload = function() {
     p.innerHTML = `<b>Judge:</b> <a class="link external" href="${proposal.judge}" target="_blank">${proposal.judge}</a>`;
     p = document.createElement('p');
     block.appendChild(p);
-    const deadline = new Date(proposal.deadline).toLocaleString();
-    const outdated = (proposal.deadline < new Date().getTime());
+    const deadline = new Date(proposal.deadline * 1000).toLocaleString();
+    const outdated = (proposal.deadline * 1000 < new Date().getTime());
     p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
