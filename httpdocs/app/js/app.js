@@ -929,6 +929,10 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
+      console.log('done = ' + proposal.done);
+      console.log('outdated = ' + outdated);
+      console.log(proposal.judge + ' == ', judge);
+      console.log('endorsed = ' + iAmEndorsedByJudge);
       if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
         disable(button);
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
