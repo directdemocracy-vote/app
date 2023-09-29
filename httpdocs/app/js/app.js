@@ -86,7 +86,7 @@ function setupLanguagePicker() {
         '</div></div></div>';
     }
   });
-  
+
   languagePicker.on('change', function(picker, value) {
     for (let key in translator.languages) {
       if (translator.languages[key] === value[0]) {
@@ -380,7 +380,7 @@ window.onload = function() {
         }
       })
       .catch((error) => {
-        console.error(`Could publish citizen card.`);
+        console.error(`Could not publish citizen card.`);
         console.error(error);
       });
     return false;
@@ -445,7 +445,7 @@ window.onload = function() {
     if (!online)
       enable('endorse-me-button');
   });
-  
+
   document.getElementById('endorse-button').addEventListener('click', function() {
     disable('endorse-button');
     app.dialog.create({
@@ -754,7 +754,7 @@ window.onload = function() {
         } else if (outdated) {
           const message = (type === 'petition')
                         ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
-                        : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;            
+                        : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Deadline expired');
         } else {
           let already = false;
@@ -817,7 +817,7 @@ window.onload = function() {
           }
         }
         enable(`scan-${type}`);
-        enable(`enter-${type}`);       
+        enable(`enter-${type}`);
       });
   }
 
@@ -1008,12 +1008,6 @@ window.onload = function() {
                         app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
                         return;
                       }
-
-
-
-
-
-                      
                     });
                 });
             });
@@ -1077,7 +1071,7 @@ window.onload = function() {
       return;
     enable('register-button');
   }
-  
+
   function uploadPicture() {
     document.getElementById('register-picture-upload').click();
   }
@@ -1105,7 +1099,7 @@ window.onload = function() {
       privateKeyAvailable(translator.translate('key-forge-time', n));
     });
   }
-  
+
   function strippedKey(publicKey) {
     let stripped = '';
     const header = '-----BEGIN PUBLIC KEY-----\n'.length;
