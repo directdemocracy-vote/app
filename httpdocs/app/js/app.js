@@ -762,7 +762,7 @@ window.onload = function() {
           let already = false;
           let proposals = (type === 'petition') ? petitions : referendums;
           for (let p of proposals) {
-            if (p.fingerprint == fingerprint) {
+            if (CryptoJS.SHA1(CryptoJS.enc.Base64.parse(p.signature)) == fingerprint) {
               if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this ${type}.`);
                 app.accordion.open(document.getElementById(`${type}-${p.id}`));
@@ -811,7 +811,6 @@ window.onload = function() {
               delete proposal.website;
             // preprend new proposal at id 0
             proposal.id = 0;
-            proposal.fingerprint = fingerprint;
             proposal.done = false;
             proposals.unshift(proposal);
             addProposal(proposal, type, true);
@@ -876,7 +875,7 @@ window.onload = function() {
     block.classList.add('block', 'no-padding');
     a = document.createElement('a');
     block.appendChild(a);
-    a.setAttribute('href', `${notary}/proposal.html?fingerprint=${proposal.fingerprint}`);
+    a.setAttribute('href', `${notary}/proposal.html?signature=${proposal.signature}`);
     a.setAttribute('target', '_blank');
     a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
@@ -965,7 +964,7 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.fingerprint}`)
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
             .then((response) => response.json())
             .then((participation) => {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
@@ -1251,7 +1250,7 @@ function updateCitizenEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(CryptoJS.enc.Base64.parse(endorsement.signature)).toString()}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -1279,7 +1278,7 @@ function updateEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(CryptoJS.enc.Base64.parse(endorsement.signature)).toString()}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
