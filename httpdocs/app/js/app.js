@@ -1214,7 +1214,7 @@ function updateProposals(proposals) {
     if (proposal.judge == judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
-        if (iAmEndorsedByJudge)
+        if (iAmEndorsedByJudge && !proposal.done)
           enable(button);
         else
           disable(button);
