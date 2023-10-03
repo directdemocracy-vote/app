@@ -367,7 +367,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    citizenFingerprint = CryptoJS.SHA1(citizen.signature);
+    citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
     fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
@@ -1146,7 +1146,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-  citizenFingerprint = CryptoJS.SHA1(citizen.signature);
+  citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
@@ -1251,7 +1251,7 @@ function updateCitizenEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(CryptoJS.enc.Base64.parse(endorsement.signature)).toString()}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -1279,7 +1279,7 @@ function updateEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(endorsement.signature).toString()}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?fingerprint=${CryptoJS.SHA1(CryptoJS.enc.Base64.parse(endorsement.signature)).toString()}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
