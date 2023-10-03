@@ -367,7 +367,7 @@ window.onload = function() {
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
+    citizenFingerprint = CryptoJS.SHA1(citizen.signature);
     fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
       .then((response) => response.json())
       .then((answer) => {
@@ -412,8 +412,15 @@ window.onload = function() {
       challenge += String.fromCharCode(value.bytes[i]);
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
+    const words = citizenFingerprint.words;
+    for(let i = 0; i < 5; ++i)
+      for(let j = 3; j >= 0; --j)
+        fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
+    /*
+    const string = citizenFingerprint.toString();
     for(let i = 0; i < 40; i+=2)
-      fingerprint += String.fromCharCode(parseInt(citizenFingerprint.slice(i, i + 2), 16));
+      fingerprint += String.fromCharCode(parseInt(string.slice(i, i + 2), 16));
+    */
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
@@ -1144,7 +1151,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-  citizenFingerprint = CryptoJS.SHA1(citizen.signature).toString();
+  citizenFingerprint = CryptoJS.SHA1(citizen.signature);
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
