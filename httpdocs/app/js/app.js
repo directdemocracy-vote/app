@@ -930,13 +930,9 @@ window.onload = function() {
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
-      console.log(proposal.done);
       button.innerHTML = proposal.done ? 'Signed' : 'Sign';
-      console.log(button.innerHTML);
-      if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge)) {
-        console.log("Disabling button");
+      if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
         disable(button);
-      }
       button.addEventListener('click', function() {
         app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
           let endorsement = {
