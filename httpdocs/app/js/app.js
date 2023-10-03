@@ -416,11 +416,6 @@ window.onload = function() {
     for(let i = 0; i < 5; ++i)
       for(let j = 3; j >= 0; --j)
         fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
-    /*
-    const string = citizenFingerprint.toString();
-    for(let i = 0; i < 40; i+=2)
-      fingerprint += String.fromCharCode(parseInt(string.slice(i, i + 2), 16));
-    */
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
