@@ -974,7 +974,7 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
+          fetch(`${sanitizeString(notary)}/api/participation.php?station=${sanitizeString(encodeURIComponent(station))}&referendum=${proposal.signature}`)
             .then((response) => response.json())
             .then((participation) => {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
@@ -1005,14 +1005,14 @@ window.onload = function() {
                 encryptedVote: encryptedVote
               }
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+              fetch(`${sanitizeString(notary)}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
                 .then((response) => response.json())
                 .then((answer) => {
                   if (answer.error) {
                     app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
                     return;
                   }
-                  fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+                  fetch(`${sanitizeString(station)}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
                     .then((response) => response.json())
                     .then((answer) => {
                       if (answer.error) {
@@ -1132,12 +1132,12 @@ window.onload = function() {
 function updateProposalLink() {
   let proposal = document.getElementById('proposal');
   if (proposal)
-    proposal.setAttribute('href', `${notary}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    proposal.setAttribute('href', `${sanitizeString(notary)}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
-  document.getElementById('search-referendum').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-petition').setAttribute('href', `${sanitizeString(notary)}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-referendum').setAttribute('href', `${sanitizeString(notary)}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
@@ -1161,7 +1161,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${sanitizeString(notary)}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
