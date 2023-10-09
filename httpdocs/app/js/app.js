@@ -44,17 +44,17 @@ let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
-let notary = localStorage.getItem('notary');
+let notary = sanitizeString(localStorage.getItem('notary'));
 if (!notary) {
   notary = 'https://notary.directdemocracy.vote';
   localStorage.setItem('notary', notary);
 }
-let judge = localStorage.getItem('judge');
+let judge = sanitizeString(localStorage.getItem('judge'));
 if (!judge) {
   judge = 'https://judge.directdemocracy.vote';
   localStorage.setItem('judge', judge);
 }
-let station = localStorage.getItem('station');
+let station = sanitizeString(localStorage.getItem('station'));
 if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
@@ -151,17 +151,17 @@ window.addEventListener('offline', () => {
 window.onload = function() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
-    notary = event.target.value;
+    notary = sanitizeString(event.target.value);
     setNotary();
   });
   document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
-    judge = event.target.value;
+    judge = sanitizeString(event.target.value);
     localStorage.setItem('judge', judge);
   });
   document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
-    station = event.target.value;
+    station = sanitizeString(event.target.value);
     localStorage.setItem('station', station);
   });
 
@@ -373,8 +373,8 @@ window.onload = function() {
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = Math.trunc(new Date().getTime() / 1000);
-    citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
-    citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
+    citizen.givenNames = document.getElementById('register-given-names').value.trim();
+    citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
     citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
@@ -974,7 +974,7 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${sanitizeString(notary)}/api/participation.php?station=${sanitizeString(encodeURIComponent(station))}&referendum=${proposal.signature}`)
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
             .then((response) => response.json())
             .then((participation) => {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
@@ -1005,14 +1005,14 @@ window.onload = function() {
                 encryptedVote: encryptedVote
               }
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${sanitizeString(notary)}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+              fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
                 .then((response) => response.json())
                 .then((answer) => {
                   if (answer.error) {
                     app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
                     return;
                   }
-                  fetch(`${sanitizeString(station)}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+                  fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
                     .then((response) => response.json())
                     .then((answer) => {
                       if (answer.error) {
@@ -1132,12 +1132,12 @@ window.onload = function() {
 function updateProposalLink() {
   let proposal = document.getElementById('proposal');
   if (proposal)
-    proposal.setAttribute('href', `${sanitizeString(notary)}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    proposal.setAttribute('href', `${notary}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-petition').setAttribute('href', `${sanitizeString(notary)}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
-  document.getElementById('search-referendum').setAttribute('href', `${sanitizeString(notary)}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-referendum').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
@@ -1161,7 +1161,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${sanitizeString(notary)}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
