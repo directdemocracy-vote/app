@@ -156,12 +156,12 @@ window.onload = function() {
     notary = sanitizeString(event.target.value);
     setNotary();
   });
-  document.getElementById('judge').value = judge;
+  document.getElementById('judge').innerHTML = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
     judge = sanitizeString(event.target.value);
     localStorage.setItem('judge', judge);
   });
-  document.getElementById('station').value = station;
+  document.getElementById('station').innerHTML = station;
   document.getElementById('station').addEventListener('input', function(event) {
     station = sanitizeString(event.target.value);
     localStorage.setItem('station', station);
@@ -680,7 +680,7 @@ window.onload = function() {
 
   function setNotary() {
     localStorage.setItem('notary', notary);
-    document.getElementById('notary').value = notary;
+    document.getElementById('notary').innerHTML = notary;
     updateSearchLinks();
     updateProposalLink();
   }
