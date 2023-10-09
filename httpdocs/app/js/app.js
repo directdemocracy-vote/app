@@ -68,6 +68,8 @@ let petitions = [];
 let referendums = [];
 
 function sanitizeString(str) {
+  if (!str)
+    return;
   str = str.replaceAll('&', '&amp;');
   str = str.replaceAll("'", '&apos;');
   str = str.replaceAll('"', '&quot;');
