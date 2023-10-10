@@ -79,16 +79,8 @@ function sanitizeString(string) {
 }
 
 function sanitizeWebservice(string) {
-  if (!string || string == '')
+  if (!string)
     return '';
-  const header = 'https://';
-  for (let i = 0; i < header.length; i++) {
-    let head = header.substring(0, i + 1);
-    if (string.length == i + 1 && string != head) {
-      string = head;
-      break;
-    }
-  }
   string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
   return string;
 }
