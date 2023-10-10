@@ -80,9 +80,15 @@ function sanitizeString(string) {
 
 function sanitizeWebservice(string) {
   if (!string)
-    return;
-  if (!string.startsWith('https://'))
-    string = 'https://' + string;
+    return 'https://';
+  if (!string.startsWith('https://')) {
+    let substring;
+    if (string.startsWith('http://') || string.startsWith('https:/'))
+      substring = string.substring(7);
+    else
+      substring = string;
+    return 'https://';
+  }
   string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
   return string;
 }
