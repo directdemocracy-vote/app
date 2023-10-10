@@ -44,17 +44,17 @@ let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
-let notary = localStorage.getItem('notary');
+let notary = sanitizeString(localStorage.getItem('notary'));
 if (!notary) {
   notary = 'https://notary.directdemocracy.vote';
   localStorage.setItem('notary', notary);
 }
-let judge = localStorage.getItem('judge');
+let judge = sanitizeString(localStorage.getItem('judge'));
 if (!judge) {
   judge = 'https://judge.directdemocracy.vote';
   localStorage.setItem('judge', judge);
 }
-let station = localStorage.getItem('station');
+let station = sanitizeString(localStorage.getItem('station'));
 if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
@@ -66,6 +66,18 @@ let endorseMarker = null;
 let online = true;
 let petitions = [];
 let referendums = [];
+
+function sanitizeString(str) {
+  if (!str)
+    return;
+  str = str.replaceAll('&', '&amp;');
+  str = str.replaceAll("'", '&apos;');
+  str = str.replaceAll('"', '&quot;');
+  str = str.replaceAll('<', '&lt;');
+  str = str.replaceAll('>', '&gt;');
+
+  return str;
+}
 
 function setupLanguagePicker() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
@@ -141,17 +153,17 @@ window.addEventListener('offline', () => {
 window.onload = function() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
-    notary = event.target.value;
+    notary = sanitizeString(event.target.value);
     setNotary();
   });
   document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
-    judge = event.target.value;
+    judge = sanitizeString(event.target.value);
     localStorage.setItem('judge', judge);
   });
   document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
-    station = event.target.value;
+    station = sanitizeString(event.target.value);
     localStorage.setItem('station', station);
   });
 
@@ -363,8 +375,8 @@ window.onload = function() {
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = strippedKey(citizenCrypt.getPublicKey());
     citizen.published = Math.trunc(new Date().getTime() / 1000);
-    citizen.givenNames = document.getElementById('register-given-names').value.trim();
-    citizen.familyName = document.getElementById('register-family-name').value.trim();
+    citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
+    citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
     citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
@@ -875,7 +887,7 @@ window.onload = function() {
     block.classList.add('block', 'no-padding');
     a = document.createElement('a');
     block.appendChild(a);
-    a.setAttribute('href', `${notary}/proposal.html?signature=${proposal.signature}`);
+    a.setAttribute('href', `${notary}/proposal.html?signature=${encodeURIComponent(proposal.signature)}`);
     a.setAttribute('target', '_blank');
     a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
