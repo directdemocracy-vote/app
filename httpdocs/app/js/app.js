@@ -44,17 +44,17 @@ let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
-let notary = sanitizeString(localStorage.getItem('notary'));
+let notary = sanitizeWebservice(localStorage.getItem('notary'));
 if (!notary) {
   notary = 'https://notary.directdemocracy.vote';
   localStorage.setItem('notary', notary);
 }
-let judge = sanitizeString(localStorage.getItem('judge'));
+let judge = sanitizeWebservice(localStorage.getItem('judge'));
 if (!judge) {
   judge = 'https://judge.directdemocracy.vote';
   localStorage.setItem('judge', judge);
 }
-let station = sanitizeString(localStorage.getItem('station'));
+let station = sanitizeWebservice(localStorage.getItem('station'));
 if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
@@ -67,16 +67,24 @@ let online = true;
 let petitions = [];
 let referendums = [];
 
-function sanitizeString(str) {
-  if (!str)
+function sanitizeString(string) {
+  if (!string)
     return;
-  str = str.replaceAll('&', '&amp;');
-  str = str.replaceAll("'", '&apos;');
-  str = str.replaceAll('"', '&quot;');
-  str = str.replaceAll('<', '&lt;');
-  str = str.replaceAll('>', '&gt;');
+  string = string.replaceAll('&', '&amp;');
+  string = string.replaceAll("'", '&apos;');
+  string = string.replaceAll('"', '&quot;');
+  string = string.replaceAll('<', '&lt;');
+  string = string.replaceAll('>', '&gt;');
+  return string;
+}
 
-  return str;
+function sanitizeWebservice(string) {
+  if (!string)
+    return;
+  if (!string.startsWith('https://'))
+    string = 'https://' + string;
+  string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
+  return string;
 }
 
 function setupLanguagePicker() {
@@ -153,17 +161,17 @@ window.addEventListener('offline', () => {
 window.onload = function() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
-    notary = sanitizeString(event.target.value);
+    notary = sanitizeWebservice(event.target.value);
     setNotary();
   });
   document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
-    judge = sanitizeString(event.target.value);
+    judge = sanitizeWebservice(event.target.value);
     localStorage.setItem('judge', judge);
   });
   document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
-    station = sanitizeString(event.target.value);
+    station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
 
