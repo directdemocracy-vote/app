@@ -392,7 +392,7 @@ window.onload = function() {
         }
       })
       .catch((error) => {
-        console.error(`Could publish citizen card.`);
+        console.error(`Could not publish citizen card.`);
         console.error(error);
       });
     return false;
@@ -1021,12 +1021,6 @@ window.onload = function() {
                         app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
                         return;
                       }
-
-
-
-
-
-
                     });
                 });
             });
