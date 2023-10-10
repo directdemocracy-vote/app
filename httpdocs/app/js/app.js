@@ -79,8 +79,8 @@ function sanitizeString(string) {
 }
 
 function sanitizeWebservice(string) {
-  if (!string)
-    return 'https://';
+  if (!string || string == '')
+    return '';
   if (!string.startsWith('https://')) {
     let substring;
     if (string.startsWith('http://') || string.startsWith('https:/'))
