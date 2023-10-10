@@ -44,17 +44,17 @@ let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
-let notary = sanitizeString(localStorage.getItem('notary'));
+let notary = localStorage.getItem('notary');
 if (!notary) {
   notary = 'https://notary.directdemocracy.vote';
   localStorage.setItem('notary', notary);
 }
-let judge = sanitizeString(localStorage.getItem('judge'));
+let judge = localStorage.getItem('judge');
 if (!judge) {
   judge = 'https://judge.directdemocracy.vote';
   localStorage.setItem('judge', judge);
 }
-let station = sanitizeString(localStorage.getItem('station'));
+let station = localStorage.getItem('station');
 if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
@@ -153,17 +153,17 @@ window.addEventListener('offline', () => {
 window.onload = function() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
-    notary = sanitizeString(event.target.value);
+    notary = event.target.value;
     setNotary();
   });
-  document.getElementById('judge').innerHTML = judge;
+  document.getElementById('judge').value = judge;
   document.getElementById('judge').addEventListener('input', function(event) {
-    judge = sanitizeString(event.target.value);
+    judge = event.target.value;
     localStorage.setItem('judge', judge);
   });
-  document.getElementById('station').innerHTML = station;
+  document.getElementById('station').value = station;
   document.getElementById('station').addEventListener('input', function(event) {
-    station = sanitizeString(event.target.value);
+    station = event.target.value;
     localStorage.setItem('station', station);
   });
 
@@ -680,7 +680,7 @@ window.onload = function() {
 
   function setNotary() {
     localStorage.setItem('notary', notary);
-    document.getElementById('notary').innerHTML = notary;
+    document.getElementById('notary').value = notary;
     updateSearchLinks();
     updateProposalLink();
   }
@@ -976,7 +976,7 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(sanitizeString(station))}&referendum=${proposal.signature}`)
             .then((response) => response.json())
             .then((participation) => {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
@@ -1256,7 +1256,7 @@ function updateCitizenEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${sanitizeString(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
@@ -1284,7 +1284,7 @@ function updateEndorsements() {
     img.style.width = '75px';
     div = newElement(li, 'div', 'item-inner');
     let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
+    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${sanitizeString(judge)}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
