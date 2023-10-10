@@ -90,10 +90,11 @@ function sanitizeWebservice(string) {
     }
   }
   string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
-  if (string.startsWith('http://') || string.startsWith('https:/'))
-    string = header + string.substring(7);
-  else if (!string.startsWith(header))
-    string = header + string;
+  if (!string.startsWith(header))
+    if (string.startsWith('http://') || string.startsWith('https:/'))
+      string = header + string.substring(7);
+    else
+      string = header + string;
   return string;
 }
 
