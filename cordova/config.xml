@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="vote.directdemocracy.app" version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>DirectDemocracy</name>
+  <description>DirectDemocracy Voting App</description>
+  <preference name="orientation" value="portrait" />
+  <author email="info@directdemocracy.vote" href="https://directdemocracy.vote">directdemocracy.vote</author>
+  <content src="index.html" />
+  <allow-intent href="http://*/*" />
+  <allow-intent href="https://*/*" />
+  <platform name="android">
+    <icon monochrome="resources/android/mdpi/monochrome.png" background="resources/android/mdpi/background.png" density="mdpi" foreground="resources/android/mdpi/foreground.png" src="resources/android/mdpi/launcher.png" />
+    <icon monochrome="resources/android/hdpi/monochrome.png" background="resources/android/hdpi/background.png" density="hdpi" foreground="resources/android/hdpi/foreground.png" src="resources/android/hdpi/launcher.png" />
+    <icon monochrome="resources/android/xhdpi/monochrome.png" background="resources/android/xhdpi/background.png" density="xhdpi" foreground="resources/android/xhdpi/foreground.png" src="resources/android/xhdpi/launcher.png" />
+    <icon monochrome="resources/android/xxhdpi/monochrome.png" background="resources/android/xxhdpi/background.png" density="xxhdpi" foreground="resources/android/xxhdpi/foreground.png" src="resources/android/xxhdpi/launcher.png" />
+    <icon monochrome="resources/android/xxxhdpi/monochrome.png" background="resources/android/xxxhdpi/background.png" density="xxxhdpi" foreground="resources/android/xxxhdpi/foreground.png" src="resources/android/xxxhdpi/launcher.png" />
+  </platform>
+</widget>
