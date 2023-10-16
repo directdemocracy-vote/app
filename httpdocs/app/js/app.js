@@ -159,6 +159,11 @@ window.addEventListener('offline', () => {
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
+  if (!localStorage.getItem('publicKey')) {
+    DdKeyStore.createKeyPair('DirectDemocratyApp', success, failure);
+    console.log("create new pair")
+  } else
+    console.log(localStorage.getItem('publicKey'))
   var success = function(message) {
     alert(message);
   }
@@ -168,6 +173,7 @@ function onDeviceReady() {
   }
 
   DdKeyStore.greet("World", success, failure);
+
   console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
 
   setNotary();
