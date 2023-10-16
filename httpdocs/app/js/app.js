@@ -155,7 +155,21 @@ window.addEventListener('offline', () => {
   enable('endorse-me-button');
 });
 
-window.onload = function() {
+// Wait for Cordova to be initialized.
+document.addEventListener('deviceready', onDeviceReady, false);
+
+function onDeviceReady() {
+  var success = function(message) {
+    alert(message);
+  }
+
+  var failure = function() {
+    alert("Error calling Hello Plugin");
+  }
+
+  DdKeyStore.greet("World", success, failure);
+  console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
+
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = sanitizeWebservice(event.target.value);
