@@ -159,20 +159,21 @@ window.addEventListener('offline', () => {
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
-  if (!localStorage.getItem('publicKey')) {
-    DdKeyStore.createKeyPair('DirectDemocratyApp', success, failure);
-    console.log("create new pair")
-  } else
-    console.log(localStorage.getItem('publicKey'))
-  var success = function(message) {
-    alert(message);
+
+  var success = function(publicKey) {
+    localStorage.setItem('publicKey', publicKey);
+    console.log(publicKey)
   }
 
   var failure = function() {
     alert("Error calling Hello Plugin");
   }
 
-  DdKeyStore.greet("World", success, failure);
+  if (!localStorage.getItem('publicKey')) {
+    DdKeyStore.createKeyPair('DirectDemocratyApp', success, failure);
+    console.log("create new pair")
+  } else
+    console.log(localStorage.getItem('publicKey'))
 
   console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
 
