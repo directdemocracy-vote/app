@@ -158,25 +158,35 @@ window.addEventListener('offline', () => {
 // Wait for Cordova to be initialized.
 document.addEventListener('deviceready', onDeviceReady, false);
 
+function failure() {
+  alert("Error calling Hello Plugin");
+}
+
 function onDeviceReady() {
 
-  var success = function(publicKey) {
+  const successCreateKey = function(publicKey) {
+    console.timeEnd("createK");
     localStorage.setItem('publicKey', publicKey);
     console.log(publicKey)
+    showMenu();
+    DdKeyStore.sign('DirectDemocracyApp', 'test signature', success, failure)
   }
 
-  var failure = function() {
-    alert("Error calling Hello Plugin");
+  const success = function(message) {
+    alert(message)
   }
 
   if (!localStorage.getItem('publicKey')) {
-    DdKeyStore.createKeyPair('DirectDemocratyApp', success, failure);
+    console.time("createK");
+    DdKeyStore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
     console.log("create new pair")
-  } else
+  } else {
     console.log(localStorage.getItem('publicKey'))
+    showMenu();
+  }
+}
 
-  console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
-
+function showMenu(){
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = sanitizeWebservice(event.target.value);
