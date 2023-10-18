@@ -17,4 +17,5 @@ $verdict = $result->tokenPayloadExternal;
 $file = fopen("../../verdict.json", "w") or die("Unable to open file!");
 fwrite($file, json_encode($verdict));
 fclose($file);
+die('{"result":"OK"}');
 ?>
