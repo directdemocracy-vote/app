@@ -158,8 +158,36 @@ window.addEventListener('offline', () => {
 // Wait for Cordova to be initialized.
 document.addEventListener('deviceready', onDeviceReady, false);
 
-function failure() {
-  alert("Error calling Hello Plugin");
+function failure(e) {
+  alert("Error calling KeyStore Plugin: " + e);
+}
+
+
+async function publish(signature) {
+  citizen.signature = signature;
+
+  const binaryString = atob(citizen.signature);
+  const bytes = new Uint8Array(binaryString.length);
+  for (var i = 0; i < binaryString.length; i++)
+     bytes[i] = binaryString.charCodeAt(i);
+  citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
+  citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
+  localStorage.setItem('citizenFingerprint', citizenFingerprint);
+  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+    .then((response) => response.json())
+    .then((answer) => {
+      if (answer.error)
+        app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+      else {
+        updateCitizenCard();
+        app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
+        window.localStorage.setItem('registered', true);
+      }
+    })
+    .catch((error) => {
+      console.error(`Could not publish citizen card.`);
+      console.error(error);
+    });
 }
 
 function onDeviceReady() {
@@ -167,9 +195,7 @@ function onDeviceReady() {
   const successCreateKey = function(publicKey) {
     console.timeEnd("createK");
     localStorage.setItem('publicKey', publicKey);
-    console.log(publicKey)
     showMenu();
-    DdKeyStore.sign('DirectDemocracyApp', 'test signature', success, failure)
   }
 
   const success = function(message) {
@@ -180,10 +206,8 @@ function onDeviceReady() {
     console.time("createK");
     DdKeyStore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
     console.log("create new pair")
-  } else {
-    console.log(localStorage.getItem('publicKey'))
+  } else
     showMenu();
-  }
 }
 
 function showMenu(){
@@ -202,14 +226,6 @@ function showMenu(){
     station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
-
-  // create a private key if needed
-  let privateKey = localStorage.getItem('privateKey');
-  if (privateKey) {
-    citizenCrypt = new JSEncrypt();
-    citizenCrypt.setPrivateKey(privateKey);
-    privateKeyAvailable('');
-  } else createNewKey();
 
   if (!window.localStorage.getItem('registered'))
     showPage('register');
@@ -409,28 +425,13 @@ function showMenu(){
     text.setAttribute('data-i18n', registration);
     show('register-button-preloader');
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
-    citizen.key = strippedKey(citizenCrypt.getPublicKey());
+    citizen.key = localStorage.getItem('publicKey');
     citizen.published = Math.trunc(new Date().getTime() / 1000);
     citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
     citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
     citizen.signature = '';
-    citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
-    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-        else {
-          updateCitizenCard();
-          app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
-          window.localStorage.setItem('registered', true);
-        }
-      })
-      .catch((error) => {
-        console.error(`Could not publish citizen card.`);
-        console.error(error);
-      });
+    DdKeyStore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure)
+
     return false;
   });
 
@@ -459,13 +460,8 @@ function showMenu(){
     for(let i=0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
-    let fingerprint = '';
-    const words = citizenFingerprint.words;
-    for(let i = 0; i < 5; ++i)
-      for(let j = 3; j >= 0; --j)
-        fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
     const qr = new QRious({
-      value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
+      value: citizenFingerprint + signature,  // 276 bytes, e.g., 20 + 256
       level: 'L',
       size: 1024,
       padding: 0
@@ -1135,20 +1131,6 @@ function showMenu(){
     validateRegistration();
   }
 
-  function createNewKey() {
-    let dt = new Date();
-    let time = -(dt.getTime());
-    citizenCrypt = new JSEncrypt({default_key_size: 2048});
-    citizenCrypt.getKey(function() {
-      dt = new Date();
-      time += (dt.getTime());
-      privateKey = citizenCrypt.getPrivateKey();
-      localStorage.setItem('privateKey', privateKey);
-      const n = Number(time / 1000).toFixed(2);
-      privateKeyAvailable(translator.translate('key-forge-time', n));
-    });
-  }
-
   function strippedKey(publicKey) {
     let stripped = '';
     const header = '-----BEGIN PUBLIC KEY-----\n'.length;
@@ -1187,7 +1169,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-  citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
+  citizenFingerprint = localStorage.getItem('citizenFingerprint');
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
