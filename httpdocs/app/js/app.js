@@ -188,6 +188,29 @@ async function publish(signature) {
     });
 }
 
+async function openQR(signature) {
+  signature = atob(signature);
+  console.log(signature)
+  console.log(signature.length)
+  const qr = new QRious({
+    value: citizenFingerprint + signature,  // 276 bytes, e.g., 20 + 256
+    level: 'L',
+    size: 1024,
+    padding: 0
+  });
+  const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
+  const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
+  app.dialog.create({
+    title: 'Ask the citizen to scan this QR-code',
+    content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
+    buttons: [{text: 'Done', onClick: function() {
+      app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
+      if (!online)
+        enable('endorse-me-button');
+    }}]
+  }).open();
+}
+
 function onDeviceReady() {
 
   const successCreateKey = function(publicKey) {
@@ -457,24 +480,7 @@ function showMenu(){
     let challenge = '';
     for(let i=0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
-    const qr = new QRious({
-      value: citizenFingerprint + signature,  // 276 bytes, e.g., 20 + 256
-      level: 'L',
-      size: 1024,
-      padding: 0
-    });
-    const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
-    const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
-    app.dialog.create({
-      title: 'Ask the citizen to scan this QR-code',
-      content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-      buttons: [{text: 'Done', onClick: function() {
-        app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-        if (!online)
-          enable('endorse-me-button');
-      }}]
-    }).open();
+    DdKeyStore.sign('DirectDemocracyApp', challenge, openQR, failure);
   }, {returnDetailedScanResult: true});
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
@@ -1163,14 +1169,14 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))})
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
         app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
       else {
         citizen = answer.citizen;
-        citizen.key = strippedKey(citizenCrypt.getPublicKey());
+        citizen.key = localStorage.getItem('publicKey');
         endorsements = answer.endorsements;
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
