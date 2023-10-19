@@ -119,8 +119,6 @@ function setupLanguagePicker() {
 
 translator.onready = function() {
   translatorIsReady = true;
-  if (!localStorage.getItem('privateKey'))
-    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
   setupLanguagePicker();
 }
 
@@ -1119,16 +1117,6 @@ function showMenu(){
 
   function uploadPicture() {
     document.getElementById('register-picture-upload').click();
-  }
-
-  function privateKeyAvailable(message) {
-    const register = 'register';
-    let text = document.getElementById('register-button-text');
-    text.innerHTML = translator.translate(register);
-    text.setAttribute('data-i18n', register);
-    hide('register-button-preloader');
-    document.getElementById('registration-button-message').innerHTML = message;
-    validateRegistration();
   }
 
   function strippedKey(publicKey) {

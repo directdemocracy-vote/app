@@ -33,7 +33,6 @@
   "latitude-longitude-text": "latitude, longitude",
   "adult-confirm": "I am over 18 years old.",
   "citizen-confirm": "I confirm the above information is correct.",
-  "generating-cryptographic-key": "Generating cryptographic key...",
   "adjust-photo": "Adjust your ID photo",
   "done-photo": "Done",
   "select-home-location": "Select your home location",
