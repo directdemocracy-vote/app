@@ -97,7 +97,7 @@ function setupLanguagePicker() {
       textAlign: 'center',
       values: values
     }],
-    renderToolbar: function () {
+    renderToolbar: function() {
       return '<div class="toolbar"><div class="toolbar-inner"><div class="left"></div><div class="right">' +
         `<a class="link sheet-close popover-close" data-i18n="language-select">${translator.translate('language-select')}</a>` +
         '</div></div></div>';
@@ -124,7 +124,7 @@ translator.onready = function() {
   setupLanguagePicker();
 }
 
-let app = new Framework7({el: '#app', name: 'directdemocracy', routes: [{path: '/', pageName: 'home'} ]});
+let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
 
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
@@ -141,7 +141,7 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
-let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
+let mainView = app.views.create('.view-main', { iosDynamicNavbar: false });
 
 window.addEventListener('online', () => {
   online = true;
@@ -324,7 +324,7 @@ window.onload = function() {
               if (geolocation)
                 return;
               const coords = answer.split(',');
-              getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
+              getGeolocationPosition({ coords: { latitude: coords[0], longitude: coords[1] } });
             })
             .catch((error) => {
               console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
@@ -386,7 +386,7 @@ window.onload = function() {
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
     citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
-    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(citizen) })
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -426,13 +426,13 @@ window.onload = function() {
     challengeScanner.stop();
     showPage('card');
     let challenge = '';
-    for(let i=0; i < 20; i++)
+    for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
     const words = citizenFingerprint.words;
-    for(let i = 0; i < 5; ++i)
-      for(let j = 3; j >= 0; --j)
+    for (let i = 0; i < 5; ++i)
+      for (let j = 3; j >= 0; --j)
         fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
     const qr = new QRious({
       value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
@@ -445,13 +445,15 @@ window.onload = function() {
     app.dialog.create({
       title: 'Ask the citizen to scan this QR-code',
       content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-      buttons: [{text: 'Done', onClick: function() {
-        app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-        if (!online)
-          enable('endorse-me-button');
-      }}]
+      buttons: [{
+        text: 'Done', onClick: function() {
+          app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
+          if (!online)
+            enable('endorse-me-button');
+        }
+      }]
     }).open();
-  }, {returnDetailedScanResult: true});
+  }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
     disable('endorse-me-button');
@@ -471,29 +473,35 @@ window.onload = function() {
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
-      buttons: [{text: 'Confirm', onClick: function() {
-        const randomBytes = new Uint8Array(20);
-        crypto.getRandomValues(randomBytes);
-        challenge = '';
-        randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
-        const qr = new QRious({
-          value: challenge,
-          level: 'L',
-          size: 512,
-          padding: 0
-        });
-        app.dialog.create({
-          title: 'Ask the citizen to scan this QR-code',
-          content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-          buttons: [{text: 'Done', onClick: function() {
-            hide('endorse-page');
-            show('endorse-scanner');
-            answerScanner.start();
-          }}]
-        }).open();
-      }}, {text: 'Cancel', onClick: function() {
-        enable('endorse-button');
-      }}]
+      buttons: [{
+        text: 'Confirm', onClick: function() {
+          const randomBytes = new Uint8Array(20);
+          crypto.getRandomValues(randomBytes);
+          challenge = '';
+          randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
+          const qr = new QRious({
+            value: challenge,
+            level: 'L',
+            size: 512,
+            padding: 0
+          });
+          app.dialog.create({
+            title: 'Ask the citizen to scan this QR-code',
+            content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
+            buttons: [{
+              text: 'Done', onClick: function() {
+                hide('endorse-page');
+                show('endorse-scanner');
+                answerScanner.start();
+              }
+            }]
+          }).open();
+        }
+      }, {
+        text: 'Cancel', onClick: function() {
+          enable('endorse-button');
+        }
+      }]
     }).open();
   });
 
@@ -506,12 +514,12 @@ window.onload = function() {
     show('endorse-page');
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     let binarySignature = '';
-    for(let i=20; i < 276; i++)
+    for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(value.bytes[i]);
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
@@ -556,8 +564,8 @@ window.onload = function() {
         let published = new Date(endorsed.published * 1000);
         document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
         if (endorseMap == null) {
-          endorseMap = L.map('endorse-map', {dragging: false});
-          endorseMap.whenReady(function() {setTimeout(() => {this.invalidateSize();}, 0);});
+          endorseMap = L.map('endorse-map', { dragging: false });
+          endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
           }).addTo(endorseMap);
@@ -576,7 +584,7 @@ window.onload = function() {
             endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">' + `(${lat}, ${lon})` + '</center>').openPopup();
           });
       });
-  },{returnDetailedScanResult: true});
+  }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
   document.getElementById('endorse-name-check').addEventListener('change', updateEndorseConfirm);
@@ -607,7 +615,7 @@ window.onload = function() {
       endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(endorsement) })
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -627,11 +635,11 @@ window.onload = function() {
 
   const referendumVideo = document.getElementById('referendum-video');
   referendumVideo.addEventListener('loadedmetadata', qrVideo);
-  referendumScanner = new QrScanner(referendumVideo, scanProposal, {returnDetailedScanResult: true});
+  referendumScanner = new QrScanner(referendumVideo, scanProposal, { returnDetailedScanResult: true });
 
   const petitionVideo = document.getElementById('petition-video');
   petitionVideo.addEventListener('loadedmetadata', qrVideo);
-  petitionScanner = new QrScanner(petitionVideo, scanProposal, {returnDetailedScanResult: true});
+  petitionScanner = new QrScanner(petitionVideo, scanProposal, { returnDetailedScanResult: true });
 
   document.getElementById('scan-referendum').addEventListener('click', function() {
     hide('referendum-page');
@@ -721,7 +729,7 @@ window.onload = function() {
 
   referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
-  referendums = [];
+    referendums = [];
   referendums.forEach(function(referendum) {
     if (referendum.id !== undefined)
       addProposal(referendum, 'referendum', false);
@@ -742,7 +750,7 @@ window.onload = function() {
     show(`${type}-page`);
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
@@ -768,13 +776,13 @@ window.onload = function() {
           app.dialog.alert(`${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`, 'Not a referendum');
         else if (!proposal.inside) {
           const message = (type === 'petition')
-                        ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
-                        : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
+            ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
+            : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Wrong area');
         } else if (outdated) {
           const message = (type === 'petition')
-                        ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
-                        : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
+            ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
+            : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Deadline expired');
         } else {
           let already = false;
@@ -787,7 +795,7 @@ window.onload = function() {
               } else { // already there, insert at position 0 and reset the missing fields
                 p.id = 0;
                 let i = 0;
-                for(let p2 of proposals)
+                for (let p2 of proposals)
                   p2.id = i++;
                 p.title = proposal.title;
                 p.description = proposal.description;
@@ -910,7 +918,7 @@ window.onload = function() {
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
-      for(let answer of proposal.answers) {
+      for (let answer of proposal.answers) {
         let label = document.createElement('label');
         block.appendChild(label);
         label.classList.add('radio', 'display-flex', 'margin-bottom-half');
@@ -961,7 +969,7 @@ window.onload = function() {
             endorsedSignature: proposal.signature
           };
           endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
+          fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(endorsement) })
             .then((response) => response.json())
             .then((answer) => {
               if (answer.error)
@@ -974,7 +982,7 @@ window.onload = function() {
                 disable(button);
               }
             });
-          });
+        });
       });
     } else {  // referendum
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
@@ -1013,14 +1021,14 @@ window.onload = function() {
                 encryptedVote: encryptedVote
               }
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+              fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(registration) })
                 .then((response) => response.json())
                 .then((answer) => {
                   if (answer.error) {
                     app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
                     return;
                   }
-                  fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
+                  fetch(`${station}/api/registration.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(registration) })
                     .then((response) => response.json())
                     .then((answer) => {
                       if (answer.error) {
@@ -1108,7 +1116,7 @@ window.onload = function() {
   function createNewKey() {
     let dt = new Date();
     let time = -(dt.getTime());
-    citizenCrypt = new JSEncrypt({default_key_size: 2048});
+    citizenCrypt = new JSEncrypt({ default_key_size: 2048 });
     citizenCrypt.getKey(function() {
       dt = new Date();
       time += (dt.getTime());
@@ -1163,7 +1171,7 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))})
+  fetch(`${notary}/api/citizen.php`, { method: 'POST', headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey())) })
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -1210,7 +1218,8 @@ function getReputationFromJudge() {
         badge.classList.add('color-' + color);
         updateProposals(petitions);
         updateProposals(referendums);
-      }})
+      }
+    })
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
     });
@@ -1218,7 +1227,7 @@ function getReputationFromJudge() {
 
 function updateProposals(proposals) {
   const type = (proposals === petitions) ? 'petition' : 'referendum';
-  for(let proposal of proposals) {
+  for (let proposal of proposals) {
     if (proposal.judge == judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
@@ -1268,7 +1277,7 @@ function updateCitizenEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
-    message.style.fontSize='82.353%';
+    message.style.fontSize = '82.353%';
     if (endorsement.revoke) {
       message.style.fontWeight = 'bold';
       message.style.color = 'red';
@@ -1296,7 +1305,7 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
-    message.style.fontSize='82.353%';
+    message.style.fontSize = '82.353%';
     if (endorsement.revoke) {
       message.style.color = 'red';
       count++;
@@ -1317,7 +1326,7 @@ function updateEndorsements() {
             endorsedSignature: endorsement.signature
           };
           e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, {method: 'POST', body: JSON.stringify(e)})
+          fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(e) })
             .then((response) => response.json())
             .then((answer) => {
               if (answer.error) {
@@ -1339,14 +1348,14 @@ function updateEndorsements() {
           text,
           content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
           buttons: [{
-              text: app.params.dialog.buttonCancel,
-              keyCodes: app.keyboardActions ? [27] : null
-            },
-            {
-              text: app.params.dialog.buttonOk,
-              bold: true,
-              keyCodes: app.keyboardActions ? [13] : null
-            }],
+            text: app.params.dialog.buttonCancel,
+            keyCodes: app.keyboardActions ? [27] : null
+          },
+          {
+            text: app.params.dialog.buttonOk,
+            bold: true,
+            keyCodes: app.keyboardActions ? [13] : null
+          }],
           destroyOnClose: true,
           onClick: function(dialog, index) {
             if (index === 1) // OK
