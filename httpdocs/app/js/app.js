@@ -60,6 +60,7 @@ if (!station) {
 }
 let iAmEndorsedByJudge = false;
 let endorsed = null;
+let endorsementToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
 let online = true;
@@ -191,8 +192,6 @@ async function publish(signature) {
 
 async function openQR(signature) {
   signature = atob(signature);
-  console.log(signature)
-  console.log(signature.length)
   const qr = new QRious({
     value: citizenFingerprint + signature,  // 276 bytes, e.g., 20 + 256
     level: 'L',
@@ -210,6 +209,26 @@ async function openQR(signature) {
         enable('endorse-me-button');
     }}]
   }).open();
+}
+
+function publishEndorsement(signature) {
+  endorsementToPublish.signature = signature
+  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsementToPublish)})
+  .then((response) => response.json())
+  .then((answer) => {
+    if (answer.error)
+      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+    else {
+      app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+      // FIXME: we should actually add the new endorsee in the endorsements list
+      updateEndorsements();
+    }
+    enable('endorse-button');
+  })
+  .catch((error) => {
+    console.error(`Could publish citizen card.`);
+    console.error(error);
+  });
 }
 
 function onDeviceReady() {
@@ -541,6 +560,7 @@ function showMenu(){
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
+
     let binarySignature = '';
     for(let i=20; i < 276; i++)
       binarySignature += String.fromCharCode(value.bytes[i]);
@@ -572,30 +592,43 @@ function showMenu(){
           ["verify"],
         );
 
-        binaryString = atob(endorsed.signature);
+        binaryString = atob(signature);
         bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++)
            bytes[i] = binaryString.charCodeAt(i);
 
-        let verifyNew = await window.crypto.subtle.verify(
+
+        const challengeArrayBuffer = new TextEncoder().encode(challenge);
+        let verify = await window.crypto.subtle.verify(
           "RSASSA-PKCS1-v1_5",
           publicKey,
           bytes,
-          challenge,
+          challengeArrayBuffer,
         );
-        console.log(verifyNew);
 
         let endorsedSignature = endorsed.signature;
-        let verify = new JSEncrypt();
         endorsed.signature = '';
-        verify.setPublicKey(publicKey(endorsed.key));
-        if (!verify.verify(challenge, signature, CryptoJS.SHA256)) {
+        if (!verify) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
           enable('endorse-button');
           return;
         }
 
-        if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
+        binaryString = atob(endorsedSignature);
+        bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++)
+           bytes[i] = binaryString.charCodeAt(i);
+
+        const encoded = new TextEncoder().encode(JSON.stringify(endorsed))
+
+        verify = await window.crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          publicKey,
+          bytes,
+          encoded,
+        );
+
+        if (!verify) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           enable('endorse-button');
           return;
@@ -660,30 +693,14 @@ function showMenu(){
   document.getElementById('endorse-confirm').addEventListener('click', function() {
     hide('endorse-citizen');
     show('endorse-page');
-    let endorsement = {
+    endorsementToPublish = {
       schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
       endorsedSignature: endorsed.signature
     };
-    endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-        else {
-          app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-          // FIXME: we should actually add the new endorsee in the endorsements list
-          updateEndorsements();
-        }
-        enable('endorse-button');
-      })
-      .catch((error) => {
-        console.error(`Could publish citizen card.`);
-        console.error(error);
-      });
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure)
   });
 
   const referendumVideo = document.getElementById('referendum-video');
