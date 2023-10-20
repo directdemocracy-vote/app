@@ -329,6 +329,7 @@ window.onload = function() {
             .catch((error) => {
               console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
               console.error(error);
+              getGeolocationPosition({ coords: { latitude: 46.517493, longitude: 6.629111 } });  // default to Lausanne
             });
           let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
