@@ -166,8 +166,9 @@ async function publish(signature) {
 
   const binaryString = atob(citizen.signature);
   const bytes = new Uint8Array(binaryString.length);
-  for (var i = 0; i < binaryString.length; i++)
+  for (let i = 0; i < binaryString.length; i++)
      bytes[i] = binaryString.charCodeAt(i);
+
   citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', citizenFingerprint);
@@ -225,7 +226,7 @@ function onDeviceReady() {
 
   if (!localStorage.getItem('publicKey')) {
     console.time("createK");
-    DdKeyStore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
+    Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
     console.log("create new pair")
   } else
     showMenu();
@@ -451,7 +452,7 @@ function showMenu(){
     citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
     citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
     citizen.signature = '';
-    DdKeyStore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure)
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure)
 
     return false;
   });
@@ -478,9 +479,9 @@ function showMenu(){
     challengeScanner.stop();
     showPage('card');
     let challenge = '';
-    for(let i=0; i < 20; i++)
+    for(let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    DdKeyStore.sign('DirectDemocracyApp', challenge, openQR, failure);
+    Keystore.sign('DirectDemocracyApp', challenge, openQR, failure);
   }, {returnDetailedScanResult: true});
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
@@ -547,7 +548,7 @@ function showMenu(){
     // get endorsee from fingerprint
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
-      .then((answer) => {
+      .then(async function (answer) {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
@@ -555,15 +556,45 @@ function showMenu(){
           return;
         }
         // verify signature of endorsed
+        let binaryString = atob(endorsed.key);
+        let bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++)
+           bytes[i] = binaryString.charCodeAt(i);
+
+        const publicKey = await window.crypto.subtle.importKey(
+          "spki",
+          bytes,
+          {
+            name: "RSASSA-PKCS1-v1_5",
+            hash: "SHA-256",
+          },
+          true,
+          ["verify"],
+        );
+
+        binaryString = atob(endorsed.signature);
+        bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++)
+           bytes[i] = binaryString.charCodeAt(i);
+
+        let verifyNew = await window.crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          publicKey,
+          bytes,
+          challenge,
+        );
+        console.log(verifyNew);
+
         let endorsedSignature = endorsed.signature;
-        endorsed.signature = '';
         let verify = new JSEncrypt();
+        endorsed.signature = '';
         verify.setPublicKey(publicKey(endorsed.key));
         if (!verify.verify(challenge, signature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
           enable('endorse-button');
           return;
         }
+
         if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           enable('endorse-button');
@@ -1116,8 +1147,7 @@ function showMenu(){
       return;
     if (!document.getElementById('register-confirm').checked)
       return;
-    if (!localStorage.getItem('privateKey'))
-      return;
+
     enable('register-button');
   }
 
