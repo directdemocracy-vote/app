@@ -62,6 +62,8 @@ let iAmEndorsedByJudge = false;
 let endorsed = null;
 let endorsementToPublish = null;
 let endorsementToRevoke = null;
+let petitionEndorsement = null;
+let petitionInfo = null;
 let revokationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
@@ -224,6 +226,25 @@ function revokeCallback(signature) {
     app.dialog.alert(`You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`, 'Revocation success');
     endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1);  // remove it from array
     updateEndorsements();
+  });
+}
+
+function signPetitionCallback(signature) {
+  petitionEndorsement.signature = signature;
+  let button = petitionInfo[0];
+  let proposal = petitionInfo[1];
+  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(petitionEndorsement)})
+  .then((response) => response.json())
+  .then((answer) => {
+    if (answer.error)
+      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+    else {
+      app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
+      button.innerHTML = 'Signed';
+      proposal.done = true;
+      localStorage.setItem(`petitions`, JSON.stringify(petitions));
+      disable(button);
+    }
   });
 }
 
@@ -584,7 +605,7 @@ function showMenu(){
     // get endorsee from fingerprint
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
-      .then(async function (answer) {
+      .then(async function(answer) {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
@@ -846,7 +867,7 @@ function showMenu(){
   async function getProposal(fingerprint, type) {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
-      .then(async function (proposal) {
+      .then(async function(proposal) {
         if (proposal.error) {
           console.error(`Proposal error: ${proposal.error}`);
           return;
@@ -982,12 +1003,12 @@ function showMenu(){
     for (let i = 0; i < binaryString.length; i++)
       bytes[i] = binaryString.charCodeAt(i);
 
-    const challengeArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
+    const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
     const verify = await window.crypto.subtle.verify(
       "RSASSA-PKCS1-v1_5",
       publicKey,
       bytes,
-      challengeArrayBuffer,
+      packetArrayBuffer,
     );
 
     if (!verify) {
@@ -1081,27 +1102,15 @@ function showMenu(){
         disable(button);
       button.addEventListener('click', function() {
         app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
-          let endorsement = {
+          petitionEndorsement = {
             schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
             key: citizen.key,
             signature: '',
             published: Math.trunc(new Date().getTime() / 1000),
             endorsedSignature: proposal.signature
           };
-          endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsement)})
-            .then((response) => response.json())
-            .then((answer) => {
-              if (answer.error)
-                app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-              else {
-                app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
-                button.innerHTML = 'Signed';
-                proposal.done = true;
-                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-                disable(button);
-              }
-            });
+          petitionInfo = [button, proposal];
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure)
           });
       });
     } else {  // referendum
@@ -1112,14 +1121,47 @@ function showMenu(){
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
           fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
             .then((response) => response.json())
-            .then((participation) => {
+            .then(async function(participation) {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
                 app.dialog.alert('Wrong participation schema', 'Vote error');
                 return;
               }
               const signature = participation.signature;
               participation.signature = '';
-              let verify = new JSEncrypt();
+
+              // verify signature of endorsed
+              let binaryString = atob(participation.key);
+              let bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++)
+                bytes[i] = binaryString.charCodeAt(i);
+
+              const publicKey = await window.crypto.subtle.importKey(
+                "spki",
+                bytes,
+                {
+                  name: "RSASSA-PKCS1-v1_5",
+                  hash: "SHA-256",
+                },
+                true,
+                ["verify"],
+              );
+
+              binaryString = atob(signature);
+              bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++)
+                bytes[i] = binaryString.charCodeAt(i);
+
+
+              const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
+              let verify = await window.crypto.subtle.verify(
+                "RSASSA-PKCS1-v1_5",
+                publicKey,
+                bytes,
+                participationArrayBuffer,
+              );
+              console.log(verify)
+              return;
+              verify = new JSEncrypt();
               verify.setPublicKey(publicKey(participation.key));
               if (!verify.verify(JSON.stringify(participation), signature, CryptoJS.SHA256)) {
                 app.dialog.alert('Cannot verify participation signature', 'Vote error');
