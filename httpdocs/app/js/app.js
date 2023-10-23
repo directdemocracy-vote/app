@@ -61,6 +61,8 @@ if (!station) {
 let iAmEndorsedByJudge = false;
 let endorsed = null;
 let endorsementToPublish = null;
+let endorsementToRevoke = null;
+let revokationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
 let online = true;
@@ -161,7 +163,6 @@ function failure(e) {
   alert("Error calling KeyStore Plugin: " + e);
 }
 
-
 async function publish(signature) {
   citizen.signature = signature;
 
@@ -209,6 +210,21 @@ async function openQR(signature) {
         enable('endorse-me-button');
     }}]
   }).open();
+}
+
+function revokeCallback(signature) {
+  revokationToPublish.signature = signature
+  fetch(`${notary}/api/publish.php`, {method: 'POST', body: JSON.stringify(revokationToPublish)})
+  .then((response) => response.json())
+  .then((answer) => {
+    if (answer.error) {
+      app.dialog.alert(answer.error, 'Revocation error');
+      return;
+    }
+    app.dialog.alert(`You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`, 'Revocation success');
+    endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1);  // remove it from array
+    updateEndorsements();
+  });
 }
 
 function publishEndorsement(signature) {
@@ -827,15 +843,16 @@ function showMenu(){
     getProposal(fingerprint, type);
   }
 
-  function getProposal(fingerprint, type) {
+  async function getProposal(fingerprint, type) {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
-      .then((proposal) => {
+      .then(async function (proposal) {
         if (proposal.error) {
           console.error(`Proposal error: ${proposal.error}`);
           return;
         }
-        if (!verifyProposalSignature(proposal))
+        const signatureIsLegit = await verifyProposalSignature(proposal)
+        if (!signatureIsLegit)
           return;
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
         const deadline = new Date(proposal.deadline * 1000).toLocaleString();
@@ -858,7 +875,13 @@ function showMenu(){
           let already = false;
           let proposals = (type === 'petition') ? petitions : referendums;
           for (let p of proposals) {
-            if (CryptoJS.SHA1(CryptoJS.enc.Base64.parse(p.signature)) == fingerprint) {
+            const binaryString = atob(p.signature);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++)
+               bytes[i] = binaryString.charCodeAt(i);
+            const bytesArray = await crypto.subtle.digest("SHA-1", bytes);
+            const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+            if (sha1 == fingerprint) {
               if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this ${type}.`);
                 app.accordion.open(document.getElementById(`${type}-${p.id}`));
@@ -918,8 +941,7 @@ function showMenu(){
       });
   }
 
-  function verifyProposalSignature(proposal) {
-    let signature = proposal.signature;
+  async function verifyProposalSignature(proposal) {
     let p = {
       'schema': proposal.schema,
       'key': proposal.key,
@@ -938,9 +960,37 @@ function showMenu(){
     p['deadline'] = proposal.deadline;
     if (p.website)
       p['website'] = proposal.website;
-    let verify = new JSEncrypt();
-    verify.setPublicKey(publicKey(proposal.key));
-    if (!verify.verify(JSON.stringify(p), proposal.signature, CryptoJS.SHA256)) {
+
+    let binaryString = atob(proposal.key);
+    let bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++)
+      bytes[i] = binaryString.charCodeAt(i);
+
+    const publicKey = await window.crypto.subtle.importKey(
+      "spki",
+      bytes,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256",
+      },
+      true,
+      ["verify"],
+    );
+    
+    binaryString = atob(proposal.signature);
+    bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++)
+      bytes[i] = binaryString.charCodeAt(i);
+
+    const challengeArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
+    const verify = await window.crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      bytes,
+      challengeArrayBuffer,
+    );
+
+    if (!verify) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
       return false;
     }
@@ -1361,7 +1411,7 @@ function updateEndorsements() {
       a.style.textTransform = 'uppercase';
       a.addEventListener('click', function() {
         function revoke() {
-          let e = {
+          revokationToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
             key: citizen.key,
             signature: '',
@@ -1369,18 +1419,10 @@ function updateEndorsements() {
             revoke: true,
             endorsedSignature: endorsement.signature
           };
-          e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, {method: 'POST', body: JSON.stringify(e)})
-            .then((response) => response.json())
-            .then((answer) => {
-              if (answer.error) {
-                app.dialog.alert(answer.error, 'Revocation error');
-                return;
-              }
-              app.dialog.alert(`You successfully revoked ${endorsement.givenNames} ${endorsement.familyName}`, 'Revocation success');
-              endorsements.splice(endorsements.indexOf(endorsement), 1);  // remove it from array
-              updateEndorsements();
-            });
+
+          endorsementToRevoke = endorsement;
+
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure)
         }
         const text = '<p class="text-align-left">' +
           "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
