@@ -122,7 +122,7 @@ translator.onready = function() {
   if (!localStorage.getItem('privateKey'))
     document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
   setupLanguagePicker();
-}
+};
 
 let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
 
@@ -190,78 +190,8 @@ window.onload = function() {
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
   // setting up the ID picture
-  document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
-  document.getElementById('register-picture').addEventListener('click', uploadPicture);
-  document.getElementById('register-picture-upload').addEventListener('change', function(event) {
-    let content = {};
-    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-  <div class="toolbar">
-    <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
-      <div class="right">
-        <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
-      </div>
-    </div>
-  </div>
-  <div class="sheet-modal-inner">
-    <div class="block margin-top-half no-padding-left no-padding-right">
-      <p><img id="edit-picture"></p>
-      <div class="row">
-        <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
-        <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
-      </div>
-    </div>
-  </div>
-</div>`;
-    let croppie = null;
-    let sheet = app.sheet.create({
-      content: content.innerHTML,
-      on: {
-        opened: function() {
-          let img = document.getElementById('edit-picture');
-          img.src = URL.createObjectURL(event.target.files[0]);
-          event.target.value = '';
-          let w = screen.width * 0.95;
-          croppie = new Croppie(img, {
-            boundary: {
-              width: w,
-              height: w * 4 / 3
-            },
-            viewport: {
-              width: w * 0.75,
-              height: w * 0.75 * 4 / 3
-            },
-            enableOrientation: true,
-            enableExif: true
-          });
-          document.getElementById('rotate-right').addEventListener('click', function() {
-            croppie.rotate(-90);
-          });
-          document.getElementById('rotate-left').addEventListener('click', function() {
-            croppie.rotate(90);
-          });
-        },
-        close: function() {
-          croppie.result({
-            type: 'base64',
-            size: {
-              width: 150,
-              height: 200
-            },
-            format: 'jpeg',
-            quality: 0.95
-          }).then(function(result) {
-            document.getElementById('register-picture').setAttribute('src', result);
-            citizen.picture = result;
-            croppie.destroy();
-            croppie = null;
-            validateRegistration();
-          });
-        }
-      }
-    });
-    sheet.open();
-  });
+  document.getElementById('register-camera-picture').addEventListener('click', uploadPicture);
+  document.getElementById('register-file-picture').addEventListener('click', uploadPicture);
 
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', function() {
@@ -329,7 +259,7 @@ window.onload = function() {
             .catch((error) => {
               console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
               console.error(error);
-              getGeolocationPosition({ coords: { latitude: 46.517493, longitude: 6.629111 } });  // default to Lausanne
+              getGeolocationPosition({ coords: { latitude: 46.517493, longitude: 6.629111 } }); // default to Lausanne
             });
           let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -386,7 +316,7 @@ window.onload = function() {
     citizen.signature = '';
     citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
     citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
-    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(citizen) })
+    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -431,11 +361,12 @@ window.onload = function() {
     const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
     let fingerprint = '';
     const words = citizenFingerprint.words;
-    for (let i = 0; i < 5; ++i)
+    for (let i = 0; i < 5; ++i) {
       for (let j = 3; j >= 0; --j)
         fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
+    }
     const qr = new QRious({
-      value: fingerprint + signature,  // 276 bytes, e.g., 20 + 256
+      value: fingerprint + signature, // 276 bytes, e.g., 20 + 256
       level: 'L',
       size: 1024,
       padding: 0
@@ -446,7 +377,8 @@ window.onload = function() {
       title: 'Ask the citizen to scan this QR-code',
       content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
       buttons: [{
-        text: 'Done', onClick: function() {
+        text: 'Done',
+        onClick: function() {
           app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
           if (!online)
             enable('endorse-me-button');
@@ -474,7 +406,8 @@ window.onload = function() {
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
       buttons: [{
-        text: 'Confirm', onClick: function() {
+        text: 'Confirm',
+        onClick: function() {
           const randomBytes = new Uint8Array(20);
           crypto.getRandomValues(randomBytes);
           challenge = '';
@@ -489,7 +422,8 @@ window.onload = function() {
             title: 'Ask the citizen to scan this QR-code',
             content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
             buttons: [{
-              text: 'Done', onClick: function() {
+              text: 'Done',
+              onClick: function() {
                 hide('endorse-page');
                 show('endorse-scanner');
                 answerScanner.start();
@@ -498,7 +432,8 @@ window.onload = function() {
           }).open();
         }
       }, {
-        text: 'Cancel', onClick: function() {
+        text: 'Cancel',
+        onClick: function() {
           enable('endorse-button');
         }
       }]
@@ -615,7 +550,7 @@ window.onload = function() {
       endorsedSignature: endorsed.signature
     };
     endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(endorsement) })
+    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsement) })
       .then((response) => response.json())
       .then((answer) => {
         if (answer.error)
@@ -664,7 +599,7 @@ window.onload = function() {
   });
   referendumSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData("text");
+    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('referendum');
   });
 
@@ -675,7 +610,7 @@ window.onload = function() {
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData("text");
+    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('petition');
   });
 
@@ -969,7 +904,7 @@ window.onload = function() {
             endorsedSignature: proposal.signature
           };
           endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(endorsement) })
+          fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsement) })
             .then((response) => response.json())
             .then((answer) => {
               if (answer.error)
@@ -984,7 +919,7 @@ window.onload = function() {
             });
         });
       });
-    } else {  // referendum
+    } else { // referendum
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
       disable(button);
       button.addEventListener('click', function(event) {
@@ -1008,9 +943,9 @@ window.onload = function() {
               const voteNumber = new Uint8Array(20);
               crypto.getRandomValues(voteNumber);
               let vote = {
-                number: btoa(String.fromCharCode(...voteNumber)),  // base64 encoding
+                number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
                 answer: answer
-              }
+              };
               const encryptedVote = citizenCrypt.encrypt(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
               let registration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
@@ -1019,22 +954,20 @@ window.onload = function() {
                 published: Math.trunc(new Date().getTime() / 1000),
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
-              }
+              };
               registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(registration) })
+              fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registration) })
                 .then((response) => response.json())
                 .then((answer) => {
                   if (answer.error) {
                     app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
                     return;
                   }
-                  fetch(`${station}/api/registration.php`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(registration) })
+                  fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registration) })
                     .then((response) => response.json())
                     .then((answer) => {
-                      if (answer.error) {
+                      if (answer.error)
                         app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-                        return;
-                      }
                     });
                 });
             });
@@ -1049,15 +982,15 @@ window.onload = function() {
       const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
       app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, `Remove ${uppercaseType}?`, function() {
         document.getElementById(`${type}s`).removeChild(item);
-        if (!proposal.done) {  // actually remove it
+        if (!proposal.done) { // actually remove it
           const index = proposals.indexOf(proposal);
           proposals.splice(index, 1);
           let i = 0;
           proposals.forEach(function(p) {
             p.id = i++;
           });
-        } else {  // remove useless fields, keep only done and fingerprint
-          delete proposal.id;  // hidden
+        } else { // remove useless fields, keep only done and fingerprint
+          delete proposal.id; // hidden
           delete proposal.published;
           delete proposal.signature;
           delete proposal.title;
@@ -1099,8 +1032,93 @@ window.onload = function() {
     enable('register-button');
   }
 
-  function uploadPicture() {
-    document.getElementById('register-picture-upload').click();
+  function uploadPicture(event) {
+    const sourceType = event.currentTarget === document.getElementById('register-camera-picture')
+      ? Camera.PictureSourceType.CAMERA
+      : Camera.PictureSourceType.PHOTOLIBRARY;
+    function successCallback(imageData) {
+      let content = {};
+      content.innerHTML = `<div class="sheet-modal" style="height: 100%">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
+        <div class="right">
+          <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="block margin-top-half no-padding-left no-padding-right">
+        <p><img id="edit-picture"></p>
+        <div class="row">
+          <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
+          <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+      let croppie = null;
+      let sheet = app.sheet.create({
+        content: content.innerHTML,
+        on: {
+          opened: function() {
+            let img = document.getElementById('edit-picture');
+            img.src = 'data:image/jpeg;base64,' + imageData;
+            let w = screen.width * 0.95;
+            croppie = new Croppie(img, {
+              boundary: {
+                width: w,
+                height: w * 4 / 3
+              },
+              viewport: {
+                width: w * 0.75,
+                height: w * 0.75 * 4 / 3
+              },
+              enableOrientation: true,
+              enableExif: true
+            });
+            document.getElementById('rotate-right').addEventListener('click', function() {
+              croppie.rotate(-90);
+            });
+            document.getElementById('rotate-left').addEventListener('click', function() {
+              croppie.rotate(90);
+            });
+          },
+          close: function() {
+            croppie.result({
+              type: 'base64',
+              size: {
+                width: 150,
+                height: 200
+              },
+              format: 'jpeg',
+              quality: 0.95
+            }).then(function(result) {
+              document.getElementById('register-picture').setAttribute('src', result);
+              citizen.picture = result;
+              croppie.destroy();
+              croppie = null;
+              validateRegistration();
+            });
+          }
+        }
+      });
+      sheet.open();
+    }
+    function errorCallback(message) {
+      // console.log('Cannot get picture: ' + message);
+    }
+    const options = {
+      quality: 90,
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: sourceType,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 1500,
+      targetHeight: 2000,
+      mediaType: Camera.MediaType.PICTURE,
+      cameraDirection: Camera.Direction.BACK
+    };
+    navigator.camera.getPicture(successCallback, errorCallback, options);
   }
 
   function privateKeyAvailable(message) {
@@ -1137,7 +1155,7 @@ window.onload = function() {
     stripped = stripped.slice(0, -1 - footer);
     return stripped;
   }
-}
+};
 
 function updateProposalLink() {
   let proposal = document.getElementById('proposal');
@@ -1171,7 +1189,11 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/api/citizen.php`, { method: 'POST', headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey())) })
+  fetch(`${notary}/api/citizen.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))
+  })
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -1334,14 +1356,14 @@ function updateEndorsements() {
                 return;
               }
               app.dialog.alert(`You successfully revoked ${endorsement.givenNames} ${endorsement.familyName}`, 'Revocation success');
-              endorsements.splice(endorsements.indexOf(endorsement), 1);  // remove it from array
+              endorsements.splice(endorsements.indexOf(endorsement), 1); // remove it from array
               updateEndorsements();
             });
         }
         const text = '<p class="text-align-left">' +
-          "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
+          'You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?' +
           `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
-          "Please type <b>I understand</b> here:" +
+          'Please type <b>I understand</b> here:' +
           '</p>';
         app.dialog.create({
           title: 'Revoke Citizen',
