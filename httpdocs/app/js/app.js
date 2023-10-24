@@ -39,7 +39,6 @@ let citizen = {
   latitude: 0,
   longitude: 0
 };
-let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
@@ -63,6 +62,7 @@ let endorsed = null;
 let endorsementToPublish = null;
 let endorsementToRevoke = null;
 let petitionEndorsement = null;
+let voteRegistration = null;
 let petitionInfo = null;
 let revokationToPublish = null;
 let endorseMap = null;
@@ -87,6 +87,10 @@ function sanitizeWebservice(string) {
     return '';
   string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
   return string;
+}
+
+function importKey() {
+
 }
 
 function setupLanguagePicker() {
@@ -266,6 +270,26 @@ function publishEndorsement(signature) {
     console.error(`Could publish citizen card.`);
     console.error(error);
   });
+}
+
+function publishVoteCallback(signature) {
+  voteRegistration.signature = signature;
+  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(voteRegistration)})
+    .then((response) => response.json())
+    .then((answer) => {
+      if (answer.error) {
+        app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
+        return;
+      }
+      fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(voteRegistration)})
+        .then((response) => response.json())
+        .then((answer) => {
+          if (answer.error) {
+            app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
+            return;
+          }
+        });
+    });
 }
 
 function onDeviceReady() {
@@ -1119,7 +1143,7 @@ function showMenu(){
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${encodeURIComponent(proposal.signature)}`)
             .then((response) => response.json())
             .then(async function(participation) {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
@@ -1159,11 +1183,8 @@ function showMenu(){
                 bytes,
                 participationArrayBuffer,
               );
-              console.log(verify)
-              return;
-              verify = new JSEncrypt();
-              verify.setPublicKey(publicKey(participation.key));
-              if (!verify.verify(JSON.stringify(participation), signature, CryptoJS.SHA256)) {
+
+              if (!verify) {
                 app.dialog.alert('Cannot verify participation signature', 'Vote error');
                 return;
               }
@@ -1173,8 +1194,8 @@ function showMenu(){
                 number: btoa(String.fromCharCode(...voteNumber)),  // base64 encoding
                 answer: answer
               }
-              const encryptedVote = citizenCrypt.encrypt(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
-              let registration = {
+              const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
+              voteRegistration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
                 key: citizen.key,
                 signature: '',
@@ -1182,23 +1203,7 @@ function showMenu(){
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
               }
-              registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
-                .then((response) => response.json())
-                .then((answer) => {
-                  if (answer.error) {
-                    app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
-                    return;
-                  }
-                  fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(registration)})
-                    .then((response) => response.json())
-                    .then((answer) => {
-                      if (answer.error) {
-                        app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-                        return;
-                      }
-                    });
-                });
+              Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure)
             });
         });
       });
