@@ -1,12 +1,15 @@
 import base64
 import json
 import os
+import requests
 import sys
 import time
 
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
+
+notary = 'https://notary.directdemocracy.vote'
 
 for filename in os.listdir('citizen'):
     if filename.endswith('.json'):
@@ -25,7 +28,7 @@ for filename in os.listdir('citizen'):
         if not file:
             sys.exit('Cannot open ' + picture_file)
         picture = file.read()
-        citizen['picture'] = base64.b64encode(picture).decode('ascii')
+        citizen['picture'] = 'data:image/jpeg;base64,' + base64.b64encode(picture).decode('ascii')
         key = RSA.generate(2048)
         key_file = os.path.join('key', citizen_name + '.key')
         with open(key_file, 'wb') as file:
@@ -33,10 +36,18 @@ for filename in os.listdir('citizen'):
             file.write(key.exportKey('PEM'))
         pubkey = key.publickey().exportKey('PEM')[27:-25].decode('ascii').replace("\n", '')
         citizen['key'] = pubkey
-        message = json.dumps(citizen, ensure_ascii=False).encode('utf8')
+        citizen['signature'] = ''
+        message = json.dumps(citizen, ensure_ascii=False, separators=(',', ':')).encode('utf8')
         h = SHA256.new(message)
         citizen['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
+        url = notary + '/api/publish.php'
+        response = requests.post(url, json=citizen)
+        answer = json.loads(response.text)
+        if 'signature' not in answer:
+            if 'error' in answer:
+                sys.exit('Error: ' + answer['error'])
+            else:
+                sys.exti('Failure: ' + response.text)
         with open(citizen_file, 'w', encoding='utf8', newline='\n') as file:
             file.write(json.dumps(citizen, indent=4, ensure_ascii=False))
             file.write("\n")
-
