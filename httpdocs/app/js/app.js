@@ -89,8 +89,29 @@ function sanitizeWebservice(string) {
   return string;
 }
 
-function importKey() {
+async function importKey(key) {
+  const bytes = base64ToByteArray(key)
+  const publicKey = await window.crypto.subtle.importKey(
+    "spki",
+    bytes,
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256",
+    },
+    true,
+    ["verify"],
+  );
 
+  return publicKey;
+}
+
+function base64ToByteArray(base64) {
+  let binaryString = atob(base64);
+  let bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++)
+     bytes[i] = binaryString.charCodeAt(i);
+
+  return bytes;
 }
 
 function setupLanguagePicker() {
@@ -172,11 +193,7 @@ function failure(e) {
 async function publish(signature) {
   citizen.signature = signature;
 
-  const binaryString = atob(citizen.signature);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++)
-     bytes[i] = binaryString.charCodeAt(i);
-
+  const bytes = base64ToByteArray(citizen.signature);
   citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', citizenFingerprint);
@@ -295,7 +312,6 @@ function publishVoteCallback(signature) {
 function onDeviceReady() {
 
   const successCreateKey = function(publicKey) {
-    console.timeEnd("createK");
     localStorage.setItem('publicKey', publicKey);
     showMenu();
   }
@@ -304,11 +320,9 @@ function onDeviceReady() {
     alert(message)
   }
 
-  if (!localStorage.getItem('publicKey')) {
-    console.time("createK");
+  if (!localStorage.getItem('publicKey'))
     Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
-    console.log("create new pair")
-  } else
+  else
     showMenu();
 }
 
@@ -637,28 +651,8 @@ function showMenu(){
           return;
         }
         // verify signature of endorsed
-        let binaryString = atob(endorsed.key);
-        let bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++)
-           bytes[i] = binaryString.charCodeAt(i);
-
-        const publicKey = await window.crypto.subtle.importKey(
-          "spki",
-          bytes,
-          {
-            name: "RSASSA-PKCS1-v1_5",
-            hash: "SHA-256",
-          },
-          true,
-          ["verify"],
-        );
-
-        binaryString = atob(signature);
-        bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++)
-           bytes[i] = binaryString.charCodeAt(i);
-
-
+        const publicKey = await importKey(endorsed.key);
+        let bytes = base64ToByteArray(signature);
         const challengeArrayBuffer = new TextEncoder().encode(challenge);
         let verify = await window.crypto.subtle.verify(
           "RSASSA-PKCS1-v1_5",
@@ -675,11 +669,8 @@ function showMenu(){
           return;
         }
 
-        binaryString = atob(endorsedSignature);
-        bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++)
-           bytes[i] = binaryString.charCodeAt(i);
-
+        bytes = base64ToByteArray(endorsedSignature);
+        
         const encoded = new TextEncoder().encode(JSON.stringify(endorsed))
 
         verify = await window.crypto.subtle.verify(
@@ -920,10 +911,7 @@ function showMenu(){
           let already = false;
           let proposals = (type === 'petition') ? petitions : referendums;
           for (let p of proposals) {
-            const binaryString = atob(p.signature);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++)
-               bytes[i] = binaryString.charCodeAt(i);
+            const bytes = base64ToByteArray(p.signature);
             const bytesArray = await crypto.subtle.digest("SHA-1", bytes);
             const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
             if (sha1 == fingerprint) {
@@ -1006,27 +994,9 @@ function showMenu(){
     if (p.website)
       p['website'] = proposal.website;
 
-    let binaryString = atob(proposal.key);
-    let bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++)
-      bytes[i] = binaryString.charCodeAt(i);
+    const publicKey = await importKey(proposal.key)
 
-    const publicKey = await window.crypto.subtle.importKey(
-      "spki",
-      bytes,
-      {
-        name: "RSASSA-PKCS1-v1_5",
-        hash: "SHA-256",
-      },
-      true,
-      ["verify"],
-    );
-    
-    binaryString = atob(proposal.signature);
-    bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++)
-      bytes[i] = binaryString.charCodeAt(i);
-
+    const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
     const verify = await window.crypto.subtle.verify(
       "RSASSA-PKCS1-v1_5",
@@ -1154,28 +1124,8 @@ function showMenu(){
               participation.signature = '';
 
               // verify signature of endorsed
-              let binaryString = atob(participation.key);
-              let bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++)
-                bytes[i] = binaryString.charCodeAt(i);
-
-              const publicKey = await window.crypto.subtle.importKey(
-                "spki",
-                bytes,
-                {
-                  name: "RSASSA-PKCS1-v1_5",
-                  hash: "SHA-256",
-                },
-                true,
-                ["verify"],
-              );
-
-              binaryString = atob(signature);
-              bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++)
-                bytes[i] = binaryString.charCodeAt(i);
-
-
+              const publicKey = await importKey(participation.key);
+              const bytes = base64ToByteArray(signature);
               const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
               let verify = await window.crypto.subtle.verify(
                 "RSASSA-PKCS1-v1_5",
