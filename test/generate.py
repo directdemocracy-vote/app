@@ -4,7 +4,9 @@ import os
 import sys
 import time
 
+from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 
 for filename in os.listdir('citizen'):
     if filename.endswith('.json'):
@@ -31,6 +33,9 @@ for filename in os.listdir('citizen'):
             file.write(key.exportKey('PEM'))
         pubkey = key.publickey().exportKey('PEM')[27:-25].decode('ascii').replace("\n", '')
         citizen['key'] = pubkey
+        message = json.dumps(citizen, ensure_ascii=False).encode('utf8')
+        h = SHA256.new(message)
+        citizen['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
         with open(citizen_file, 'w', encoding='utf8', newline='\n') as file:
             file.write(json.dumps(citizen, indent=4, ensure_ascii=False))
             file.write("\n")
