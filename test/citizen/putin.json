@@ -1,0 +1,11 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "givenNames": "владимир владимирович",
+    "familyName": "путин",
+    "picture": "",
+    "latitude": 46.5299,
+    "longitude": 6.5674
+}

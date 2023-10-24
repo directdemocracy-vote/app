@@ -1,0 +1,11 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "givenNames": "Boris",
+    "familyName": "Johnson",
+    "picture": "",
+    "latitude": 46.5289,
+    "longitude": 6.5631
+}
