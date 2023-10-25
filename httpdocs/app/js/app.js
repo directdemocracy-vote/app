@@ -209,8 +209,7 @@ async function publish(signature) {
       }
     })
     .catch((error) => {
-      console.error(`Could not publish citizen card.`);
-      console.error(error);
+      app.dialog.alert(error, 'Could not publish citizen card');
     });
 }
 
