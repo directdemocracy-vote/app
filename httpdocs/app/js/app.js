@@ -302,8 +302,8 @@ function publishVoteCallback(signature) {
         return;
       }
       fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
-        .then((response) => response.json())
-        .then((answer) => {
+        .then(response => response.json())
+        .then(answer => {
           if (answer.error)
             app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
         });
