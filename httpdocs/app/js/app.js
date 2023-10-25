@@ -1,3 +1,5 @@
+/* global Framework7, QRious, Keystore, L, Camera, Croppie */
+
 import QrScanner from './qr-scanner.min.js';
 import Translator from './translator.js';
 
@@ -71,35 +73,24 @@ let online = true;
 let petitions = [];
 let referendums = [];
 
-function sanitizeString(string) {
-  if (!string)
-    return;
-  string = string.replaceAll('&', '&amp;');
-  string = string.replaceAll("'", '&apos;');
-  string = string.replaceAll('"', '&quot;');
-  string = string.replaceAll('<', '&lt;');
-  string = string.replaceAll('>', '&gt;');
-  return string;
-}
-
 function sanitizeWebservice(string) {
   if (!string)
     return '';
-  string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
+  string = string.replace(/[^a-z0-9-:./]/gi, '');
   return string;
 }
 
 async function importKey(key) {
   const bytes = base64ToByteArray(key);
   const publicKey = await window.crypto.subtle.importKey(
-    "spki",
+    'spki',
     bytes,
     {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256",
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256'
     },
     true,
-    ["verify"],
+    ['verify']
   );
 
   return publicKey;
@@ -109,7 +100,7 @@ function base64ToByteArray(base64) {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++)
-     bytes[i] = binaryString.charCodeAt(i);
+    bytes[i] = binaryString.charCodeAt(i);
 
   return bytes;
 }
@@ -169,7 +160,7 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
-let mainView = app.views.create('.view-main', { iosDynamicNavbar: false });
+app.views.create('.view-main', { iosDynamicNavbar: false });
 
 window.addEventListener('online', () => {
   online = true;
@@ -194,11 +185,14 @@ async function publish(signature) {
   citizen.signature = signature;
 
   const bytes = base64ToByteArray(citizen.signature);
-  citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
+  citizenFingerprint = await crypto.subtle.digest('SHA-1', bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', citizenFingerprint);
-  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
-    .then(response => response.json())
+  fetch(`${notary}/api/publish.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(citizen)
+  }).then(response => response.json())
     .then(answer => {
       if (answer.error)
         app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
@@ -240,68 +234,82 @@ async function openQR(signature) {
 function revokeCallback(signature) {
   revokationToPublish.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(revokationToPublish) })
-  .then(response => response.json())
-  .then(answer => {
-    if (answer.error) {
-      app.dialog.alert(answer.error, 'Revocation error');
-      return;
-    }
-    app.dialog.alert(`You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`, 'Revocation success');
-    endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
-    updateEndorsements();
-  });
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error) {
+        app.dialog.alert(answer.error, 'Revocation error');
+        return;
+      }
+      app.dialog.alert(
+        `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
+        'Revocation success');
+      endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
+      updateEndorsements();
+    });
 }
 
 function signPetitionCallback(signature) {
   petitionEndorsement.signature = signature;
   let button = petitionInfo[0];
   let proposal = petitionInfo[1];
-  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(petitionEndorsement) })
-  .then(response => response.json())
-  .then(answer => {
-    if (answer.error)
-      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-    else {
-      app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
-      button.innerHTML = 'Signed';
-      proposal.done = true;
-      localStorage.setItem(`petitions`, JSON.stringify(petitions));
-      disable(button);
-    }
-  });
+  fetch(`${notary}/api/publish.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(petitionEndorsement)
+  }).then(response => response.json())
+    .then(answer => {
+      if (answer.error)
+        app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+      else {
+        app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
+        button.textContent = 'Signed';
+        proposal.done = true;
+        localStorage.setItem(`petitions`, JSON.stringify(petitions));
+        disable(button);
+      }
+    });
 }
 
 function publishEndorsement(signature) {
   endorsementToPublish.signature = signature;
-  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsementToPublish) })
-  .then(response => response.json())
-  .then(answer => {
-    if (answer.error)
-      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-    else {
-      app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-      // FIXME: we should actually add the new endorsee in the endorsements list
-      updateEndorsements();
-    }
-    enable('endorse-button');
-  })
-  .catch((error) => {
-    console.error(`Could publish citizen card.`);
-    console.error(error);
-  });
+  fetch(`${notary}/api/publish.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(endorsementToPublish)
+  }).then(response => response.json())
+    .then(answer => {
+      if (answer.error)
+        app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+      else {
+        app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+        // FIXME: we should actually add the new endorsee in the endorsements list
+        updateEndorsements();
+      }
+      enable('endorse-button');
+    })
+    .catch((error) => {
+      console.error(`Could publish citizen card.`);
+      console.error(error);
+    });
 }
 
 function publishVoteCallback(signature) {
   voteRegistration.signature = signature;
-  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
-    .then(response => response.json())
+  fetch(`${notary}/api/publish.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(voteRegistration)
+  }).then(response => response.json())
     .then(answer => {
       if (answer.error) {
         app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
         return;
       }
-      fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
-        .then(response => response.json())
+      fetch(`${station}/api/registration.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(voteRegistration)
+      }).then(response => response.json())
         .then(answer => {
           if (answer.error)
             app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
@@ -313,7 +321,7 @@ function onDeviceReady() {
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
-  }
+  };
 
   if (!localStorage.getItem('publicKey'))
     Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
@@ -321,7 +329,7 @@ function onDeviceReady() {
     showMenu();
 }
 
-function showMenu(){
+function showMenu() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = sanitizeWebservice(event.target.value);
@@ -379,10 +387,14 @@ function showMenu(){
 
           function updateLocation() {
             registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
-            fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
+            fetch('https://nominatim.openstreetmap.org/reverse.php' +
+              `?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
               .then((response) => response.json())
               .then((answer) => {
-                registerMarker.setPopupContent(`${answer.display_name}<br><br><center style="color:#999">(${citizen.latitude}, ${citizen.longitude})</center>`).openPopup();
+                registerMarker.setPopupContent(
+                  `${answer.display_name}<br><br><center style="color:#999">` +
+                  `(${citizen.latitude}, ${citizen.longitude})</center>`
+                ).openPopup();
               })
               .catch((error) => {
                 console.error(`Could not fetch address at ${citizen.latitude}, ${citizen.longitude}.`);
@@ -469,8 +481,8 @@ function showMenu(){
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
     citizen.key = localStorage.getItem('publicKey');
     citizen.published = Math.trunc(new Date().getTime() / 1000);
-    citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
-    citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
+    citizen.givenNames = document.getElementById('register-given-names').value.trim();
+    citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
     Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure);
 
@@ -502,7 +514,7 @@ function showMenu(){
     for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
     Keystore.sign('DirectDemocracyApp', challenge, openQR, failure);
-  }, {returnDetailedScanResult: true});
+  }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
     disable('endorse-me-button');
@@ -590,10 +602,10 @@ function showMenu(){
         let bytes = base64ToByteArray(signature);
         const challengeArrayBuffer = new TextEncoder().encode(challenge);
         let verify = await window.crypto.subtle.verify(
-          "RSASSA-PKCS1-v1_5",
+          'RSASSA-PKCS1-v1_5',
           publicKey,
           bytes,
-          challengeArrayBuffer,
+          challengeArrayBuffer
         );
 
         let endorsedSignature = endorsed.signature;
@@ -605,14 +617,14 @@ function showMenu(){
         }
 
         bytes = base64ToByteArray(endorsedSignature);
-        
+
         const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
 
         verify = await window.crypto.subtle.verify(
-          "RSASSA-PKCS1-v1_5",
+          'RSASSA-PKCS1-v1_5',
           publicKey,
           bytes,
-          encoded,
+          encoded
         );
 
         if (!verify) {
@@ -629,13 +641,13 @@ function showMenu(){
         document.getElementById('endorse-coords-check').checked = false;
         document.getElementById('endorse-citizen').style.display = '';
         document.getElementById('endorse-picture').src = endorsed.picture;
-        document.getElementById('endorse-family-name').innerHTML = endorsed.familyName;
-        document.getElementById('endorse-given-names').innerHTML = endorsed.givenNames;
+        document.getElementById('endorse-family-name').textContent = endorsed.familyName;
+        document.getElementById('endorse-given-names').textContent = endorsed.givenNames;
         const lat = endorsed.latitude;
         const lon = endorsed.longitude;
-        document.getElementById('endorse-coords').innerHTML = lat + ', ' + lon;
+        document.getElementById('endorse-coords').textContent = lat + ', ' + lon;
         let published = new Date(endorsed.published * 1000);
-        document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
+        document.getElementById('endorse-published').textContent = published.toISOString().slice(0, 10);
         if (endorseMap == null) {
           endorseMap = L.map('endorse-map', { dragging: false });
           endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
@@ -654,7 +666,7 @@ function showMenu(){
           .then((response) => response.json())
           .then((answer) => {
             const address = answer.display_name;
-            endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">' + `(${lat}, ${lon})` + '</center>').openPopup();
+            endorseMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
           });
       });
   }, { returnDetailedScanResult: true });
@@ -829,14 +841,22 @@ function showMenu(){
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
         const deadline = new Date(proposal.deadline * 1000).toLocaleString();
         const title = `<b>${proposal.title}</b><br><br>`;
-        if (type === 'petition' && proposal.secret)
-          app.dialog.alert(`${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`, 'Not a petition');
-        else if (type === 'referendum' && !proposal.secret)
-          app.dialog.alert(`${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`, 'Not a referendum');
-        else if (!proposal.inside) {
+        if (type === 'petition' && proposal.secret) {
+          app.dialog.alert(
+            `${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`,
+            'Not a petition'
+          );
+        } else if (type === 'referendum' && !proposal.secret) {
+          app.dialog.alert(
+            `${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`,
+            'Not a referendum'
+          );
+        } else if (!proposal.inside) {
           const message = (type === 'petition')
-            ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
-            : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
+            ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). ` +
+            'Therefore you cannot sign it.'
+            : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). ` +
+            'Therefore you cannot vote.';
           app.dialog.alert(`${title}${message}`, 'Wrong area');
         } else if (outdated) {
           const message = (type === 'petition')
@@ -848,9 +868,9 @@ function showMenu(){
           let proposals = (type === 'petition') ? petitions : referendums;
           for (let p of proposals) {
             const bytes = base64ToByteArray(p.signature);
-            const bytesArray = await crypto.subtle.digest("SHA-1", bytes);
+            const bytesArray = await crypto.subtle.digest('SHA-1', bytes);
             const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
-            if (sha1 == fingerprint) {
+            if (sha1 === fingerprint) {
               if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this ${type}.`);
                 app.accordion.open(document.getElementById(`${type}-${p.id}`));
@@ -935,10 +955,10 @@ function showMenu(){
     const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
     const verify = await window.crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
+      'RSASSA-PKCS1-v1_5',
       publicKey,
       bytes,
-      packetArrayBuffer,
+      packetArrayBuffer
     );
 
     if (!verify) {
@@ -963,7 +983,7 @@ function showMenu(){
     let title = document.createElement('div');
     inner.appendChild(title);
     title.classList.add('item-title');
-    title.innerHTML = proposal.title;
+    title.textContent = proposal.title;
     let content = document.createElement('div');
     item.appendChild(content);
     content.classList.add('accordion-item-content');
@@ -977,17 +997,17 @@ function showMenu(){
     a.style.fontSize = '120%';
     a.style.fontWeight = 'bold';
     a.classList.add('link', 'external');
-    a.innerHTML = proposal.title;
+    a.textContent = proposal.title;
     let p = document.createElement('p');
     block.appendChild(p);
-    p.innerHTML = proposal.description;
+    p.textContent = proposal.description;
     p = document.createElement('p');
     block.appendChild(p);
     let button = document.createElement('button');
     if (type === 'referendum') {
       p = document.createElement('p');
       p.style.fontWeight = 'bold';
-      p.innerHTML = proposal.question;
+      p.textContent = proposal.question;
       block.appendChild(p);
       for (let answer of proposal.answers) {
         let label = document.createElement('label');
@@ -1003,7 +1023,7 @@ function showMenu(){
         label.appendChild(i);
         label.appendChild(document.createTextNode(answer));
         input.addEventListener('change', function(event) {
-          if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+          if (proposal.done || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
             disable(button);
           else
             enable(button);
@@ -1012,10 +1032,26 @@ function showMenu(){
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
-    p.innerHTML = `<b>Area:</b> <a class="link external" href="${url}" target="_blank">${proposal.areas[0].split('=')[1]}</a>`;
+    let b = document.createElement('b');
+    b.textContent = 'Area:';
+    p.appendChild(b);
+    a = document.createElement('a');
+    a.classList.add('link', 'external');
+    a.setAttribute('href', url);
+    a.setAttribute('target', '_blank');
+    a.textContent = proposal.areas[0].split('=')[1];
+    p.appendChild(a);
     p = document.createElement('p');
     block.appendChild(p);
-    p.innerHTML = `<b>Judge:</b> <a class="link external" href="${proposal.judge}" target="_blank">${proposal.judge}</a>`;
+    b = document.createElement('b');
+    b.textContent = 'Judge:';
+    p.appendChild(b);
+    a = document.createElement('a');
+    a.classList.add('link', 'external');
+    a.setAttribute('href', proposal.judge);
+    a.setAttribute('target', '_blank');
+    a.textContent = proposal.judge;
+    p.appendChild(a);
     p = document.createElement('p');
     block.appendChild(p);
     const deadline = new Date(proposal.deadline * 1000).toLocaleString();
@@ -1027,71 +1063,78 @@ function showMenu(){
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
-      button.innerHTML = proposal.done ? 'Signed' : 'Sign';
-      if (proposal.done || outdated || (proposal.judge == judge && !iAmEndorsedByJudge))
+      button.textContent = proposal.done ? 'Signed' : 'Sign';
+      if (proposal.done || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
         disable(button);
       button.addEventListener('click', function() {
-        app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
-          petitionEndorsement = {
-            schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
-            key: citizen.key,
-            signature: '',
-            published: Math.trunc(new Date().getTime() / 1000),
-            endorsedSignature: proposal.signature
-          };
-          petitionInfo = [button, proposal];
-          Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure);
-        });
+        app.dialog.confirm(
+          'Your name and signature will be published to show publicly your support to this petition.',
+          'Sign Petition?', function() {
+            petitionEndorsement = {
+              schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+              key: citizen.key,
+              signature: '',
+              published: Math.trunc(new Date().getTime() / 1000),
+              endorsedSignature: proposal.signature
+            };
+            petitionInfo = [button, proposal];
+            Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure);
+          });
       });
     } else { // referendum
-      button.innerHTML = proposal.done ? 'Voted' : 'Vote';
+      button.textContent = proposal.done ? 'Voted' : 'Vote';
       disable(button);
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
-        app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${encodeURIComponent(proposal.signature)}`)
-            .then((response) => response.json())
-            .then(async function(participation) {
-              if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
-                app.dialog.alert('Wrong participation schema', 'Vote error');
-                return;
-              }
-              const signature = participation.signature;
-              participation.signature = '';
+        app.dialog.confirm(
+          `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
+          'Vote?', function() {
+            fetch(
+              `${notary}/api/participation.php?station=${encodeURIComponent(station)}` +
+              `&referendum=${encodeURIComponent(proposal.signature)}`)
+              .then((response) => response.json())
+              .then(async function(participation) {
+                if (participation.schema !==
+                  `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
+                  app.dialog.alert('Wrong participation schema', 'Vote error');
+                  return;
+                }
+                const signature = participation.signature;
+                participation.signature = '';
 
-              // verify signature of endorsed
-              const publicKey = await importKey(participation.key);
-              const bytes = base64ToByteArray(signature);
-              const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
-              let verify = await window.crypto.subtle.verify(
-                "RSASSA-PKCS1-v1_5",
-                publicKey,
-                bytes,
-                participationArrayBuffer,
-              );
+                // verify signature of endorsed
+                const publicKey = await importKey(participation.key);
+                const bytes = base64ToByteArray(signature);
+                const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
+                let verify = await window.crypto.subtle.verify(
+                  'RSASSA-PKCS1-v1_5',
+                  publicKey,
+                  bytes,
+                  participationArrayBuffer
+                );
 
-              if (!verify) {
-                app.dialog.alert('Cannot verify participation signature', 'Vote error');
-                return;
-              }
-              const voteNumber = new Uint8Array(20);
-              crypto.getRandomValues(voteNumber);
-              let vote = {
-                number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
-                answer: answer
-              };
-              const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
-              voteRegistration = {
-                schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
-                key: citizen.key,
-                signature: '',
-                published: Math.trunc(new Date().getTime() / 1000),
-                blindKey: participation.blindKey,
-                encryptedVote: encryptedVote
-              };
-              Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure);
-            });
-        });
+                if (!verify) {
+                  app.dialog.alert('Cannot verify participation signature', 'Vote error');
+                  return;
+                }
+                const voteNumber = new Uint8Array(20);
+                crypto.getRandomValues(voteNumber);
+                let vote = {
+                  number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
+                  answer: answer
+                };
+                const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
+                voteRegistration = {
+                  schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
+                  key: citizen.key,
+                  signature: '',
+                  published: Math.trunc(new Date().getTime() / 1000),
+                  blindKey: participation.blindKey,
+                  encryptedVote: encryptedVote
+                };
+                Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure);
+              });
+          });
       });
     }
     let trashButton = document.createElement('button');
@@ -1100,34 +1143,36 @@ function showMenu(){
     trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
     trashButton.addEventListener('click', function() {
       const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
-      app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, `Remove ${uppercaseType}?`, function() {
-        document.getElementById(`${type}s`).removeChild(item);
-        if (!proposal.done) { // actually remove it
-          const index = proposals.indexOf(proposal);
-          proposals.splice(index, 1);
-          let i = 0;
-          proposals.forEach(function(p) {
-            p.id = i++;
-          });
-        } else { // remove useless fields, keep only done and signature
-          delete proposal.id; // hidden
-          delete proposal.published;
-          delete proposal.participants;
-          delete proposal.title;
-          delete proposal.description;
-          delete proposal.areas;
-          delete proposal.area;
-          delete proposal.deadline;
-          delete proposal.corpus;
-          delete proposal.participation;
-          delete proposal.answers;
-          delete proposal.question;
-          delete proposal.judge;
-          delete proposal.secret;
-          delete proposal.website;
-        }
-        localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-      });
+      app.dialog.confirm(
+        `This ${type} will be removed from your list, but you can fetch it again if needed.`,
+        `Remove ${uppercaseType}?`, function() {
+          document.getElementById(`${type}s`).removeChild(item);
+          if (!proposal.done) { // actually remove it
+            const index = proposals.indexOf(proposal);
+            proposals.splice(index, 1);
+            let i = 0;
+            proposals.forEach(function(p) {
+              p.id = i++;
+            });
+          } else { // remove useless fields, keep only done and signature
+            delete proposal.id; // hidden
+            delete proposal.published;
+            delete proposal.participants;
+            delete proposal.title;
+            delete proposal.description;
+            delete proposal.areas;
+            delete proposal.area;
+            delete proposal.deadline;
+            delete proposal.corpus;
+            delete proposal.participation;
+            delete proposal.answers;
+            delete proposal.question;
+            delete proposal.judge;
+            delete proposal.secret;
+            delete proposal.website;
+          }
+          localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+        });
     });
     if (open)
       app.accordion.open(item);
@@ -1248,17 +1293,19 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-petition').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
-  document.getElementById('search-referendum').setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-petition').setAttribute('href',
+    `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  document.getElementById('search-referendum').setAttribute('href',
+    `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateCitizenCard() {
   showPage('card');
   document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
   document.getElementById('register-picture').setAttribute('src', citizen.picture);
-  document.getElementById('citizen-given-names').innerHTML = citizen.givenNames;
+  document.getElementById('citizen-given-names').textContent = citizen.givenNames;
   document.getElementById('register-given-names').value = citizen.givenNames;
-  document.getElementById('citizen-family-name').innerHTML = citizen.familyName;
+  document.getElementById('citizen-family-name').textContent = citizen.familyName;
   document.getElementById('register-family-name').value = citizen.familyName;
   document.getElementById('citizen-coords').innerHTML =
     '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
@@ -1266,7 +1313,7 @@ function updateCitizenCard() {
     citizen.latitude + ', ' + citizen.longitude + '</a>';
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
-  document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
+  document.getElementById('citizen-published').textContent = published.toISOString().slice(0, 10);
   citizenFingerprint = localStorage.getItem('citizenFingerprint');
   getReputationFromJudge();
   updateCitizenEndorsements();
@@ -1311,14 +1358,21 @@ function getReputationFromJudge() {
     .then((answer) => {
       let reputation = document.getElementById('citizen-reputation');
       let badge = document.getElementById('endorsed-badge');
+      const span = document.createElement('span');
       if (answer.error) {
-        reputation.innerHTML = `<span style="font-weight:bold;color:red">${answer.error}</span>`;
+        span.setAttribute('style', 'font-weight:bold;color:red');
+        span.textContent = answer.error;
+        reputation.innerHTML = '';
+        reputation.appendChild(span);
         badge.classList.remove('color-blue');
         badge.classList.add('color-red');
       } else {
         iAmEndorsedByJudge = answer.endorsed;
         const color = answer.endorsed ? 'blue' : 'red';
-        reputation.innerHTML = `<span style="font-weight:bold;color:${color}">${answer.reputation}</span>`;
+        span.setAttribute('style', `font-weight:bold;color:${color}`);
+        span.textContent = answer.error;
+        reputation.innerHTML = '';
+        reputation.appendChild(span);
         badge.classList.remove('color-red');
         badge.classList.remove('color-blue');
         badge.classList.add('color-' + color);
@@ -1334,7 +1388,7 @@ function getReputationFromJudge() {
 function updateProposals(proposals) {
   const type = (proposals === petitions) ? 'petition' : 'referendum';
   for (let proposal of proposals) {
-    if (proposal.judge == judge) {
+    if (proposal.judge === judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
         if (iAmEndorsedByJudge && !proposal.done)
@@ -1349,7 +1403,7 @@ function updateProposals(proposals) {
 function updateCitizenEndorsements() {
   let list = document.getElementById('citizen-endorsements-list');
   let badge = document.getElementById('endorsed-badge');
-  if (citizenEndorsements.length == 0) {
+  if (citizenEndorsements.length === 0) {
     list.innerHTML =
       `<div class="block-title" data-i18n="not-endorsed">${translator.translate('not-endorsed')}</div>` +
       `<div class="block" data-i18n="ask-others-to-endorse-you">${translator.translate('ask-others-to-endorse-you')}</div>`;
@@ -1364,9 +1418,14 @@ function updateCitizenEndorsements() {
   });
   list.innerHTML = '';
   let endorsementCount = citizenEndorsements.length - revokeCount;
-  badge.innerHTML = endorsementCount;
+  badge.textContent = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
-  newElement(list, 'div', 'block-title no-margin-left no-margin-right', `${endorsementCount}/${citizenEndorsements.length} ${plural}`);
+  newElement(
+    list,
+    'div',
+    'block-title no-margin-left no-margin-right',
+    `${endorsementCount}/${citizenEndorsements.length} ${plural}`
+  );
   let medias = newElement(list, 'div', 'list media-list');
   let ul = newElement(medias, 'ul');
   citizenEndorsements.forEach(function(endorsement) {
@@ -1437,7 +1496,8 @@ function updateEndorsements() {
           Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure);
         }
         const text = '<p class="text-align-left">' +
-          'You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?' +
+          'You should revoke only a citizen who has moved or changed her citizen card. ' +
+          'This might affect their ability to vote. Do you really want to revoke this citizen?' +
           `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
           'Please type <b>I understand</b> here:' +
           '</p>';
@@ -1483,8 +1543,8 @@ function updateEndorsements() {
     }
   });
   let badge = document.getElementById('endorse-badge');
-  badge.innerHTML = count;
-  badge.style.display = (count == 0) ? 'none' : '';
+  badge.textContent = count;
+  badge.style.display = (count === 0) ? 'none' : '';
 }
 
 // show either:
@@ -1541,7 +1601,7 @@ function hide(item) {
   addClass(item, 'display-none');
 }
 
-function newElement(parent, type, classes, innerHTML) {
+function newElement(parent, type, classes, textContent) {
   let element = document.createElement(type);
   if (parent)
     parent.appendChild(element);
@@ -1551,7 +1611,7 @@ function newElement(parent, type, classes, innerHTML) {
       element.classList.add(c);
     });
   }
-  if (typeof innerHTML !== 'undefined')
-    element.innerHTML = innerHTML;
+  if (typeof textContent !== 'undefined')
+    element.textContent = textContent;
   return element;
 }
