@@ -241,8 +241,8 @@ async function openQR(signature) {
 function revokeCallback(signature) {
   revokationToPublish.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(revokationToPublish) })
-  .then((response) => response.json())
-  .then((answer) => {
+  .then(response => response.json())
+  .then(answer => {
     if (answer.error) {
       app.dialog.alert(answer.error, 'Revocation error');
       return;
