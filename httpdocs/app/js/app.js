@@ -1154,10 +1154,10 @@ function showMenu() {
             proposals.forEach(function(p) {
               p.id = i++;
             });
-          } else { // remove useless fields, keep only done and fingerprint
+          } else { // remove useless fields, keep only done and signature
             delete proposal.id; // hidden
             delete proposal.published;
-            delete proposal.signature;
+            delete proposal.participants;
             delete proposal.title;
             delete proposal.description;
             delete proposal.areas;
