@@ -187,7 +187,7 @@ async function publish(signature) {
   const bytes = base64ToByteArray(citizen.signature);
   citizenFingerprint = await crypto.subtle.digest('SHA-1', bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
-  localStorage.setItem('citizenFingerprint', citizenFingerprint);
+  localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   fetch(`${notary}/api/publish.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1314,7 +1314,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').textContent = published.toISOString().slice(0, 10);
-  citizenFingerprint = localStorage.getItem('citizenFingerprint');
+  citizenFingerprint = atob(localStorage.getItem('citizenFingerprint'));
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
