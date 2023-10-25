@@ -258,8 +258,8 @@ function signPetitionCallback(signature) {
   let button = petitionInfo[0];
   let proposal = petitionInfo[1];
   fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(petitionEndorsement) })
-  .then((response) => response.json())
-  .then((answer) => {
+  .then(response => response.json())
+  .then(answer => {
     if (answer.error)
       app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
     else {
