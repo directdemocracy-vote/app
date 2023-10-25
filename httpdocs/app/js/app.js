@@ -187,7 +187,7 @@ window.addEventListener('offline', () => {
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function failure(e) {
-  alert("Error calling KeyStore Plugin: " + e);
+  app.dialog.alert(e, 'Error calling KeyStore Plugin');
 }
 
 async function publish(signature) {
