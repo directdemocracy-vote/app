@@ -1112,7 +1112,7 @@ function showMenu(){
         } else { // remove useless fields, keep only done and fingerprint
           delete proposal.id; // hidden
           delete proposal.published;
-          delete proposal.signature;
+          delete proposal.participants;
           delete proposal.title;
           delete proposal.description;
           delete proposal.areas;
