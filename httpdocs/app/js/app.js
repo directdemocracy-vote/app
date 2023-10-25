@@ -39,7 +39,6 @@ let citizen = {
   latitude: 0,
   longitude: 0
 };
-let citizenCrypt = null;
 let citizenFingerprint = null;
 let citizenEndorsements = [];
 let endorsements = [];
@@ -60,6 +59,12 @@ if (!station) {
 }
 let iAmEndorsedByJudge = false;
 let endorsed = null;
+let endorsementToPublish = null;
+let endorsementToRevoke = null;
+let petitionEndorsement = null;
+let voteRegistration = null;
+let petitionInfo = null;
+let revokationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
 let online = true;
@@ -82,6 +87,31 @@ function sanitizeWebservice(string) {
     return '';
   string = string.replace(/[^a-z0-9-\:\.\/]/gi, '');
   return string;
+}
+
+async function importKey(key) {
+  const bytes = base64ToByteArray(key);
+  const publicKey = await window.crypto.subtle.importKey(
+    "spki",
+    bytes,
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256",
+    },
+    true,
+    ["verify"],
+  );
+
+  return publicKey;
+}
+
+function base64ToByteArray(base64) {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++)
+     bytes[i] = binaryString.charCodeAt(i);
+
+  return bytes;
 }
 
 function setupLanguagePicker() {
@@ -119,8 +149,6 @@ function setupLanguagePicker() {
 
 translator.onready = function() {
   translatorIsReady = true;
-  if (!localStorage.getItem('privateKey'))
-    document.getElementById('registration-button-message').innerHTML = translator.translate('please-wait-for-key');
   setupLanguagePicker();
 };
 
@@ -155,7 +183,145 @@ window.addEventListener('offline', () => {
   enable('endorse-me-button');
 });
 
-window.onload = function() {
+// Wait for Cordova to be initialized.
+document.addEventListener('deviceready', onDeviceReady, false);
+
+function failure(e) {
+  app.dialog.alert(e, 'Error calling KeyStore Plugin');
+}
+
+async function publish(signature) {
+  citizen.signature = signature;
+
+  const bytes = base64ToByteArray(citizen.signature);
+  citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
+  citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
+  localStorage.setItem('citizenFingerprint', citizenFingerprint);
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error)
+        app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+      else {
+        updateCitizenCard();
+        app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
+        window.localStorage.setItem('registered', true);
+      }
+    })
+    .catch((error) => {
+      app.dialog.alert(error, 'Could not publish citizen card');
+    });
+}
+
+async function openQR(signature) {
+  signature = atob(signature);
+  const qr = new QRious({
+    value: citizenFingerprint + signature, // 276 bytes, e.g., 20 + 256
+    level: 'L',
+    size: 1024,
+    padding: 0
+  });
+  const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
+  const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
+  app.dialog.create({
+    title: 'Ask the citizen to scan this QR-code',
+    content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
+    buttons: [{
+      text: 'Done',
+      onClick: function() {
+        app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
+        if (!online)
+          enable('endorse-me-button');
+      }
+    }]
+  }).open();
+}
+
+function revokeCallback(signature) {
+  revokationToPublish.signature = signature;
+  fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(revokationToPublish) })
+  .then(response => response.json())
+  .then(answer => {
+    if (answer.error) {
+      app.dialog.alert(answer.error, 'Revocation error');
+      return;
+    }
+    app.dialog.alert(`You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`, 'Revocation success');
+    endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
+    updateEndorsements();
+  });
+}
+
+function signPetitionCallback(signature) {
+  petitionEndorsement.signature = signature;
+  let button = petitionInfo[0];
+  let proposal = petitionInfo[1];
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(petitionEndorsement) })
+  .then(response => response.json())
+  .then(answer => {
+    if (answer.error)
+      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+    else {
+      app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
+      button.innerHTML = 'Signed';
+      proposal.done = true;
+      localStorage.setItem(`petitions`, JSON.stringify(petitions));
+      disable(button);
+    }
+  });
+}
+
+function publishEndorsement(signature) {
+  endorsementToPublish.signature = signature;
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsementToPublish) })
+  .then(response => response.json())
+  .then(answer => {
+    if (answer.error)
+      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+    else {
+      app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+      // FIXME: we should actually add the new endorsee in the endorsements list
+      updateEndorsements();
+    }
+    enable('endorse-button');
+  })
+  .catch((error) => {
+    console.error(`Could publish citizen card.`);
+    console.error(error);
+  });
+}
+
+function publishVoteCallback(signature) {
+  voteRegistration.signature = signature;
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error) {
+        app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
+        return;
+      }
+      fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
+        .then(response => response.json())
+        .then(answer => {
+          if (answer.error)
+            app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
+        });
+    });
+}
+
+function onDeviceReady() {
+  const successCreateKey = function(publicKey) {
+    localStorage.setItem('publicKey', publicKey);
+    showMenu();
+  }
+
+  if (!localStorage.getItem('publicKey'))
+    Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
+  else
+    showMenu();
+}
+
+function showMenu(){
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = sanitizeWebservice(event.target.value);
@@ -171,14 +337,6 @@ window.onload = function() {
     station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
-
-  // create a private key if needed
-  let privateKey = localStorage.getItem('privateKey');
-  if (privateKey) {
-    citizenCrypt = new JSEncrypt();
-    citizenCrypt.setPrivateKey(privateKey);
-    privateKeyAvailable('');
-  } else createNewKey();
 
   if (!window.localStorage.getItem('registered'))
     showPage('register');
@@ -309,28 +467,13 @@ window.onload = function() {
     text.setAttribute('data-i18n', registration);
     show('register-button-preloader');
     citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
-    citizen.key = strippedKey(citizenCrypt.getPublicKey());
+    citizen.key = localStorage.getItem('publicKey');
     citizen.published = Math.trunc(new Date().getTime() / 1000);
     citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
     citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
     citizen.signature = '';
-    citizen.signature = citizenCrypt.sign(JSON.stringify(citizen), CryptoJS.SHA256, 'sha256');
-    citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
-    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-        else {
-          updateCitizenCard();
-          app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
-          window.localStorage.setItem('registered', true);
-        }
-      })
-      .catch((error) => {
-        console.error(`Could not publish citizen card.`);
-        console.error(error);
-      });
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure);
+
     return false;
   });
 
@@ -358,34 +501,8 @@ window.onload = function() {
     let challenge = '';
     for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    const signature = atob(citizenCrypt.sign(challenge, CryptoJS.SHA256, 'sha256'));
-    let fingerprint = '';
-    const words = citizenFingerprint.words;
-    for (let i = 0; i < 5; ++i) {
-      for (let j = 3; j >= 0; --j)
-        fingerprint += String.fromCharCode((words[i] >> 8 * j) & 0xff);
-    }
-    const qr = new QRious({
-      value: fingerprint + signature, // 276 bytes, e.g., 20 + 256
-      level: 'L',
-      size: 1024,
-      padding: 0
-    });
-    const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
-    const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
-    app.dialog.create({
-      title: 'Ask the citizen to scan this QR-code',
-      content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-      buttons: [{
-        text: 'Done',
-        onClick: function() {
-          app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-          if (!online)
-            enable('endorse-me-button');
-        }
-      }]
-    }).open();
-  }, { returnDetailedScanResult: true });
+    Keystore.sign('DirectDemocracyApp', challenge, openQR, failure);
+  }, {returnDetailedScanResult: true});
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
     disable('endorse-me-button');
@@ -453,6 +570,7 @@ window.onload = function() {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
+
     let binarySignature = '';
     for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(value.bytes[i]);
@@ -460,7 +578,7 @@ window.onload = function() {
     // get endorsee from fingerprint
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
-      .then((answer) => {
+      .then(async function(answer) {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
@@ -468,16 +586,36 @@ window.onload = function() {
           return;
         }
         // verify signature of endorsed
+        const publicKey = await importKey(endorsed.key);
+        let bytes = base64ToByteArray(signature);
+        const challengeArrayBuffer = new TextEncoder().encode(challenge);
+        let verify = await window.crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          publicKey,
+          bytes,
+          challengeArrayBuffer,
+        );
+
         let endorsedSignature = endorsed.signature;
         endorsed.signature = '';
-        let verify = new JSEncrypt();
-        verify.setPublicKey(publicKey(endorsed.key));
-        if (!verify.verify(challenge, signature, CryptoJS.SHA256)) {
+        if (!verify) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
           enable('endorse-button');
           return;
         }
-        if (!verify.verify(JSON.stringify(endorsed), endorsedSignature, CryptoJS.SHA256)) {
+
+        bytes = base64ToByteArray(endorsedSignature);
+        
+        const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
+
+        verify = await window.crypto.subtle.verify(
+          "RSASSA-PKCS1-v1_5",
+          publicKey,
+          bytes,
+          encoded,
+        );
+
+        if (!verify) {
           app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
           enable('endorse-button');
           return;
@@ -542,30 +680,15 @@ window.onload = function() {
   document.getElementById('endorse-confirm').addEventListener('click', function() {
     hide('endorse-citizen');
     show('endorse-page');
-    let endorsement = {
+    endorsementToPublish = {
       schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
       endorsedSignature: endorsed.signature
     };
-    endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-    fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsement) })
-      .then((response) => response.json())
-      .then((answer) => {
-        if (answer.error)
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-        else {
-          app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-          // FIXME: we should actually add the new endorsee in the endorsements list
-          updateEndorsements();
-        }
-        enable('endorse-button');
-      })
-      .catch((error) => {
-        console.error(`Could publish citizen card.`);
-        console.error(error);
-      });
+
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure);
   });
 
   const referendumVideo = document.getElementById('referendum-video');
@@ -692,15 +815,16 @@ window.onload = function() {
     getProposal(fingerprint, type);
   }
 
-  function getProposal(fingerprint, type) {
+  async function getProposal(fingerprint, type) {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
-      .then((proposal) => {
+      .then(async function(proposal) {
         if (proposal.error) {
           console.error(`Proposal error: ${proposal.error}`);
           return;
         }
-        if (!verifyProposalSignature(proposal))
+        const signatureIsLegit = await verifyProposalSignature(proposal);
+        if (!signatureIsLegit)
           return;
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
         const deadline = new Date(proposal.deadline * 1000).toLocaleString();
@@ -723,7 +847,10 @@ window.onload = function() {
           let already = false;
           let proposals = (type === 'petition') ? petitions : referendums;
           for (let p of proposals) {
-            if (CryptoJS.SHA1(CryptoJS.enc.Base64.parse(p.signature)) == fingerprint) {
+            const bytes = base64ToByteArray(p.signature);
+            const bytesArray = await crypto.subtle.digest("SHA-1", bytes);
+            const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+            if (sha1 == fingerprint) {
               if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this ${type}.`);
                 app.accordion.open(document.getElementById(`${type}-${p.id}`));
@@ -783,8 +910,7 @@ window.onload = function() {
       });
   }
 
-  function verifyProposalSignature(proposal) {
-    let signature = proposal.signature;
+  async function verifyProposalSignature(proposal) {
     let p = {
       'schema': proposal.schema,
       'key': proposal.key,
@@ -803,9 +929,19 @@ window.onload = function() {
     p['deadline'] = proposal.deadline;
     if (p.website)
       p['website'] = proposal.website;
-    let verify = new JSEncrypt();
-    verify.setPublicKey(publicKey(proposal.key));
-    if (!verify.verify(JSON.stringify(p), proposal.signature, CryptoJS.SHA256)) {
+
+    const publicKey = await importKey(proposal.key);
+
+    const bytes = base64ToByteArray(proposal.signature);
+    const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
+    const verify = await window.crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      bytes,
+      packetArrayBuffer,
+    );
+
+    if (!verify) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
       return false;
     }
@@ -896,27 +1032,15 @@ window.onload = function() {
         disable(button);
       button.addEventListener('click', function() {
         app.dialog.confirm('Your name and signature will be published to show publicly your support to this petition.', 'Sign Petition?', function() {
-          let endorsement = {
+          petitionEndorsement = {
             schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
             key: citizen.key,
             signature: '',
             published: Math.trunc(new Date().getTime() / 1000),
             endorsedSignature: proposal.signature
           };
-          endorsement.signature = citizenCrypt.sign(JSON.stringify(endorsement), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsement) })
-            .then((response) => response.json())
-            .then((answer) => {
-              if (answer.error)
-                app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-              else {
-                app.dialog.alert(`You successfully signed the petition entitled "${proposal.title}"`, 'Signed!');
-                button.innerHTML = 'Signed';
-                proposal.done = true;
-                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-                disable(button);
-              }
-            });
+          petitionInfo = [button, proposal];
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure);
         });
       });
     } else { // referendum
@@ -925,18 +1049,28 @@ window.onload = function() {
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(`You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`, 'Vote?', function() {
-          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${proposal.signature}`)
+          fetch(`${notary}/api/participation.php?station=${encodeURIComponent(station)}&referendum=${encodeURIComponent(proposal.signature)}`)
             .then((response) => response.json())
-            .then((participation) => {
+            .then(async function(participation) {
               if (participation.schema != `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
                 app.dialog.alert('Wrong participation schema', 'Vote error');
                 return;
               }
               const signature = participation.signature;
               participation.signature = '';
-              let verify = new JSEncrypt();
-              verify.setPublicKey(publicKey(participation.key));
-              if (!verify.verify(JSON.stringify(participation), signature, CryptoJS.SHA256)) {
+
+              // verify signature of endorsed
+              const publicKey = await importKey(participation.key);
+              const bytes = base64ToByteArray(signature);
+              const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
+              let verify = await window.crypto.subtle.verify(
+                "RSASSA-PKCS1-v1_5",
+                publicKey,
+                bytes,
+                participationArrayBuffer,
+              );
+
+              if (!verify) {
                 app.dialog.alert('Cannot verify participation signature', 'Vote error');
                 return;
               }
@@ -946,8 +1080,8 @@ window.onload = function() {
                 number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
                 answer: answer
               };
-              const encryptedVote = citizenCrypt.encrypt(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
-              let registration = {
+              const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
+              voteRegistration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
                 key: citizen.key,
                 signature: '',
@@ -955,21 +1089,7 @@ window.onload = function() {
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
               };
-              registration.signature = citizenCrypt.sign(JSON.stringify(registration), CryptoJS.SHA256, 'sha256');
-              fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registration) })
-                .then((response) => response.json())
-                .then((answer) => {
-                  if (answer.error) {
-                    app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
-                    return;
-                  }
-                  fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registration) })
-                    .then((response) => response.json())
-                    .then((answer) => {
-                      if (answer.error)
-                        app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-                    });
-                });
+              Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure);
             });
         });
       });
@@ -1027,8 +1147,7 @@ window.onload = function() {
       return;
     if (!document.getElementById('register-confirm').checked)
       return;
-    if (!localStorage.getItem('privateKey'))
-      return;
+
     enable('register-button');
   }
 
@@ -1120,41 +1239,6 @@ window.onload = function() {
     };
     navigator.camera.getPicture(successCallback, errorCallback, options);
   }
-
-  function privateKeyAvailable(message) {
-    const register = 'register';
-    let text = document.getElementById('register-button-text');
-    text.innerHTML = translator.translate(register);
-    text.setAttribute('data-i18n', register);
-    hide('register-button-preloader');
-    document.getElementById('registration-button-message').innerHTML = message;
-    validateRegistration();
-  }
-
-  function createNewKey() {
-    let dt = new Date();
-    let time = -(dt.getTime());
-    citizenCrypt = new JSEncrypt({ default_key_size: 2048 });
-    citizenCrypt.getKey(function() {
-      dt = new Date();
-      time += (dt.getTime());
-      privateKey = citizenCrypt.getPrivateKey();
-      localStorage.setItem('privateKey', privateKey);
-      const n = Number(time / 1000).toFixed(2);
-      privateKeyAvailable(translator.translate('key-forge-time', n));
-    });
-  }
-
-  function strippedKey(publicKey) {
-    let stripped = '';
-    const header = '-----BEGIN PUBLIC KEY-----\n'.length;
-    const footer = '-----END PUBLIC KEY-----'.length;
-    const l = publicKey.length - footer;
-    for (let i = header; i < l; i += 65)
-      stripped += publicKey.substr(i, 64);
-    stripped = stripped.slice(0, -1 - footer);
-    return stripped;
-  }
 };
 
 function updateProposalLink() {
@@ -1183,7 +1267,7 @@ function updateCitizenCard() {
   document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
   let published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').innerHTML = published.toISOString().slice(0, 10);
-  citizenFingerprint = CryptoJS.SHA1(CryptoJS.enc.Base64.parse(citizen.signature));
+  citizenFingerprint = localStorage.getItem('citizenFingerprint');
   getReputationFromJudge();
   updateCitizenEndorsements();
 }
@@ -1192,7 +1276,7 @@ function downloadCitizen() {
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'key=' + encodeURIComponent(strippedKey(citizenCrypt.getPublicKey()))
+    body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
   })
     .then((response) => response.json())
     .then((answer) => {
@@ -1200,7 +1284,7 @@ function downloadCitizen() {
         app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
       else {
         citizen = answer.citizen;
-        citizen.key = strippedKey(citizenCrypt.getPublicKey());
+        citizen.key = localStorage.getItem('publicKey');
         endorsements = answer.endorsements;
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
@@ -1339,7 +1423,7 @@ function updateEndorsements() {
       a.style.textTransform = 'uppercase';
       a.addEventListener('click', function() {
         function revoke() {
-          let e = {
+          revokationToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
             key: citizen.key,
             signature: '',
@@ -1347,18 +1431,10 @@ function updateEndorsements() {
             revoke: true,
             endorsedSignature: endorsement.signature
           };
-          e.signature = citizenCrypt.sign(JSON.stringify(e), CryptoJS.SHA256, 'sha256');
-          fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(e) })
-            .then((response) => response.json())
-            .then((answer) => {
-              if (answer.error) {
-                app.dialog.alert(answer.error, 'Revocation error');
-                return;
-              }
-              app.dialog.alert(`You successfully revoked ${endorsement.givenNames} ${endorsement.familyName}`, 'Revocation success');
-              endorsements.splice(endorsements.indexOf(endorsement), 1); // remove it from array
-              updateEndorsements();
-            });
+
+          endorsementToRevoke = endorsement;
+
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure);
         }
         const text = '<p class="text-align-left">' +
           'You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?' +
@@ -1463,26 +1539,6 @@ function show(item) {
 
 function hide(item) {
   addClass(item, 'display-none');
-}
-
-function publicKey(key) {
-  let pkey = '-----BEGIN PUBLIC KEY-----\n';
-  const l = key.length;
-  for (let i = 0; i < l; i += 64)
-    pkey += key.substr(i, 64) + '\n';
-  pkey += '-----END PUBLIC KEY-----';
-  return pkey;
-}
-
-function strippedKey(publicKey) {
-  let stripped = '';
-  const header = '-----BEGIN PUBLIC KEY-----\n'.length;
-  const footer = '-----END PUBLIC KEY-----'.length;
-  const l = publicKey.length - footer;
-  for (let i = header; i < l; i += 65)
-    stripped += publicKey.substr(i, 64);
-  stripped = stripped.slice(0, -1 - footer);
-  return stripped;
 }
 
 function newElement(parent, type, classes, innerHTML) {
