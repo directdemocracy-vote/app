@@ -275,8 +275,8 @@ function signPetitionCallback(signature) {
 function publishEndorsement(signature) {
   endorsementToPublish.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsementToPublish) })
-  .then((response) => response.json())
-  .then((answer) => {
+  .then(response => response.json())
+  .then(answer => {
     if (answer.error)
       app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
     else {
