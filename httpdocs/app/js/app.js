@@ -90,7 +90,7 @@ function sanitizeWebservice(string) {
 }
 
 async function importKey(key) {
-  const bytes = base64ToByteArray(key)
+  const bytes = base64ToByteArray(key);
   const publicKey = await window.crypto.subtle.importKey(
     "spki",
     bytes,
@@ -106,8 +106,8 @@ async function importKey(key) {
 }
 
 function base64ToByteArray(base64) {
-  let binaryString = atob(base64);
-  let bytes = new Uint8Array(binaryString.length);
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++)
      bytes[i] = binaryString.charCodeAt(i);
 
@@ -239,7 +239,7 @@ async function openQR(signature) {
 }
 
 function revokeCallback(signature) {
-  revokationToPublish.signature = signature
+  revokationToPublish.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(revokationToPublish) })
   .then((response) => response.json())
   .then((answer) => {
@@ -273,7 +273,7 @@ function signPetitionCallback(signature) {
 }
 
 function publishEndorsement(signature) {
-  endorsementToPublish.signature = signature
+  endorsementToPublish.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsementToPublish) })
   .then((response) => response.json())
   .then((answer) => {
@@ -311,14 +311,9 @@ function publishVoteCallback(signature) {
 }
 
 function onDeviceReady() {
-
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
-  }
-
-  const success = function(message) {
-    alert(message)
   }
 
   if (!localStorage.getItem('publicKey'))
@@ -478,7 +473,7 @@ function showMenu(){
     citizen.givenNames = sanitizeString(document.getElementById('register-given-names').value.trim());
     citizen.familyName = sanitizeString(document.getElementById('register-family-name').value.trim());
     citizen.signature = '';
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure)
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure);
 
     return false;
   });
@@ -505,7 +500,7 @@ function showMenu(){
     challengeScanner.stop();
     showPage('card');
     let challenge = '';
-    for(let i = 0; i < 20; i++)
+    for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
     Keystore.sign('DirectDemocracyApp', challenge, openQR, failure);
   }, {returnDetailedScanResult: true});
@@ -612,7 +607,7 @@ function showMenu(){
 
         bytes = base64ToByteArray(endorsedSignature);
         
-        const encoded = new TextEncoder().encode(JSON.stringify(endorsed))
+        const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
 
         verify = await window.crypto.subtle.verify(
           "RSASSA-PKCS1-v1_5",
@@ -694,7 +689,7 @@ function showMenu(){
       endorsedSignature: endorsed.signature
     };
 
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure)
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure);
   });
 
   const referendumVideo = document.getElementById('referendum-video');
@@ -829,7 +824,7 @@ function showMenu(){
           console.error(`Proposal error: ${proposal.error}`);
           return;
         }
-        const signatureIsLegit = await verifyProposalSignature(proposal)
+        const signatureIsLegit = await verifyProposalSignature(proposal);
         if (!signatureIsLegit)
           return;
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
@@ -936,7 +931,7 @@ function showMenu(){
     if (p.website)
       p['website'] = proposal.website;
 
-    const publicKey = await importKey(proposal.key)
+    const publicKey = await importKey(proposal.key);
 
     const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
@@ -1046,7 +1041,7 @@ function showMenu(){
             endorsedSignature: proposal.signature
           };
           petitionInfo = [button, proposal];
-          Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure)
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure);
         });
       });
     } else { // referendum
@@ -1095,7 +1090,7 @@ function showMenu(){
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
               };
-              Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure)
+              Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure);
             });
         });
       });
@@ -1451,7 +1446,7 @@ function updateEndorsements() {
 
           endorsementToRevoke = endorsement;
 
-          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure)
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure);
         }
         const text = '<p class="text-align-left">' +
           'You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?' +
