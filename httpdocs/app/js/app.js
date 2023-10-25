@@ -127,7 +127,7 @@ function setupLanguagePicker() {
       textAlign: 'center',
       values: values
     }],
-    renderToolbar: function () {
+    renderToolbar: function() {
       return '<div class="toolbar"><div class="toolbar-inner"><div class="left"></div><div class="right">' +
         `<a class="link sheet-close popover-close" data-i18n="language-select">${translator.translate('language-select')}</a>` +
         '</div></div></div>';
@@ -150,9 +150,9 @@ function setupLanguagePicker() {
 translator.onready = function() {
   translatorIsReady = true;
   setupLanguagePicker();
-}
+};
 
-let app = new Framework7({el: '#app', name: 'directdemocracy', routes: [{path: '/', pageName: 'home'} ]});
+let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
 
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
@@ -169,7 +169,7 @@ app.on('pageBeforeRemove', function(page) {
   languagePicker = undefined;
 });
 
-let mainView = app.views.create('.view-main', {iosDynamicNavbar: false});
+let mainView = app.views.create('.view-main', { iosDynamicNavbar: false });
 
 window.addEventListener('online', () => {
   online = true;
@@ -197,7 +197,7 @@ async function publish(signature) {
   citizenFingerprint = await crypto.subtle.digest("SHA-1", bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', citizenFingerprint);
-  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(citizen)})
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -217,7 +217,7 @@ async function publish(signature) {
 async function openQR(signature) {
   signature = atob(signature);
   const qr = new QRious({
-    value: citizenFingerprint + signature,  // 276 bytes, e.g., 20 + 256
+    value: citizenFingerprint + signature, // 276 bytes, e.g., 20 + 256
     level: 'L',
     size: 1024,
     padding: 0
@@ -227,17 +227,20 @@ async function openQR(signature) {
   app.dialog.create({
     title: 'Ask the citizen to scan this QR-code',
     content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-    buttons: [{text: 'Done', onClick: function() {
-      app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-      if (!online)
-        enable('endorse-me-button');
-    }}]
+    buttons: [{
+      text: 'Done',
+      onClick: function() {
+        app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
+        if (!online)
+          enable('endorse-me-button');
+      }
+    }]
   }).open();
 }
 
 function revokeCallback(signature) {
   revokationToPublish.signature = signature
-  fetch(`${notary}/api/publish.php`, {method: 'POST', body: JSON.stringify(revokationToPublish)})
+  fetch(`${notary}/api/publish.php`, { method: 'POST', body: JSON.stringify(revokationToPublish) })
   .then((response) => response.json())
   .then((answer) => {
     if (answer.error) {
@@ -245,7 +248,7 @@ function revokeCallback(signature) {
       return;
     }
     app.dialog.alert(`You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`, 'Revocation success');
-    endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1);  // remove it from array
+    endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
     updateEndorsements();
   });
 }
@@ -254,7 +257,7 @@ function signPetitionCallback(signature) {
   petitionEndorsement.signature = signature;
   let button = petitionInfo[0];
   let proposal = petitionInfo[1];
-  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(petitionEndorsement)})
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(petitionEndorsement) })
   .then((response) => response.json())
   .then((answer) => {
     if (answer.error)
@@ -271,7 +274,7 @@ function signPetitionCallback(signature) {
 
 function publishEndorsement(signature) {
   endorsementToPublish.signature = signature
-  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(endorsementToPublish)})
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endorsementToPublish) })
   .then((response) => response.json())
   .then((answer) => {
     if (answer.error)
@@ -291,20 +294,18 @@ function publishEndorsement(signature) {
 
 function publishVoteCallback(signature) {
   voteRegistration.signature = signature;
-  fetch(`${notary}/api/publish.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(voteRegistration)})
+  fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error) {
         app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
         return;
       }
-      fetch(`${station}/api/registration.php`, {method: 'POST', headers: {"Content-Type": "application/json"}, body: JSON.stringify(voteRegistration)})
+      fetch(`${station}/api/registration.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
         .then((response) => response.json())
         .then((answer) => {
-          if (answer.error) {
+          if (answer.error)
             app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-            return;
-          }
         });
     });
 }
@@ -353,78 +354,8 @@ function showMenu(){
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
   // setting up the ID picture
-  document.getElementById('register-upload-button').addEventListener('click', uploadPicture);
-  document.getElementById('register-picture').addEventListener('click', uploadPicture);
-  document.getElementById('register-picture-upload').addEventListener('change', function(event) {
-    let content = {};
-    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-  <div class="toolbar">
-    <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
-      <div class="right">
-        <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
-      </div>
-    </div>
-  </div>
-  <div class="sheet-modal-inner">
-    <div class="block margin-top-half no-padding-left no-padding-right">
-      <p><img id="edit-picture"></p>
-      <div class="row">
-        <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
-        <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
-      </div>
-    </div>
-  </div>
-</div>`;
-    let croppie = null;
-    let sheet = app.sheet.create({
-      content: content.innerHTML,
-      on: {
-        opened: function() {
-          let img = document.getElementById('edit-picture');
-          img.src = URL.createObjectURL(event.target.files[0]);
-          event.target.value = '';
-          let w = screen.width * 0.95;
-          croppie = new Croppie(img, {
-            boundary: {
-              width: w,
-              height: w * 4 / 3
-            },
-            viewport: {
-              width: w * 0.75,
-              height: w * 0.75 * 4 / 3
-            },
-            enableOrientation: true,
-            enableExif: true
-          });
-          document.getElementById('rotate-right').addEventListener('click', function() {
-            croppie.rotate(-90);
-          });
-          document.getElementById('rotate-left').addEventListener('click', function() {
-            croppie.rotate(90);
-          });
-        },
-        close: function() {
-          croppie.result({
-            type: 'base64',
-            size: {
-              width: 150,
-              height: 200
-            },
-            format: 'jpeg',
-            quality: 0.95
-          }).then(function(result) {
-            document.getElementById('register-picture').setAttribute('src', result);
-            citizen.picture = result;
-            croppie.destroy();
-            croppie = null;
-            validateRegistration();
-          });
-        }
-      }
-    });
-    sheet.open();
-  });
+  document.getElementById('register-camera-picture').addEventListener('click', uploadPicture);
+  document.getElementById('register-file-picture').addEventListener('click', uploadPicture);
 
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', function() {
@@ -487,11 +418,12 @@ function showMenu(){
               if (geolocation)
                 return;
               const coords = answer.split(',');
-              getGeolocationPosition({coords: {latitude: coords[0], longitude: coords[1]}});
+              getGeolocationPosition({ coords: { latitude: coords[0], longitude: coords[1] } });
             })
             .catch((error) => {
               console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
               console.error(error);
+              getGeolocationPosition({ coords: { latitude: 46.517493, longitude: 6.629111 } }); // default to Lausanne
             });
           let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -596,29 +528,38 @@ function showMenu(){
     app.dialog.create({
       title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
       text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
-      buttons: [{text: 'Confirm', onClick: function() {
-        const randomBytes = new Uint8Array(20);
-        crypto.getRandomValues(randomBytes);
-        challenge = '';
-        randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
-        const qr = new QRious({
-          value: challenge,
-          level: 'L',
-          size: 512,
-          padding: 0
-        });
-        app.dialog.create({
-          title: 'Ask the citizen to scan this QR-code',
-          content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-          buttons: [{text: 'Done', onClick: function() {
-            hide('endorse-page');
-            show('endorse-scanner');
-            answerScanner.start();
-          }}]
-        }).open();
-      }}, {text: 'Cancel', onClick: function() {
-        enable('endorse-button');
-      }}]
+      buttons: [{
+        text: 'Confirm',
+        onClick: function() {
+          const randomBytes = new Uint8Array(20);
+          crypto.getRandomValues(randomBytes);
+          challenge = '';
+          randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
+          const qr = new QRious({
+            value: challenge,
+            level: 'L',
+            size: 512,
+            padding: 0
+          });
+          app.dialog.create({
+            title: 'Ask the citizen to scan this QR-code',
+            content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
+            buttons: [{
+              text: 'Done',
+              onClick: function() {
+                hide('endorse-page');
+                show('endorse-scanner');
+                answerScanner.start();
+              }
+            }]
+          }).open();
+        }
+      }, {
+        text: 'Cancel',
+        onClick: function() {
+          enable('endorse-button');
+        }
+      }]
     }).open();
   });
 
@@ -631,13 +572,13 @@ function showMenu(){
     show('endorse-page');
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
 
     let binarySignature = '';
-    for(let i=20; i < 276; i++)
+    for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(value.bytes[i]);
     const signature = btoa(binarySignature);
     // get endorsee from fingerprint
@@ -702,8 +643,8 @@ function showMenu(){
         let published = new Date(endorsed.published * 1000);
         document.getElementById('endorse-published').innerHTML = published.toISOString().slice(0, 10);
         if (endorseMap == null) {
-          endorseMap = L.map('endorse-map', {dragging: false});
-          endorseMap.whenReady(function() {setTimeout(() => {this.invalidateSize();}, 0);});
+          endorseMap = L.map('endorse-map', { dragging: false });
+          endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
           }).addTo(endorseMap);
@@ -722,7 +663,7 @@ function showMenu(){
             endorseMarker.setPopupContent(address + '<br><br><center style="color:#999">' + `(${lat}, ${lon})` + '</center>').openPopup();
           });
       });
-  },{returnDetailedScanResult: true});
+  }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
   document.getElementById('endorse-name-check').addEventListener('change', updateEndorseConfirm);
@@ -752,16 +693,17 @@ function showMenu(){
       published: Math.trunc(new Date().getTime() / 1000),
       endorsedSignature: endorsed.signature
     };
+
     Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure)
   });
 
   const referendumVideo = document.getElementById('referendum-video');
   referendumVideo.addEventListener('loadedmetadata', qrVideo);
-  referendumScanner = new QrScanner(referendumVideo, scanProposal, {returnDetailedScanResult: true});
+  referendumScanner = new QrScanner(referendumVideo, scanProposal, { returnDetailedScanResult: true });
 
   const petitionVideo = document.getElementById('petition-video');
   petitionVideo.addEventListener('loadedmetadata', qrVideo);
-  petitionScanner = new QrScanner(petitionVideo, scanProposal, {returnDetailedScanResult: true});
+  petitionScanner = new QrScanner(petitionVideo, scanProposal, { returnDetailedScanResult: true });
 
   document.getElementById('scan-referendum').addEventListener('click', function() {
     hide('referendum-page');
@@ -786,7 +728,7 @@ function showMenu(){
   });
   referendumSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData("text");
+    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('referendum');
   });
 
@@ -797,7 +739,7 @@ function showMenu(){
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData("text");
+    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('petition');
   });
 
@@ -851,7 +793,7 @@ function showMenu(){
 
   referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
-  referendums = [];
+    referendums = [];
   referendums.forEach(function(referendum) {
     if (referendum.id !== undefined)
       addProposal(referendum, 'referendum', false);
@@ -872,7 +814,7 @@ function showMenu(){
     show(`${type}-page`);
     let fingerprint = '';
     const hex = '0123456789abcdef';
-    for(let i=0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       const b = value.bytes[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
@@ -899,13 +841,13 @@ function showMenu(){
           app.dialog.alert(`${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`, 'Not a referendum');
         else if (!proposal.inside) {
           const message = (type === 'petition')
-                        ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
-                        : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
+            ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot sign it.`
+            : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Wrong area');
         } else if (outdated) {
           const message = (type === 'petition')
-                        ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
-                        : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
+            ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
+            : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
           app.dialog.alert(`${title}${message}`, 'Deadline expired');
         } else {
           let already = false;
@@ -921,7 +863,7 @@ function showMenu(){
               } else { // already there, insert at position 0 and reset the missing fields
                 p.id = 0;
                 let i = 0;
-                for(let p2 of proposals)
+                for (let p2 of proposals)
                   p2.id = i++;
                 p.title = proposal.title;
                 p.description = proposal.description;
@@ -1053,7 +995,7 @@ function showMenu(){
       p.style.fontWeight = 'bold';
       p.innerHTML = proposal.question;
       block.appendChild(p);
-      for(let answer of proposal.answers) {
+      for (let answer of proposal.answers) {
         let label = document.createElement('label');
         block.appendChild(label);
         label.classList.add('radio', 'display-flex', 'margin-bottom-half');
@@ -1105,9 +1047,9 @@ function showMenu(){
           };
           petitionInfo = [button, proposal];
           Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure)
-          });
+        });
       });
-    } else {  // referendum
+    } else { // referendum
       button.innerHTML = proposal.done ? 'Voted' : 'Vote';
       disable(button);
       button.addEventListener('click', function(event) {
@@ -1141,9 +1083,9 @@ function showMenu(){
               const voteNumber = new Uint8Array(20);
               crypto.getRandomValues(voteNumber);
               let vote = {
-                number: btoa(String.fromCharCode(...voteNumber)),  // base64 encoding
+                number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
                 answer: answer
-              }
+              };
               const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
               voteRegistration = {
                 schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
@@ -1152,7 +1094,7 @@ function showMenu(){
                 published: Math.trunc(new Date().getTime() / 1000),
                 blindKey: participation.blindKey,
                 encryptedVote: encryptedVote
-              }
+              };
               Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure)
             });
         });
@@ -1166,15 +1108,15 @@ function showMenu(){
       const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
       app.dialog.confirm(`This ${type} will be removed from your list, but you can fetch it again if needed.`, `Remove ${uppercaseType}?`, function() {
         document.getElementById(`${type}s`).removeChild(item);
-        if (!proposal.done) {  // actually remove it
+        if (!proposal.done) { // actually remove it
           const index = proposals.indexOf(proposal);
           proposals.splice(index, 1);
           let i = 0;
           proposals.forEach(function(p) {
             p.id = i++;
           });
-        } else {  // remove useless fields, keep only done and fingerprint
-          delete proposal.id;  // hidden
+        } else { // remove useless fields, keep only done and fingerprint
+          delete proposal.id; // hidden
           delete proposal.published;
           delete proposal.signature;
           delete proposal.title;
@@ -1215,8 +1157,93 @@ function showMenu(){
     enable('register-button');
   }
 
-  function uploadPicture() {
-    document.getElementById('register-picture-upload').click();
+  function uploadPicture(event) {
+    const sourceType = event.currentTarget === document.getElementById('register-camera-picture')
+      ? Camera.PictureSourceType.CAMERA
+      : Camera.PictureSourceType.PHOTOLIBRARY;
+    function successCallback(imageData) {
+      let content = {};
+      content.innerHTML = `<div class="sheet-modal" style="height: 100%">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
+        <div class="right">
+          <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="block margin-top-half no-padding-left no-padding-right">
+        <p><img id="edit-picture"></p>
+        <div class="row">
+          <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
+          <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+      let croppie = null;
+      let sheet = app.sheet.create({
+        content: content.innerHTML,
+        on: {
+          opened: function() {
+            let img = document.getElementById('edit-picture');
+            img.src = 'data:image/jpeg;base64,' + imageData;
+            let w = screen.width * 0.95;
+            croppie = new Croppie(img, {
+              boundary: {
+                width: w,
+                height: w * 4 / 3
+              },
+              viewport: {
+                width: w * 0.75,
+                height: w * 0.75 * 4 / 3
+              },
+              enableOrientation: true,
+              enableExif: true
+            });
+            document.getElementById('rotate-right').addEventListener('click', function() {
+              croppie.rotate(-90);
+            });
+            document.getElementById('rotate-left').addEventListener('click', function() {
+              croppie.rotate(90);
+            });
+          },
+          close: function() {
+            croppie.result({
+              type: 'base64',
+              size: {
+                width: 150,
+                height: 200
+              },
+              format: 'jpeg',
+              quality: 0.95
+            }).then(function(result) {
+              document.getElementById('register-picture').setAttribute('src', result);
+              citizen.picture = result;
+              croppie.destroy();
+              croppie = null;
+              validateRegistration();
+            });
+          }
+        }
+      });
+      sheet.open();
+    }
+    function errorCallback(message) {
+      // console.log('Cannot get picture: ' + message);
+    }
+    const options = {
+      quality: 90,
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: sourceType,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 1500,
+      targetHeight: 2000,
+      mediaType: Camera.MediaType.PICTURE,
+      cameraDirection: Camera.Direction.BACK
+    };
+    navigator.camera.getPicture(successCallback, errorCallback, options);
   }
 
   function strippedKey(publicKey) {
@@ -1229,7 +1256,7 @@ function showMenu(){
     stripped = stripped.slice(0, -1 - footer);
     return stripped;
   }
-}
+};
 
 function updateProposalLink() {
   let proposal = document.getElementById('proposal');
@@ -1263,7 +1290,11 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  fetch(`${notary}/api/citizen.php`, {method: 'POST', headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))})
+  fetch(`${notary}/api/citizen.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
+  })
     .then((response) => response.json())
     .then((answer) => {
       if (answer.error)
@@ -1310,7 +1341,8 @@ function getReputationFromJudge() {
         badge.classList.add('color-' + color);
         updateProposals(petitions);
         updateProposals(referendums);
-      }})
+      }
+    })
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
     });
@@ -1318,7 +1350,7 @@ function getReputationFromJudge() {
 
 function updateProposals(proposals) {
   const type = (proposals === petitions) ? 'petition' : 'referendum';
-  for(let proposal of proposals) {
+  for (let proposal of proposals) {
     if (proposal.judge == judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
@@ -1368,7 +1400,7 @@ function updateCitizenEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
-    message.style.fontSize='82.353%';
+    message.style.fontSize = '82.353%';
     if (endorsement.revoke) {
       message.style.fontWeight = 'bold';
       message.style.color = 'red';
@@ -1396,7 +1428,7 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
-    message.style.fontSize='82.353%';
+    message.style.fontSize = '82.353%';
     if (endorsement.revoke) {
       message.style.color = 'red';
       count++;
@@ -1422,23 +1454,23 @@ function updateEndorsements() {
           Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure)
         }
         const text = '<p class="text-align-left">' +
-          "You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?" +
+          'You should revoke only a citizen who has moved or changed her citizen card. This might affect their ability to vote. Do you really want to revoke this citizen?' +
           `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
-          "Please type <b>I understand</b> here:" +
+          'Please type <b>I understand</b> here:' +
           '</p>';
         app.dialog.create({
           title: 'Revoke Citizen',
           text,
           content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
           buttons: [{
-              text: app.params.dialog.buttonCancel,
-              keyCodes: app.keyboardActions ? [27] : null
-            },
-            {
-              text: app.params.dialog.buttonOk,
-              bold: true,
-              keyCodes: app.keyboardActions ? [13] : null
-            }],
+            text: app.params.dialog.buttonCancel,
+            keyCodes: app.keyboardActions ? [27] : null
+          },
+          {
+            text: app.params.dialog.buttonOk,
+            bold: true,
+            keyCodes: app.keyboardActions ? [13] : null
+          }],
           destroyOnClose: true,
           onClick: function(dialog, index) {
             if (index === 1) // OK

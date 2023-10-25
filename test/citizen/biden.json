@@ -1,0 +1,11 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "givenNames": "Joe",
+    "familyName": "Biden",
+    "picture": "",
+    "latitude": 46.5257,
+    "longitude": 6.5629
+}
