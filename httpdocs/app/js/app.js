@@ -295,8 +295,8 @@ function publishEndorsement(signature) {
 function publishVoteCallback(signature) {
   voteRegistration.signature = signature;
   fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(voteRegistration) })
-    .then((response) => response.json())
-    .then((answer) => {
+    .then(response => response.json())
+    .then(answer => {
       if (answer.error) {
         app.dialog.alert(`Cannot publish registration: ${answer.error}`, 'Vote error');
         return;
