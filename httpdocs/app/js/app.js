@@ -198,8 +198,8 @@ async function publish(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', citizenFingerprint);
   fetch(`${notary}/api/publish.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(citizen) })
-    .then((response) => response.json())
-    .then((answer) => {
+    .then(response => response.json())
+    .then(answer => {
       if (answer.error)
         app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
       else {
