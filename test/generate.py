@@ -12,7 +12,17 @@ from Crypto.Signature import PKCS1_v1_5
 notary = 'https://notary.directdemocracy.vote'
 
 
-def generate_citizens():
+def generate_app():
+    key = RSA.generate(2048)
+    key_file = 'id_rsa'
+    with open(key_file, 'wb') as file:
+        os.chmod(key_file, 0o600)
+        file.write(key.exportKey('PEM'))
+    pkey_file = 'id_rsa.pub'
+    with open(pkey_file, 'wb') as file:
+        file.write(key.publickey().exportKey('PEM'))
+
+def generate_citizens(save=False):
     if not os.path.isdir('key'):
         os.mkdir('key')
     for filename in os.listdir('citizen'):
@@ -53,9 +63,10 @@ def generate_citizens():
                     sys.exit('Error: ' + answer['error'])
                 else:
                     sys.exit('Error: ' + response.text)
-            with open(citizen_file, 'w', encoding='utf8', newline='\n') as file:
-                file.write(json.dumps(citizen, indent=4, ensure_ascii=False))
-                file.write("\n")
+            if save:
+                with open(citizen_file, 'w', encoding='utf8', newline='\n') as file:
+                    file.write(json.dumps(citizen, indent=4, ensure_ascii=False))
+                    file.write("\n")
             print('.', end='', flush=True)
             print('')
 
@@ -97,5 +108,6 @@ def generate_endorsements():
             print('')
 
 
-generate_citizens()
-generate_endorsements()
+generate_app()
+# generate_citizens()
+# generate_endorsements()
