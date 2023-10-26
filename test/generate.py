@@ -13,6 +13,8 @@ notary = 'https://notary.directdemocracy.vote'
 
 
 def generate_citizens():
+    if not os.path.isdir('key'):
+        os.mkdir('key')
     for filename in os.listdir('citizen'):
         if filename.endswith('.json'):
             citizen_name = filename[:-5]
