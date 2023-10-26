@@ -12,6 +12,9 @@ from Crypto.Signature import PKCS1_v1_5
 notary = 'https://notary.directdemocracy.vote'
 
 
+def public_key(key):
+    return key.publicKey().exportKey('PEM')[27:-25].decode('ascii').replace("\n", '')
+
 def generate_app():
     key = RSA.generate(2048)
     key_file = 'id_rsa'
@@ -23,6 +26,8 @@ def generate_app():
         file.write(key.publickey().exportKey('PEM'))
 
 def generate_citizens(save=False):
+    with open('id_rsa', 'r') as file:
+        app_key = RSA.importKey(file.read())
     if not os.path.isdir('key'):
         os.mkdir('key')
     for filename in os.listdir('citizen'):
@@ -46,12 +51,16 @@ def generate_citizens(save=False):
             with open(key_file, 'wb') as file:
                 os.chmod(key_file, 0o600)
                 file.write(key.exportKey('PEM'))
-            pubkey = key.publickey().exportKey('PEM')[27:-25].decode('ascii').replace("\n", '')
-            citizen['key'] = pubkey
+            citizen['key'] = public_key(key)
             citizen['signature'] = ''
+            citizen['appKey'] = public_key(app_key)
+            citizen['appSignature'] = ''
             message = json.dumps(citizen, ensure_ascii=False, separators=(',', ':')).encode('utf8')
             h = SHA256.new(message)
             citizen['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
+            message = json.dumps(citizen, ensure_ascii=False, separators=(',', ':')).encode('utf8')
+            h = SHA256.new(message)
+            citizen['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')
             url = notary + '/api/publish.php'
             response = requests.post(url, json=citizen)
             try:
@@ -72,6 +81,8 @@ def generate_citizens(save=False):
 
 
 def generate_endorsements():
+    with open('id_rsa', 'r') as file:
+        app_key = RSA.importKey(file.read())
     for citizen_filename in os.listdir('citizen'):
         if citizen_filename.endswith('.json'):
             citizen_name = citizen_filename[:-5]
@@ -90,6 +101,8 @@ def generate_endorsements():
                     endorsement['key'] = citizen['key']
                     endorsement['signature'] = ''
                     endorsement['published'] = int(time.time())
+                    endorsement['appKey'] = public_key(app_key)
+                    endorsement['appSignature'] = ''
                     endorsement['endorsedSignature'] = endorsed['signature']
                     message = json.dumps(endorsement, ensure_ascii=False, separators=(',', ':')).encode('utf8')
                     h = SHA256.new(message)
@@ -97,6 +110,9 @@ def generate_endorsements():
                     with open(key_file, 'r') as file:
                         key = RSA.importKey(file.read())
                     endorsement['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
+                    message = json.dumps(endorsement, ensure_ascii=False, separators=(',', ':')).encode('utf8')
+                    h = SHA256.new(message)
+                    endorsement['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')
                     print(' ' + endorsed_name, end='', flush=True)
                     response = requests.post(notary + '/api/publish.php', json=endorsement)
                     try:
@@ -108,6 +124,6 @@ def generate_endorsements():
             print('')
 
 
-generate_app()
-# generate_citizens()
-# generate_endorsements()
+# generate_app()
+generate_citizens()
+generate_endorsements()
