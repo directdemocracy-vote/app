@@ -1,24 +1,42 @@
-/* global Framework7, QRious, Keystore, L, Camera, Croppie */
+/* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity */
 
 import QrScanner from './qr-scanner.min.js';
 import Translator from './translator.js';
 
-/* This doesn't work on Android/firefox, should be implemented with Cordova
-if (typeof screen.orientation.lock === 'function')
-  screen.orientation.lock('portrait-primary')
-    .then(() => {
-      console.log('Locked screen to portrait orientation.');
-    })
-    .catch((error) => {
-      console.log('Cannot lock screen to portrait orientation.');
-    });
-else {
-  screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
-  if (!screen.lockOrientationUniversal('portrait-primary')) {
-    console.log('Failed to lock screen to portrait orientation.');
-  }
-}
-*/
+const DIRECTDEMOCRACY_VERSION = '2';
+const APP_PUBLIC_KEY = // public key of the app
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvD20QQ18u761ean1+zgq' +
+  'lDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8I' +
+  'k4CN63elBj4ELU70xZeYXIMxxxDqisFgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5' +
+  'd4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFh' +
+  'zfmkXiVqFrQ5BHAf+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4O' +
+  'tklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3Iga' +
+  'rQIDAQAB';
+const EMULATOR_PRIVATE_KEY = // private key of the emulator and test app
+  'MIIEogIBAAKCAQEAnRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwz' +
+  'NdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8A' +
+  'b4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlY' +
+  'NhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QIor7U2raCVFSy' +
+  '7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkH' +
+  'hNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQIDAQABAoIBAEAsbbYo1CEpiI6H' +
+  'Wieg4is8y3sXCSnShGY5bUpKRELNeZ7Km9Dgnmf662jaKcfIoZJUqmXCg2Pt1iRV' +
+  'dxPiIuNFakQ0bLcHVeblmN2xBEZipNuuUys+mDYC85XEL0o1C5j1uXm6jJxtxFlq' +
+  'r9h6k5bWzHxM2ombA+xh28SG9E3LBOo9yof9caoI7R5o5Nw2K6XHDiByCuxomMHN' +
+  'Ai4FDvDG9B/jxC8g/XOkc5RhkM7romnrj6VTKYsgY7Fv30fOhJVXmpEGf/QvvveJ' +
+  'kPvMcimtN8CPSt8yh0s6YfNblzFVuV3lwFHK8x439NHw2niAijLbBJf5pv5xNknK' +
+  'I5ry8kuIWZMOFcZRACQKfX8mHRlrLQa6TF46dfQiZO5LSJtH4vma7Lqwe9DriXkE' +
+  'mA+sTjxwYuWmBlLxDREB3amgyrC1esOcEuslcOF5WpC/w0tdps8thh8CgYEAzfx0' +
+  'cr58Se/2unyejWMgOHtP2/bVxQLI26DKE6QAsVj+9/P9XugpIvTQDWu0CpgNipqA' +
+  'weRIsi/DIFQxxt5vMBWgw+q+yxb1TCPaA9arr4tEKpcfDtwEHr4HWZwOzHJwAyJF' +
+  'fhJE/Gpz7UOaTS+i7zPoEZA/aGs9VVJxymvTpqsCgYBI7tkSDBbK3lBlOAQrxUW6' +
+  'jrJqf32HDnwhjdaUb/bCEMEmz1xy1oZOxrlu7ex3mcmvNLBZnx0UGIWCZVZ2MYcy' +
+  'tBieq56Vmbch3nASSDApsuvutPLoHf8rVt+FMmrBZwyIXD+UJABQb+eTEEQbIiuR' +
+  'naoU6wXMYTphmCvZ/pcA/QKBgDKL6r9lgvZZzj/A6N9lHbj+eYBOt/JaVpOehzf+' +
+  'nLToU9jgpKIvcjjDvnIspcebvGbwtvvdWwFuuwEp5/UXDE3OYN7ysdMAVT1T5uHe' +
+  'Qc8X66hP4S0yTEiG9SLGKtN8mYQLWuYu8YLHVJ86YZjjQaZVJHN65DRpbGmNi6LS' +
+  'huN1AoGAdWpb8tNnke76kxyx+dq4sYJZAi2xrYz+lRRPkmUd4ssesHy3Xv0ZEruz' +
+  '/CbFAqRn/9060DVxlOhSym0D1q7SYlLlu2pbnQhFbTCELEZ7A4Cf466FRgt/d3eS' +
+  'OGevfhBnIEiPFPHdCz/f+oZOXig5nr7gVbP1WR7eb79AdLG+mOQ=';
 
 let languagePicker;
 let homePageIsReady = false;
@@ -29,12 +47,13 @@ let answerScanner = null;
 let petitionScanner = null;
 let referendumScanner = null;
 let translator = new Translator('i18n');
-const DIRECTDEMOCRACY_VERSION = '2';
 let citizen = {
   schema: '',
   key: '',
   signature: '',
   published: 0,
+  appKey: APP_PUBLIC_KEY,
+  appSignature: '',
   givenNames: '',
   familyName: '',
   picture: '',
@@ -82,7 +101,7 @@ function sanitizeWebservice(string) {
 
 async function importKey(key) {
   const bytes = base64ToByteArray(key);
-  const publicKey = await window.crypto.subtle.importKey(
+  const publicKey = await crypto.subtle.importKey(
     'spki',
     bytes,
     {
@@ -162,14 +181,14 @@ app.on('pageBeforeRemove', function(page) {
 
 app.views.create('.view-main', { iosDynamicNavbar: false });
 
-window.addEventListener('online', () => {
+addEventListener('online', () => {
   online = true;
   disable('endorse-me-button');
   downloadCitizen();
   getReputationFromJudge();
 });
 
-window.addEventListener('offline', () => {
+addEventListener('offline', () => {
   online = false;
   enable('endorse-me-button');
 });
@@ -177,17 +196,47 @@ window.addEventListener('offline', () => {
 // Wait for Cordova to be initialized.
 document.addEventListener('deviceready', onDeviceReady, false);
 
-function failure(e) {
-  app.dialog.alert(e, 'Error calling KeyStore Plugin');
+function keystoreFailure(e) {
+  app.dialog.alert(e, 'Keystore failure');
 }
 
-async function publish(signature) {
+async function publishCitizen(signature) {
   citizen.signature = signature;
-
   const bytes = base64ToByteArray(citizen.signature);
   citizenFingerprint = await crypto.subtle.digest('SHA-1', bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
-  localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
+  const citizenFingerprintBase64 = btoa(citizenFingerprint);
+  localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
+  integrity.check(citizenFingerprintBase64, function(token) { // success
+    console.log('token = ' + token);
+    alert(token);
+    fetch('https://app.directdemocracy.vote/api/integrity.php',
+      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + message })
+      .then(response => response.json())
+      .then(answer => {
+        console.log(answer);
+
+        // FIXME: this is incomplete
+      });
+  }, async function(message) { // failure
+    if (message.startsWith('-9: ')) { // Play Store should be updated error showing up in the emulator
+      // from here we consider that we are on the emulator: we will the emulator key to sign as an app
+      const privateKey = atob(EMULATOR_PRIVATE_KEY);
+      const buffer = new Uint8Array(new ArrayBuffer(privateKey.length));
+      for (let i = 0, len = privateKey.length; i < len; i++)
+        buffer[i] = privateKey.charCodeAt(i);
+      const pair = await crypto.subtle.importKey('pkcs8', buffer, {
+        name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'
+      }, true, ['sign']);
+      const publicKey = await crypto.subtle.exportKey('spki', pair.publicKey);
+      citizen.appKey = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+
+      // FIXME: this is incomplete
+    } else { // should not happen
+      console.error(message);
+      alert(message);
+    }
+  });
   fetch(`${notary}/api/publish.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -199,7 +248,7 @@ async function publish(signature) {
       else {
         updateCitizenCard();
         app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
-        window.localStorage.setItem('registered', true);
+        localStorage.setItem('registered', true);
       }
     })
     .catch((error) => {
@@ -322,9 +371,8 @@ function onDeviceReady() {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
   };
-
   if (!localStorage.getItem('publicKey'))
-    Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, failure);
+    Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, keystoreFailure);
   else
     showMenu();
 }
@@ -346,7 +394,7 @@ function showMenu() {
     localStorage.setItem('station', station);
   });
 
-  if (!window.localStorage.getItem('registered'))
+  if (!localStorage.getItem('registered'))
     showPage('register');
   else {
     showPage('splash');
@@ -484,7 +532,8 @@ function showMenu() {
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publish, failure);
+    citizen.appSignature = '';
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
     return false;
   });
@@ -513,7 +562,7 @@ function showMenu() {
     let challenge = '';
     for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    Keystore.sign('DirectDemocracyApp', challenge, openQR, failure);
+    Keystore.sign('DirectDemocracyApp', challenge, openQR, keystoreFailure);
   }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
@@ -601,7 +650,7 @@ function showMenu() {
         const publicKey = await importKey(endorsed.key);
         let bytes = base64ToByteArray(signature);
         const challengeArrayBuffer = new TextEncoder().encode(challenge);
-        let verify = await window.crypto.subtle.verify(
+        let verify = await crypto.subtle.verify(
           'RSASSA-PKCS1-v1_5',
           publicKey,
           bytes,
@@ -620,7 +669,7 @@ function showMenu() {
 
         const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
 
-        verify = await window.crypto.subtle.verify(
+        verify = await crypto.subtle.verify(
           'RSASSA-PKCS1-v1_5',
           publicKey,
           bytes,
@@ -700,7 +749,7 @@ function showMenu() {
       endorsedSignature: endorsed.signature
     };
 
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, failure);
+    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
 
   const referendumVideo = document.getElementById('referendum-video');
@@ -954,7 +1003,7 @@ function showMenu() {
 
     const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
-    const verify = await window.crypto.subtle.verify(
+    const verify = await crypto.subtle.verify(
       'RSASSA-PKCS1-v1_5',
       publicKey,
       bytes,
@@ -1078,7 +1127,7 @@ function showMenu() {
               endorsedSignature: proposal.signature
             };
             petitionInfo = [button, proposal];
-            Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, failure);
+            Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, keystoreFailure);
           });
       });
     } else { // referendum
@@ -1106,7 +1155,7 @@ function showMenu() {
                 const publicKey = await importKey(participation.key);
                 const bytes = base64ToByteArray(signature);
                 const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
-                let verify = await window.crypto.subtle.verify(
+                let verify = await crypto.subtle.verify(
                   'RSASSA-PKCS1-v1_5',
                   publicKey,
                   bytes,
@@ -1132,7 +1181,7 @@ function showMenu() {
                   blindKey: participation.blindKey,
                   encryptedVote: encryptedVote
                 };
-                Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, failure);
+                Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, keystoreFailure);
               });
           });
       });
@@ -1184,7 +1233,7 @@ function showMenu() {
       return;
     if (document.getElementById('register-family-name').value.trim() === '')
       return;
-    if (document.getElementById('register-picture').src === 'https://app.directdemocracy.vote/images/default-picture.png')
+    if (document.getElementById('register-picture').src === 'images/default-picture.png')
       return;
     if (document.getElementById('register-location').value === '')
       return;
@@ -1493,7 +1542,7 @@ function updateEndorsements() {
 
           endorsementToRevoke = endorsement;
 
-          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, failure);
+          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, keystoreFailure);
         }
         const text = '<p class="text-align-left">' +
           'You should revoke only a citizen who has moved or changed her citizen card. ' +
