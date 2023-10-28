@@ -1,4 +1,4 @@
-/* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity */
+/* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device */
 
 import QrScanner from './qr-scanner.min.js';
 import Translator from './translator.js';
@@ -52,7 +52,7 @@ let citizen = {
   key: '',
   signature: '',
   published: 0,
-  appKey: APP_PUBLIC_KEY,
+  appKey: '',
   appSignature: '',
   givenNames: '',
   familyName: '',
@@ -215,28 +215,11 @@ async function publishCitizen(signature) {
       .then(response => response.json())
       .then(answer => {
         console.log(answer);
-
         // FIXME: this is incomplete
       });
-  }, async function(message) { // failure
-    if (message.startsWith('-9: ')) { // Play Store should be updated error showing up in the emulator
-      // from here we consider that we are on the emulator: we will the emulator key to sign as an app
-      console.log('failed integrity');
-      const privateKey = atob(EMULATOR_PRIVATE_KEY);
-      const buffer = new Uint8Array(new ArrayBuffer(privateKey.length));
-      for (let i = 0, len = privateKey.length; i < len; i++)
-        buffer[i] = privateKey.charCodeAt(i);
-      const pair = await crypto.subtle.importKey('pkcs8', buffer, {
-        name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'
-      }, true, ['sign']);
-      const publicKey = await crypto.subtle.exportKey('spki', pair.publicKey);
-      citizen.appKey = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
-
-      // FIXME: this is incomplete
-    } else { // should not happen
-      console.error(message);
-      alert(message);
-    }
+  }, function(message) { // failure
+    console.error(message);
+    alert(message);
   });
   fetch(`${notary}/api/publish.php`, {
     method: 'POST',
@@ -368,7 +351,6 @@ function publishVoteCallback(signature) {
 }
 
 function onDeviceReady() {
-  alert(location.pathname); // => "/index.html" on emulator
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
@@ -521,7 +503,7 @@ function showMenu() {
   document.getElementById('register-confirm').addEventListener('input', validateRegistration);
 
   // registering
-  document.getElementById('register-button').addEventListener('click', function(event) {
+  document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
     let text = document.getElementById('register-button-text');
     const registration = 'registration';
@@ -534,6 +516,18 @@ function showMenu() {
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
+    if (device.isVirtual) {
+      const privateKey = atob(EMULATOR_PRIVATE_KEY);
+      const buffer = new Uint8Array(new ArrayBuffer(privateKey.length));
+      for (let i = 0, len = privateKey.length; i < len; i++)
+        buffer[i] = privateKey.charCodeAt(i);
+      const pair = await crypto.subtle.importKey('pkcs8', buffer, {
+        name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'
+      }, true, ['sign']);
+      const publicKey = await crypto.subtle.exportKey('spki', pair.publicKey);
+      citizen.appKey = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+    } else
+      citizen.appKey = APP_PUBLIC_KEY;
     citizen.appSignature = '';
     Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
