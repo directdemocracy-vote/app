@@ -208,12 +208,41 @@ async function publishCitizen(signature) {
   const citizenFingerprintBase64 = btoa(citizenFingerprint);
   localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
   integrity.check(citizenFingerprintBase64, function(token) { // success
-    console.log('token = ' + token);
-    alert(token);
-    fetch('https://app.directdemocracy.vote/api/integrity.php',
-      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + token })
-      .then(response => response.json())
+    citizen.token = token;
+    fetch('https://app.directdemocracy.vote/api/integrity.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(citizen)
+    }).then(response => response.json())
       .then(answer => {
+        delete citizen.token;
+        let error = [];
+        if (answer.schema !== citizen.schema)
+          error.push('schema');
+        if (answer.key !== citizen.key)
+          error.push('key');
+        if (answer.signature !== citizen.signature)
+          error.push('signature');
+        if (answer.published !== citizen.published)
+          error.push('published');
+        if (answer.appKey !== citizen.appKey)
+          error.push('appKey');
+        if (answer.givenNames !== citizen.givenNames)
+          error.push('givenNames');
+        if (answer.familyName !== citizen.familyName)
+          error.push('familyName');
+        if (answer.picture !== citizen.picture)
+          error.push('picture');
+        if (answer.latitude !== citizen.latitude)
+          error.push('latitude');
+        if (answer.longitude !== citizen.longitude)
+          error.push('longitude');
+        if (error.length > 0) {
+          const message = 'Fields changed: ' + error.join(', ') + '.';
+          alert(message);
+          return;
+        }
+        // check app signature
         console.log(answer);
         // FIXME: this is incomplete
       });
