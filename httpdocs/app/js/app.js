@@ -211,7 +211,7 @@ async function publishCitizen(signature) {
     console.log('token = ' + token);
     alert(token);
     fetch('https://app.directdemocracy.vote/api/integrity.php',
-      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + message })
+      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + token })
       .then(response => response.json())
       .then(answer => {
         console.log(answer);
@@ -221,6 +221,7 @@ async function publishCitizen(signature) {
   }, async function(message) { // failure
     if (message.startsWith('-9: ')) { // Play Store should be updated error showing up in the emulator
       // from here we consider that we are on the emulator: we will the emulator key to sign as an app
+      console.log('failed integrity');
       const privateKey = atob(EMULATOR_PRIVATE_KEY);
       const buffer = new Uint8Array(new ArrayBuffer(privateKey.length));
       for (let i = 0, len = privateKey.length; i < len; i++)
@@ -367,6 +368,7 @@ function publishVoteCallback(signature) {
 }
 
 function onDeviceReady() {
+  alert(location.pathname); // => "/index.html" on emulator
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
