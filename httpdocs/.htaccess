@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} ^app\.directdemocracy\.vote$
+RewriteRule .* https://app.directdemocracy.vote%{REQUEST_URI} [R=301,L]
+
+Header set Access-Control-Allow-Origin *
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type"
