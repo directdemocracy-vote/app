@@ -20,7 +20,7 @@ const EMULATOR_PUBLIC_KEY = // private key of the emulator and test app
   'yGxbXJ8B/B5hV4QIor7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vM' +
   'tQIDAQAB';
 
-const PRIVATE_KEY_NAME = 'vote.directdemocracy.app';
+const PRIVATE_KEY_NAME = 'DirectDemocracyApp';
 
 let languagePicker;
 let homePageIsReady = false;
@@ -191,6 +191,7 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   const citizenFingerprintBase64 = btoa(citizenFingerprint);
   localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
+  console.log('nonce = ' + citizenFingerprintBase64);
   integrity.check(citizenFingerprintBase64, function(token) { // success
     citizen.token = token;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
