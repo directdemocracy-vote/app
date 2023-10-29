@@ -12,31 +12,15 @@ const APP_PUBLIC_KEY = // public key of the app
   'zfmkXiVqFrQ5BHAf+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4O' +
   'tklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3Iga' +
   'rQIDAQAB';
-const EMULATOR_PRIVATE_KEY = // private key of the emulator and test app
-  'MIIEogIBAAKCAQEAnRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwz' +
-  'NdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8A' +
-  'b4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlY' +
-  'NhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QIor7U2raCVFSy' +
-  '7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkH' +
-  'hNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQIDAQABAoIBAEAsbbYo1CEpiI6H' +
-  'Wieg4is8y3sXCSnShGY5bUpKRELNeZ7Km9Dgnmf662jaKcfIoZJUqmXCg2Pt1iRV' +
-  'dxPiIuNFakQ0bLcHVeblmN2xBEZipNuuUys+mDYC85XEL0o1C5j1uXm6jJxtxFlq' +
-  'r9h6k5bWzHxM2ombA+xh28SG9E3LBOo9yof9caoI7R5o5Nw2K6XHDiByCuxomMHN' +
-  'Ai4FDvDG9B/jxC8g/XOkc5RhkM7romnrj6VTKYsgY7Fv30fOhJVXmpEGf/QvvveJ' +
-  'kPvMcimtN8CPSt8yh0s6YfNblzFVuV3lwFHK8x439NHw2niAijLbBJf5pv5xNknK' +
-  'I5ry8kuIWZMOFcZRACQKfX8mHRlrLQa6TF46dfQiZO5LSJtH4vma7Lqwe9DriXkE' +
-  'mA+sTjxwYuWmBlLxDREB3amgyrC1esOcEuslcOF5WpC/w0tdps8thh8CgYEAzfx0' +
-  'cr58Se/2unyejWMgOHtP2/bVxQLI26DKE6QAsVj+9/P9XugpIvTQDWu0CpgNipqA' +
-  'weRIsi/DIFQxxt5vMBWgw+q+yxb1TCPaA9arr4tEKpcfDtwEHr4HWZwOzHJwAyJF' +
-  'fhJE/Gpz7UOaTS+i7zPoEZA/aGs9VVJxymvTpqsCgYBI7tkSDBbK3lBlOAQrxUW6' +
-  'jrJqf32HDnwhjdaUb/bCEMEmz1xy1oZOxrlu7ex3mcmvNLBZnx0UGIWCZVZ2MYcy' +
-  'tBieq56Vmbch3nASSDApsuvutPLoHf8rVt+FMmrBZwyIXD+UJABQb+eTEEQbIiuR' +
-  'naoU6wXMYTphmCvZ/pcA/QKBgDKL6r9lgvZZzj/A6N9lHbj+eYBOt/JaVpOehzf+' +
-  'nLToU9jgpKIvcjjDvnIspcebvGbwtvvdWwFuuwEp5/UXDE3OYN7ysdMAVT1T5uHe' +
-  'Qc8X66hP4S0yTEiG9SLGKtN8mYQLWuYu8YLHVJ86YZjjQaZVJHN65DRpbGmNi6LS' +
-  'huN1AoGAdWpb8tNnke76kxyx+dq4sYJZAi2xrYz+lRRPkmUd4ssesHy3Xv0ZEruz' +
-  '/CbFAqRn/9060DVxlOhSym0D1q7SYlLlu2pbnQhFbTCELEZ7A4Cf466FRgt/d3eS' +
-  'OGevfhBnIEiPFPHdCz/f+oZOXig5nr7gVbP1WR7eb79AdLG+mOQ=';
+const EMULATOR_PUBLIC_KEY = // private key of the emulator and test app
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnRhEkRo47vT2Zm4Cquza' +
+  'vyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2sz' +
+  'MMUwGCkqJSPi6fa90pQKx81QHY8Ab4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3' +
+  'iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXC' +
+  'yGxbXJ8B/B5hV4QIor7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vM' +
+  'tQIDAQAB';
+
+const PRIVATE_KEY_NAME = 'vote.directdemocracy.app';
 
 let languagePicker;
 let homePageIsReady = false;
@@ -385,7 +369,7 @@ function onDeviceReady() {
     showMenu();
   };
   if (!localStorage.getItem('publicKey'))
-    Keystore.createKeyPair('DirectDemocracyApp', successCreateKey, keystoreFailure);
+    Keystore.createKeyPair(PRIVATE_KEY_NAME, successCreateKey, keystoreFailure);
   else
     showMenu();
 }
@@ -545,20 +529,9 @@ function showMenu() {
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
-    if (device.isVirtual) {
-      const privateKey = atob(EMULATOR_PRIVATE_KEY);
-      const buffer = new Uint8Array(new ArrayBuffer(privateKey.length));
-      for (let i = 0, len = privateKey.length; i < len; i++)
-        buffer[i] = privateKey.charCodeAt(i);
-      const pair = await crypto.subtle.importKey('pkcs8', buffer, {
-        name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256'
-      }, true, ['sign']);
-      const publicKey = await crypto.subtle.exportKey('spki', pair.publicKey);
-      citizen.appKey = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
-    } else
-      citizen.appKey = APP_PUBLIC_KEY;
+    citizen.appKey = device.isVirtual ? EMULATOR_PUBLIC_KEY : APP_PUBLIC_KEY;
     citizen.appSignature = '';
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(citizen), publishCitizen, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
     return false;
   });
@@ -587,7 +560,7 @@ function showMenu() {
     let challenge = '';
     for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    Keystore.sign('DirectDemocracyApp', challenge, openQR, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_NAME, challenge, openQR, keystoreFailure);
   }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
@@ -774,7 +747,7 @@ function showMenu() {
       endorsedSignature: endorsed.signature
     };
 
-    Keystore.sign('DirectDemocracyApp', JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
 
   const referendumVideo = document.getElementById('referendum-video');
@@ -1152,7 +1125,7 @@ function showMenu() {
               endorsedSignature: proposal.signature
             };
             petitionInfo = [button, proposal];
-            Keystore.sign('DirectDemocracyApp', JSON.stringify(petitionEndorsement), signPetitionCallback, keystoreFailure);
+            Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(petitionEndorsement), signPetitionCallback, keystoreFailure);
           });
       });
     } else { // referendum
@@ -1206,7 +1179,7 @@ function showMenu() {
                   blindKey: participation.blindKey,
                   encryptedVote: encryptedVote
                 };
-                Keystore.sign('DirectDemocracyApp', JSON.stringify(voteRegistration), publishVoteCallback, keystoreFailure);
+                Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(voteRegistration), publishVoteCallback, keystoreFailure);
               });
           });
       });
@@ -1567,7 +1540,7 @@ function updateEndorsements() {
 
           endorsementToRevoke = endorsement;
 
-          Keystore.sign('DirectDemocracyApp', JSON.stringify(revokationToPublish), revokeCallback, keystoreFailure);
+          Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(revokationToPublish), revokeCallback, keystoreFailure);
         }
         const text = '<p class="text-align-left">' +
           'You should revoke only a citizen who has moved or changed her citizen card. ' +
