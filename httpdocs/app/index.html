@@ -49,7 +49,7 @@
           </div>
         </div>
       </div>
-      <div data-name="home" class="page">
+      <div id="home" data-name="home" class="page">
         <div class="navbar">
           <div class="navbar-bg"></div>
           <div class="navbar-inner">
@@ -58,7 +58,10 @@
               <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span
                 style="font-weight:normal">.vote</span>
             </div>
-            <div class="right"><a class="popup-open" data-popup=".info-popup"><i class="icon f7-icons">info_circle_fill</i></a>
+            <div class="right">
+              <a class="popup-open" data-popup=".info-popup">
+                <i class="icon f7-icons">info_circle_fill</i>
+              </a>
             </div>
           </div>
         </div>
@@ -69,11 +72,15 @@
               <span class="tabbar-label" data-i18n="card"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-endorse" id="tabbar-endorse">
-              <i class="icon f7-icons">viewfinder<span id="endorse-badge" class="badge color-blue display-none"></span></i>
+              <i class="icon f7-icons">
+                viewfinder<span id="endorse-badge" class="badge color-blue display-none"></span>
+              </i>
               <span class="tabbar-label" data-i18n="endorse"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-vote" id="tabbar-vote">
-              <i class="icon f7-icons">square_arrow_down<span id="vote-badge" class="badge color-green display-none"></span></i>
+              <i class="icon f7-icons">
+                square_arrow_down<span id="vote-badge" class="badge color-green display-none"></span>
+              </i>
               <span class="tabbar-label" data-i18n="vote"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-sign" id="tabbar-sign">
@@ -118,8 +125,12 @@
                         <div>
                           <div class="item-title item-label margin-left margin-bottom padding-bottom"
                             data-i18n="provide-picture"></div>
-                          <button class="button" id="register-camera-picture"><i class="icon f7-icons">camera_fill</i></button>
-                          <button class="button" id="register-file-picture"><i class="icon f7-icons">folder_fill</i></button>
+                          <button class="button" id="register-camera-picture">
+                            <i class="icon f7-icons">camera_fill</i>
+                          </button>
+                          <button class="button" id="register-file-picture">
+                            <i class="icon f7-icons">folder_fill</i>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -130,8 +141,9 @@
                       <div class="item-input-wrap display-flex">
                         <input type="text" style="width:200%" id="register-location" data-i18n="latitude-longitude-text"
                           disabled required>
-                        <button class="button" id="register-location-button"><i
-                            class="icon f7-icons">placemark_fill</i></button>
+                        <button class="button" id="register-location-button">
+                          <i class="icon f7-icons">placemark_fill</i>
+                        </button>
                       </div>
                     </div>
                   </li>
@@ -155,15 +167,17 @@
                     <div class="item-inner">
                       <button class="button button-fill disabled" id="register-button">
                         <div id="register-button-text" data-i18n="register"></div>
-                        <div id="register-button-preloader" class="preloader text-color-white padding-left display-none"></div>
+                        <div id="register-button-preloader"
+                          class="preloader text-color-white padding-left display-none"></div>
                       </button>
                     </div>
                   </li>
                 </ul>
               </div>
             </div>
-            <div id="splash-page" class="text-align-center display-none"><i class="f7-icons"
-                style="font-size:2000%;transform:rotate(-90deg);margin-top:40%">hand_point_right</i></div>
+            <div id="splash-page" class="text-align-center display-none">
+              <i class="f7-icons" style="font-size:2000%;transform:rotate(-90deg);margin-top:40%">hand_point_right</i>
+            </div>
             <div id="card-page" class="display-none">
               <div class="block margin-top-half">
                 <div class="display-flex">
@@ -267,12 +281,14 @@
                 </ul>
                 <div class="grid grid-cols-2 grid-gap margin-top-half">
                   <button class="button button-fill disabled" id="endorse-confirm">Endorse<div
-                      id="endorse-button-preloader display-none" class="preloader text-color-white padding-left display-none">
+                      id="endorse-button-preloader display-none"
+                      class="preloader text-color-white padding-left display-none">
                     </div></button>
                   <button class="button button-fill color-red" id="endorse-cancel-confirm">Cancel</button>
                 </div>
-                <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">Warning: wrongly
-                  endorsing a citizen is likely to affect your own endorsements by judges.</div>
+                <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">
+                  Warning: wrongly endorsing a citizen is likely to affect your own endorsements by judges.
+                </div>
               </div>
             </div>
             <div id="endorsements-list">
@@ -291,13 +307,16 @@
                             placeholder="Paste referendum reference here">
                           <span class="input-clear-button"></span>
                         </div>
-                        <div class="item-input-info">Search referendums <a id="search-referendum" class="link external"
-                            target="_blank">online</a></div>
+                        <div class="item-input-info">
+                          Search referendums <a id="search-referendum" class="link external" target="_blank">online</a>
+                        </div>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button id="scan-referendum" class="button" style="width:5%"><i class="icon f7-icons">viewfinder</i></button>
+                <button id="scan-referendum" class="button" style="width:5%">
+                  <i class="icon f7-icons">viewfinder</i>
+                </button>
               </div>
               <div class="no-margin-left no-margin-right block-title">Your Referendums</div>
               <div id="referendums"
@@ -326,13 +345,16 @@
                             placeholder="Paste petition reference here">
                           <span class="input-clear-button"></span>
                         </div>
-                        <div class="item-input-info">Search petitions <a id="search-petition" class="link external"
-                            target="_blank">online</a></div>
+                        <div class="item-input-info">
+                          Search petitions <a id="search-petition" class="link external" target="_blank">online</a>
+                        </div>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button id="scan-petition" class="button" style="width:5%"><i class="icon f7-icons">viewfinder</i></button>
+                <button id="scan-petition" class="button" style="width:5%">
+                  <i class="icon f7-icons">viewfinder</i>
+                </button>
               </div>
               <div class="no-margin-left no-margin-right block-title">Your Petitions</div>
               <div id="petitions"

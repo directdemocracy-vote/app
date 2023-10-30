@@ -1,4 +1,4 @@
-/* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device */
+/* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
 import QrScanner from './qr-scanner.min.js';
 import Translator from './translator.js';
@@ -522,9 +522,29 @@ function showMenu() {
   }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
+    QRScanner.prepare(function(error, status) {
+      if (error)
+        console.error(error._message);
+      else {
+        console.log('QRScanner prepare: ');
+        console.log(status);
+        QRScanner.show(function(status) {
+          console.log('QRScanner show: ');
+          console.log(status);
+          document.getElementById('home').style.display = 'none';
+        });
+        QRScanner.scan(function(error, contents) {
+          if (error)
+            console.error(error._message);
+          alert('QRScanner scan: ' + contents);
+        });
+      }
+    });
+    /*
     disable('endorse-me-button');
     showPage('endorse-me');
     challengeScanner.start();
+    */
   });
 
   document.getElementById('cancel-endorse-me-button').addEventListener('click', function() {
