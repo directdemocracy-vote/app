@@ -50,8 +50,9 @@ if ($citizen->appKey !== stripped_key($k))
 $private_key = openssl_get_privatekey('file://../../test/id_rsa');
 if ($private_key == FALSE)
   error('Failed to read private key');
-$appSignature = '';
-$success = openssl_sign($citizen->signature, $appSignature, $private_key, OPENSSL_ALGO_SHA256);
+$binarySignature = '';
+$success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
+$appSignature = base64_encode($binarySignature);
 if ($success === FALSE)
   error('Failed to sign citizen');
 die("{\"appSignature\":\"$appSignature\"}");
