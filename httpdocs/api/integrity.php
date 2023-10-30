@@ -54,5 +54,5 @@ $appSignature = '';
 $success = openssl_sign($citizen->signature, $appSignature, $private_key, OPENSSL_ALGO_SHA256);
 if ($success === FALSE)
   error('Failed to sign citizen');
-die('{"appSignature":$appSignature}');
+die("{\"appSignature\":\"$appSignature\"}");
 ?>
