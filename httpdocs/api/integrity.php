@@ -42,12 +42,19 @@ if ($nonce !== $citizen->signature)
   error("Wrong nonce: $nonce  !==  $citizen->signature");
 if ($verdict->requestDetails->requestPackageName !== 'vote.directdemocracy.app')
   error('Wrong package name');
-$public_key_file = fopen('../../test/id_rsa.pub', 'r') or error('Failed to read public key');
-$k = fread($public_key_file, filesize('../../test/id_rsa.pub'));
-fclose($public_key_file);
-if ($citizen->appKey !== stripped_key($k))
+$file = fopen('../../test/id_rsa.pub', 'r') or error('Failed to read test public key');
+$test_public_key = fread($file, filesize('../../test/id_rsa.pub'));
+fclose($file);
+$file = fopen('../../id_rsa.pub', 'r') or error('Failed to read app public key');
+$app_public_key = fread($file, filesize('../../id_rsa.pub'));
+fclose($file);
+if ($citizen->appKey === stripped_key($test_public_key))
+  $folder = 'test/';
+elseif ($citizen->appKey === stripped_key($app_public_key))
+  $folder = '';
+else
   error('Wrong appKey');
-$private_key = openssl_get_privatekey('file://../../test/id_rsa');
+$private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
 if ($private_key == FALSE)
   error('Failed to read private key');
 $binarySignature = '';
