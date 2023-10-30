@@ -29,7 +29,7 @@ $verdict = $result->tokenPayloadExternal;
 $file = fopen('../../verdict.json', 'w') or error('Unable to open verdict file!');
 fwrite($file, json_encode($verdict));
 fclose($file);
-$nonce = str_replace('/', '_', str_replace('+', '-', $verdict->requestDetails->nonce));
+$nonce = str_replace('_', '/', str_replace('-', '+', $verdict->requestDetails->nonce));
 if ($nonce !== $citizen->signature)
   error("Wrong nonce: $nonce  !==  $citizen->signature");
 if ($verdict->requestDetails->packageName !== 'vote.directdemocracy.app')
