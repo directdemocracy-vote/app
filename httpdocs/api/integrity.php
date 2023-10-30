@@ -9,6 +9,14 @@ function error($message) {
   die("{\"error\":\"$message\"}");
 }
 
+function stripped_key($public_key) {
+  $stripped = str_replace('-----BEGIN PUBLIC KEY-----', '', $public_key);
+  $stripped = str_replace('-----END PUBLIC KEY-----', '', $stripped);
+  $stripped = str_replace("\r\n", '', $stripped);
+  $stripped = str_replace("\n", '', $stripped);
+  return $stripped;
+}
+
 $citizen = json_decode(file_get_contents("php://input"));
 if (!$citizen)
   error('Unable to parse JSON post');
@@ -32,9 +40,8 @@ fclose($file);
 $nonce = str_replace('_', '/', str_replace('-', '+', $verdict->requestDetails->nonce));
 if ($nonce !== $citizen->signature)
   error("Wrong nonce: $nonce  !==  $citizen->signature");
-if ($verdict->requestDetails->packageName !== 'vote.directdemocracy.app')
+if ($verdict->requestDetails->requestPackageName !== 'vote.directdemocracy.app')
   error('Wrong package name');
-
 $public_key_file = fopen('../../test/id_rsa.pub', 'r') or error('Failed to read public key');
 $k = fread($public_key_file, filesize('../../test/id_rsa.pub'));
 fclose($public_key_file);
