@@ -12,7 +12,7 @@ const APP_PUBLIC_KEY = // public key of the app
   'zfmkXiVqFrQ5BHAf+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4O' +
   'tklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3Iga' +
   'rQIDAQAB';
-const EMULATOR_PUBLIC_KEY = // private key of the emulator and test app
+const TEST_PUBLIC_KEY = // private key of the emulator and test app
   'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnRhEkRo47vT2Zm4Cquza' +
   'vyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2sz' +
   'MMUwGCkqJSPi6fa90pQKx81QHY8Ab4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3' +
@@ -192,27 +192,19 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   const citizenFingerprintBase64 = btoa(citizenFingerprint);
   localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
-  console.log('signature = ' + signature);
-  console.log('hash = ' + citizenFingerprintBase64);
-  integrity.check(signature, function(token) { // success
-    console.log('token = ' + token);
+  const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
+  integrity.check(nonce, function(token) { // success
     citizen.token = token;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(citizen)
     }).then(response => response.json())
-      .then(answer => {
+      .then(async answer => {
         delete citizen.token;
         console.log(answer);
         if (answer.hasOwnProperty('error')) {
           alert(answer.error);
-          return;
-        }
-        let error = [];
-        if (error.length > 0) {
-          const message = 'Fields changed: ' + error.join(', ') + '.';
-          alert(message);
           return;
         }
         if (!answer.hasOwnProperty('appSignature')) {
@@ -220,10 +212,15 @@ async function publishCitizen(signature) {
           return;
         }
         citizen.appSignature = answer.appSignature;
-        // check app signature
-
-        // FIXME: this is incomplete
-
+        // verify app signature
+        const publicKey = await importKey(citizen.appKey);
+        const bytes = base64ToByteArray(citizen.appSignature);
+        const buffer = new TextEncoder().encode(citizen.signature);
+        const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, buffer);
+        if (!verify) {
+          alert('Wrong app signature');
+          return;
+        }
         fetch(`${notary}/api/publish.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -524,7 +521,7 @@ function showMenu() {
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
-    citizen.appKey = device.isVirtual ? EMULATOR_PUBLIC_KEY : APP_PUBLIC_KEY;
+    citizen.appKey = device.isVirtual ? TEST_PUBLIC_KEY : APP_PUBLIC_KEY;
     citizen.appSignature = '';
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
