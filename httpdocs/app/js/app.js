@@ -18,6 +18,7 @@ const EMULATOR_PUBLIC_KEY = // private key of the emulator and test app
   'MMUwGCkqJSPi6fa90pQKx81QHY8Ab4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3' +
   'iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXC' +
   'yGxbXJ8B/B5hV4QIor7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vM' +
+  'yw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2w' +
   'tQIDAQAB';
 
 const PRIVATE_KEY_NAME = 'DirectDemocracyApp';
