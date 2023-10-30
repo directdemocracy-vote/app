@@ -47,7 +47,7 @@ $k = fread($public_key_file, filesize('../../test/id_rsa.pub'));
 fclose($public_key_file);
 if ($citizen->appKey !== stripped_key($k))
   error('Wrong appKey');
-$private_key = openssl_get_privatekey('file://../../test/id_rsa');
+$private_key = openssl_get_privatekey('../../test/id_rsa');
 if ($private_key == FALSE)
   error('Failed to read private key');
 $appSignature = '';
