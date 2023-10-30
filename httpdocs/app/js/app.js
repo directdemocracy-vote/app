@@ -21,7 +21,7 @@ const EMULATOR_PUBLIC_KEY = // private key of the emulator and test app
   'yw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2w' +
   'tQIDAQAB';
 
-const PRIVATE_KEY_NAME = 'DirectDemocracyApp';
+const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
 let languagePicker;
 let homePageIsReady = false;
@@ -192,8 +192,10 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   const citizenFingerprintBase64 = btoa(citizenFingerprint);
   localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
-  console.log('nonce = ' + citizenFingerprintBase64);
-  integrity.check(citizenFingerprintBase64, function(token) { // success
+  console.log('signature = ' + signature);
+  console.log('hash = ' + citizenFingerprintBase64);
+  integrity.check(signature, function(token) { // success
+    console.log('token = ' + token);
     citizen.token = token;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
@@ -202,57 +204,48 @@ async function publishCitizen(signature) {
     }).then(response => response.json())
       .then(answer => {
         delete citizen.token;
+        console.log(answer);
+        if (answer.hasOwnProperty('error')) {
+          alert(answer.error);
+          return;
+        }
         let error = [];
-        if (answer.schema !== citizen.schema)
-          error.push('schema');
-        if (answer.key !== citizen.key)
-          error.push('key');
-        if (answer.signature !== citizen.signature)
-          error.push('signature');
-        if (answer.published !== citizen.published)
-          error.push('published');
-        if (answer.appKey !== citizen.appKey)
-          error.push('appKey');
-        if (answer.givenNames !== citizen.givenNames)
-          error.push('givenNames');
-        if (answer.familyName !== citizen.familyName)
-          error.push('familyName');
-        if (answer.picture !== citizen.picture)
-          error.push('picture');
-        if (answer.latitude !== citizen.latitude)
-          error.push('latitude');
-        if (answer.longitude !== citizen.longitude)
-          error.push('longitude');
         if (error.length > 0) {
           const message = 'Fields changed: ' + error.join(', ') + '.';
           alert(message);
           return;
         }
+        if (!answer.hasOwnProperty('appSignature')) {
+          alert('Missing app signature');
+          return;
+        }
+        citizen.appSignature = answer.appSignature;
         // check app signature
-        console.log(answer);
+
         // FIXME: this is incomplete
+
+        fetch(`${notary}/api/publish.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(citizen)
+        }).then(response => response.json())
+          .then(answer => {
+            if (answer.error)
+              app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+            else {
+              updateCitizenCard();
+              app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
+              localStorage.setItem('registered', true);
+            }
+          })
+          .catch((error) => {
+            app.dialog.alert(error, 'Could not publish citizen card');
+          });
       });
-  }, function(message) { // failure
-    console.error(message);
+  }, function(message) { // integrity check failure
+    console.error('Integrity check failure: ' + message);
     alert(message);
   });
-  fetch(`${notary}/api/publish.php`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(citizen)
-  }).then(response => response.json())
-    .then(answer => {
-      if (answer.error)
-        app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-      else {
-        updateCitizenCard();
-        app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
-        localStorage.setItem('registered', true);
-      }
-    })
-    .catch((error) => {
-      app.dialog.alert(error, 'Could not publish citizen card');
-    });
 }
 
 async function openQR(signature) {
@@ -371,7 +364,7 @@ function onDeviceReady() {
     showMenu();
   };
   if (!localStorage.getItem('publicKey'))
-    Keystore.createKeyPair(PRIVATE_KEY_NAME, successCreateKey, keystoreFailure);
+    Keystore.createKeyPair(PRIVATE_KEY_ALIAS, successCreateKey, keystoreFailure);
   else
     showMenu();
 }
@@ -533,7 +526,7 @@ function showMenu() {
     citizen.signature = '';
     citizen.appKey = device.isVirtual ? EMULATOR_PUBLIC_KEY : APP_PUBLIC_KEY;
     citizen.appSignature = '';
-    Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
     return false;
   });
@@ -562,7 +555,7 @@ function showMenu() {
     let challenge = '';
     for (let i = 0; i < 20; i++)
       challenge += String.fromCharCode(value.bytes[i]);
-    Keystore.sign(PRIVATE_KEY_NAME, challenge, openQR, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_ALIAS, challenge, openQR, keystoreFailure);
   }, { returnDetailedScanResult: true });
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
@@ -749,7 +742,7 @@ function showMenu() {
       endorsedSignature: endorsed.signature
     };
 
-    Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
 
   const referendumVideo = document.getElementById('referendum-video');
@@ -1127,7 +1120,7 @@ function showMenu() {
               endorsedSignature: proposal.signature
             };
             petitionInfo = [button, proposal];
-            Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(petitionEndorsement), signPetitionCallback, keystoreFailure);
+            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(petitionEndorsement), signPetitionCallback, keystoreFailure);
           });
       });
     } else { // referendum
@@ -1181,7 +1174,7 @@ function showMenu() {
                   blindKey: participation.blindKey,
                   encryptedVote: encryptedVote
                 };
-                Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(voteRegistration), publishVoteCallback, keystoreFailure);
+                Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(voteRegistration), publishVoteCallback, keystoreFailure);
               });
           });
       });
@@ -1542,7 +1535,7 @@ function updateEndorsements() {
 
           endorsementToRevoke = endorsement;
 
-          Keystore.sign(PRIVATE_KEY_NAME, JSON.stringify(revokationToPublish), revokeCallback, keystoreFailure);
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(revokationToPublish), revokeCallback, keystoreFailure);
         }
         const text = '<p class="text-align-left">' +
           'You should revoke only a citizen who has moved or changed her citizen card. ' +
