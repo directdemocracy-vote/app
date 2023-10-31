@@ -50,9 +50,30 @@ $app_public_key = fread($file, filesize('../../id_rsa.pub'));
 fclose($file);
 if ($citizen->appKey === stripped_key($test_public_key))
   $folder = 'test/';
-elseif ($citizen->appKey === stripped_key($app_public_key))
+elseif ($citizen->appKey === stripped_key($app_public_key)) {
+  if ($verdict->appIntegrity->appRecognitionVerdict !== 'PLAY_RECOGNIZED')
+    error('Failed app recognition check: ' . $verdict->appIntegrity->appRecognitionVerdict);
+  if ($verdict->appIntegrity->packageName !== 'vote.directdemocracy.app')
+    error('Failed app package name check: '. $verdict->appIntegrity->packageName);
+  $deviceRecognitionVerdict = $verdict->deviceIntegrity->deviceRecognitionVerdict;
+  if ($deviceRecognitionVerdict === null)
+    error('No device recognition verdict');
+  $s = sizeof($deviceRecognitionVerdict);
+  if ($s === 0)
+    error('Empty device recognition verdict');
+  if ($s === 1)
+    error('Insufficient device integrity: '.$deviceRecognitionVerdict[0]);
+  if ($s === 2)
+    error('Insufficent device integrity: '.$deviceRecognitionVerdict[0].' and '.$deviceRecognitionVerdict[1]);
+  foreach(array('MEET_BASIC_INTEGRITY', 'MEETS_DEVICE_INTEGRITY', 'MEETS_STRONG_INTEGRITY') as &$check) {
+    if (!in_array($check, $deviceRecognitionVerdict, true)
+      error('Missing '.$check.', found: '.
+            $deviceRecognitionVerdict[0].', '.
+            $deviceRecognitionVerdict[1].' and '.
+            $deviceRecognitionVerdict[2]);
+  }
   $folder = '';
-else
+} else
   error('Wrong appKey');
 $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
 if ($private_key == FALSE)
