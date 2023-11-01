@@ -661,7 +661,7 @@ function showMenu() {
           enable('endorse-button');
           return;
         }
-        // verify signature of endorsed
+        // verify challenge signature by endorsed
         const publicKey = await importKey(endorsed.key);
         let bytes = base64ToByteArray(signature); // FIXME: we should keep the signature as a byte array from the beginning
         const challengeArrayBuffer = new TextEncoder().encode(challenge);
@@ -672,17 +672,31 @@ function showMenu() {
           enable('endorse-button');
           return;
         }
+        // verify citizen signature on citizen card of endorsed
         let endorsedSignature = endorsed.signature;
+        let endorsedAppSignature = endorsed.appSignature;
+        endorsed.appSignature = '';
         endorsed.signature = '';
         bytes = base64ToByteArray(endorsedSignature);
-        const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
+        let encoded = new TextEncoder().encode(JSON.stringify(endorsed));
         verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, encoded);
-        if (!verify) { // FIXME: this fails
-          app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
+        if (!verify) {
+          app.dialog.alert('Cannot verify citizen signature on citizen card', 'Error verifying signature');
           enable('endorse-button');
           return;
         }
         endorsed.signature = endorsedSignature;
+        endorsed.appSignature = endorsedAppSignature;
+        // verify app signature on citizen card of endorsed
+        bytes = base64ToByteArray(endorsedAppSignature);
+        encoded = new TextEncoder().encode(endorsedSignature);
+        const appKey = await importKey(endorsed.appKey);
+        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', appKey, bytes, encoded);
+        if (!verify) {
+          app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
+          enable('endorse-button');
+          return;
+        }
         hide('endorse-page');
         show('endorse-citizen');
         document.getElementById('endorse-picture-check').checked = false;
