@@ -26,7 +26,6 @@ const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
-let challengeScanner = null;
 let challenge = '';
 let answerScanner = null;
 let petitionScanner = null;
@@ -77,6 +76,71 @@ let endorseMarker = null;
 let online = true;
 let petitions = [];
 let referendums = [];
+
+const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
+  'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
+const base128Padding = ''; // FIXME: we could probably remove all the padding stuff
+
+function encodeBase128(byteArray) { // Uint8Array
+  function toBin(byteArray) {
+    let end = '';
+    for (let i in byteArray) {
+      let aux = byteArray[i].toString(2);
+      if (aux.length < 8)
+        aux = '0'.repeat(8 - aux.length) + aux;
+      end += aux;
+    }
+    return end;
+  }
+  const bin = toBin(byteArray);
+  const sevenBits = bin.match(/.{1,7}/g);
+  let paddingCounter = 0;
+  while (sevenBits[sevenBits.length - 1].length < 7) {
+    sevenBits[sevenBits.length - 1] += '0';
+    ++paddingCounter;
+  }
+  let res = [];
+  for (let i in sevenBits) {
+    const interger = parseInt('0' + sevenBits[i], 2);
+    res.push(base128Charset[interger]);
+  }
+  res = res.join('');
+  if (paddingCounter)
+    res += base128Padding.repeat(paddingCounter);
+  return res;
+}
+
+function decodeBase128(text) {
+  function toByteArray(bin) {
+    const size = bin.length / 8;
+    let res = new Uint8Array(size);
+    const bytes = bin.match(/.{1,8}/g);
+    for (let i in bytes)
+      res[i] = parseInt(bytes[i], 2);
+    return res;
+  }
+  let paddingCounter = 0;
+  for (let i in text) {
+    if (text[i] === base128Padding)
+      paddingCounter++;
+  }
+  text = text.replace(base128Padding, '');
+  let sevenBits = [];
+  for (let i in text) {
+    for (let j = 0; j < base128Charset.length; ++j) {
+      if (text[i] === base128Charset[j]) {
+        let aux = j.toString(2);
+        let aux2 = '0'.repeat(7 - aux.length) + aux;
+        sevenBits.push(aux2);
+      }
+    }
+  }
+  if (paddingCounter) {
+    sevenBits[sevenBits.length - 1] = sevenBits[sevenBits.length - 1]
+      .substring(0, sevenBits[sevenBits.length - 1].length - paddingCounter);
+  }
+  return toByteArray(sevenBits.join('')); // Uint8Array
+}
 
 function sanitizeWebservice(string) {
   if (!string)
@@ -297,10 +361,18 @@ function publishVoteRegistration(signature) {
   publish(voteRegistration, signature, 'vote registration');
 }
 
-async function openQR(signature) {
-  signature = atob(signature);
+async function signChallenge(signature) {
+  const binaryString = citizenFingerprint + atob(signature);
+  if (binaryString.length !== 276) // citizenFingerprint + atob(signature) is 276 bytes long, e.g., 20 + 256
+    console.error('Unexpected binary string length: ' + binaryString.length);
+  const buffer = new Uint8Array(binaryString.length);
+  for (let i in buffer)
+    buffer[i] = binaryString.charCodeAt(i);
+  const code = encodeBase128(buffer); // code should a be 316 bytes long
+  console.log('code length = ' + code.length);
+  console.log('code = ' + code);
   const qr = new QRious({
-    value: citizenFingerprint + signature, // 276 bytes, e.g., 20 + 256
+    value: code,
     level: 'L',
     size: 1024,
     padding: 0
@@ -494,9 +566,6 @@ function showMenu() {
     return false;
   });
 
-  const challengeVideo = document.getElementById('challenge-video');
-  challengeVideo.addEventListener('loadedmetadata', qrVideo);
-
   function qrVideo() { // display video as a square centered in the video rectangle
     if (this.videoWidth > this.videoHeight) {
       const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
@@ -512,16 +581,27 @@ function showMenu() {
     }
   }
 
-  challengeScanner = new QrScanner(challengeVideo, function(value) {
-    challengeScanner.stop();
-    showPage('card');
-    let challenge = '';
-    for (let i = 0; i < 20; i++)
-      challenge += String.fromCharCode(value.bytes[i]);
-    Keystore.sign(PRIVATE_KEY_ALIAS, challenge, openQR, keystoreFailure);
-  }, { returnDetailedScanResult: true });
+  function stopScanner(page) {
+    hide('scanner');
+    show(page);
+    QRScanner.hide(function(status) {
+      console.log('QRScanner hide: ' + status);
+      QRScanner.destroy(function(status) {
+        console.log('QRScanner destroy: ' + status);
+      });
+    });
+  }
 
-  document.getElementById('endorse-me-button').addEventListener('click', function() {
+  document.getElementById('cancel-scanner').addEventListener('click', function() {
+    if (!online)
+      enable('endorse-me-button');
+    QRScanner.cancelScan(function(status) {
+      console.log('QRScanner cancelScan: ' + status);
+      stopScanner('home');
+    });
+  });
+
+  function scan(callback) {
     QRScanner.prepare(function(error, status) {
       if (error)
         console.error(error._message);
@@ -531,28 +611,143 @@ function showMenu() {
         QRScanner.show(function(status) {
           console.log('QRScanner show: ');
           console.log(status);
-          document.getElementById('home').style.display = 'none';
+          hide('home');
+          show('scanner');
         });
-        QRScanner.scan(function(error, contents) {
-          if (error)
-            console.error(error._message);
-          alert('QRScanner scan: ' + contents);
-        });
+        QRScanner.scan(callback);
       }
     });
-    /*
+  }
+
+  document.getElementById('endorse-me-button').addEventListener('click', function() {
     disable('endorse-me-button');
-    showPage('endorse-me');
-    challengeScanner.start();
-    */
+    scan(function(error, contents) {
+      if (error) {
+        if (error.name !== 'SCAN_CANCELLED')
+          console.error(error._message);
+        enable('endorse-me-button');
+        return;
+      }
+      console.log('contents = ' + contents);
+      const challenge = decodeBase128(contents);
+      if (challenge.length !== 20)
+        console.error(`Wrong challenge, size is ${challenge.length} where it should be 20.`);
+      show('home');
+      hide('scanner');
+      Keystore.sign(PRIVATE_KEY_ALIAS, contents, signChallenge, keystoreFailure);
+    });
   });
 
-  document.getElementById('cancel-endorse-me-button').addEventListener('click', function() {
-    challengeScanner.stop();
-    showPage('card');
-    if (!online)
-      enable('endorse-me-button');
-  });
+  function scanChallengeAnswer(error, contents) {
+    if (error) {
+      if (error.name !== 'SCAN_CANCELED')
+        console.log(error._message);
+      enable('endorse-button');
+      return;
+    }
+    stopScanner('home');
+    if (contents.length !== 316)
+      alert('Wrong contents size: ' + contents.length);
+    const byteArray = decodeBase128(contents);
+    if (byteArray.length !== 276)
+      alert('Wrong byteArray size: ' + byteArray.length);
+    let fingerprint = '';
+    const hex = '0123456789abcdef';
+    for (let i = 0; i < 20; i++) {
+      const b = byteArray[i];
+      fingerprint += hex[b >> 4] + hex[b & 15];
+    }
+    console.log(fingerprint);
+    let binarySignature = '';
+    for (let i = 20; i < 276; i++)
+      binarySignature += String.fromCharCode(byteArray[i]);
+    const signature = btoa(binarySignature);
+    // get endorsee from fingerprint
+    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+      .then((response) => response.text())
+      .then(async function(answer) {
+        endorsed = JSON.parse(answer);
+        if (endorsed.hasOwnProperty('error')) {
+          app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
+          enable('endorse-button');
+          return;
+        }
+        // verify signature of endorsed
+        const publicKey = await importKey(endorsed.key);
+        let bytes = base64ToByteArray(signature); // FIXME: we should keep the signature as a byte array from the beginning
+        const challengeArrayBuffer = new TextEncoder().encode(challenge);
+        let verify = await crypto.subtle.verify(
+          'RSASSA-PKCS1-v1_5',
+          publicKey,
+          bytes,
+          challengeArrayBuffer
+        );
+        let endorsedSignature = endorsed.signature;
+        endorsed.signature = '';
+        if (!verify) {
+          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+          enable('endorse-button');
+          return;
+        }
+        bytes = base64ToByteArray(endorsedSignature);
+        const encoded = new TextEncoder().encode(JSON.stringify(endorsed));
+        verify = await crypto.subtle.verify(
+          'RSASSA-PKCS1-v1_5',
+          publicKey,
+          bytes,
+          encoded
+        );
+        if (!verify) {
+          app.dialog.alert('Cannot verify citizen signature', 'Error verifying signature');
+          enable('endorse-button');
+          return;
+        }
+        endorsed.signature = endorsedSignature;
+        hide('endorse-page');
+        show('endorse-citizen');
+        document.getElementById('endorse-picture-check').checked = false;
+        document.getElementById('endorse-name-check').checked = false;
+        document.getElementById('endorse-adult-check').checked = false;
+        document.getElementById('endorse-coords-check').checked = false;
+        show('endorse-citizen');
+        document.getElementById('endorse-picture').src = endorsed.picture;
+        document.getElementById('endorse-family-name').textContent = endorsed.familyName;
+        document.getElementById('endorse-given-names').textContent = endorsed.givenNames;
+        const lat = endorsed.latitude;
+        const lon = endorsed.longitude;
+        document.getElementById('endorse-coords').textContent = lat + ', ' + lon;
+        let published = new Date(endorsed.published * 1000);
+        document.getElementById('endorse-published').textContent = published.toISOString().slice(0, 10);
+        if (endorseMap == null) {
+          endorseMap = L.map('endorse-map', { dragging: false });
+          endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+          }).addTo(endorseMap);
+          endorseMarker = L.marker([lat, lon]).addTo(endorseMap);
+        } else
+          endorseMarker.setLatLng([lat, lon]);
+        endorseMarker.bindPopup(lat + ', ' + lon);
+        endorseMap.setView([lat, lon], 18);
+        endorseMap.on('contextmenu', function(event) {
+          return false;
+        });
+        fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+          .then((response) => response.json())
+          .then((answer) => {
+            const address = answer.display_name;
+            endorseMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
+          });
+      });
+  }
+
+  function qrCodeDone() {
+    hide('qrcode');
+    show('home');
+    scan(scanChallengeAnswer);
+  }
+
+  document.getElementById('done-qrcode').addEventListener('click', qrCodeDone);
 
   document.getElementById('endorse-button').addEventListener('click', function() {
     disable('endorse-button');
@@ -564,26 +759,17 @@ function showMenu() {
         onClick: function() {
           const randomBytes = new Uint8Array(20);
           crypto.getRandomValues(randomBytes);
-          challenge = '';
-          randomBytes.forEach((v) => { challenge += String.fromCharCode(v); });
+          challenge = encodeBase128(randomBytes);
+          console.log('challenge = ' + challenge);
           const qr = new QRious({
             value: challenge,
             level: 'L',
             size: 512,
             padding: 0
           });
-          app.dialog.create({
-            title: 'Ask the citizen to scan this QR-code',
-            content: `<img src="${qr.toDataURL()}" class="margin-top" style="width:100%;height:100%">`,
-            buttons: [{
-              text: 'Done',
-              onClick: function() {
-                hide('endorse-page');
-                show('endorse-scanner');
-                answerScanner.start();
-              }
-            }]
-          }).open();
+          document.getElementById('qrcode-image').src = qr.toDataURL();
+          hide('home');
+          show('qrcode');
         }
       }, {
         text: 'Cancel',
@@ -664,7 +850,7 @@ function showMenu() {
         document.getElementById('endorse-name-check').checked = false;
         document.getElementById('endorse-adult-check').checked = false;
         document.getElementById('endorse-coords-check').checked = false;
-        document.getElementById('endorse-citizen').style.display = '';
+        show('endorse-citizen');
         document.getElementById('endorse-picture').src = endorsed.picture;
         document.getElementById('endorse-family-name').textContent = endorsed.familyName;
         document.getElementById('endorse-given-names').textContent = endorsed.givenNames;
@@ -1579,7 +1765,7 @@ function updateEndorsements() {
 // 3. the card page once registered citizen data is available
 // 4. the video scan page to get endorsed
 function showPage(page) {
-  const pages = ['splash', 'register', 'card', 'endorse-me'];
+  const pages = ['splash', 'register', 'card'];
   if (!pages.includes(page)) {
     console.error(`Page '${page}' not found`);
     return;

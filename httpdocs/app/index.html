@@ -49,12 +49,27 @@
           </div>
         </div>
       </div>
-      <div id="scanner" class="page" style="background-color: transparent;display:flex;justify-content:center;">
+      <div id="scanner" class="page display-none"
+        style="background-color: transparent;display:flex;justify-content:center">
         <div
           style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
           Scan the QR code
         </div>
-        <button class="button button-fill color-red" style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
+        <button id="cancel-scanner" class="button button-fill color-red"
+          style="position:fixed;bottom: 18px;width: 60%;">
+          Cancel
+        </button>
+      </div>
+      <div id="qrcode" class="page display-none" style="display:flex;justify-content:center">
+        <div style="display:flex;flex-direction: column;justify-content: center;">
+          <img id="qrcode-image" style="width: 95%;height:fit-content;align-self:center;margin-bottom:92px">
+        </div>
+        <div
+          style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
+          Ask endorser to scan this QR code
+        </div>
+        <button id="done-qrcode" class="button button-fill"
+          style="position:fixed;bottom: 18px;width: 60%;">Done</button>
       </div>
       <div id="home" data-name="home" class="page">
         <div class="navbar">
@@ -207,14 +222,6 @@
                   <div id="endorse-me-message" class="item-label display-flex justify-content-center" style="width:100%"
                     data-i18n="airplane-mode"></div>
                 </div>
-              </div>
-            </div>
-            <div id="endorse-me-page" class="display-none">
-              <div style="overflow:hidden">
-                <video muted playsinline id="challenge-video"></video>
-              </div>
-              <div class="block no-margin-top text-align-center">Scan the QR code on the phone of your endorser.
-                <button class="button button-fill margin-top-half" id="cancel-endorse-me-button">Cancel</button>
               </div>
             </div>
           </swiper-slide>
