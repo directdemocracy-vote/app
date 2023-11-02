@@ -66,10 +66,8 @@ elseif ($citizen->appKey === stripped_key($app_public_key)) {
   if ($s === 2)
     error('Insufficent device integrity: '.$deviceRecognitionVerdict[0].' and '.$deviceRecognitionVerdict[1]);
   foreach(array('MEET_BASIC_INTEGRITY', 'MEETS_DEVICE_INTEGRITY', 'MEETS_STRONG_INTEGRITY') as &$check) {
-    if (!in_array($check, $deviceRecognitionVerdict, true)
-      error('Missing '.$check.', found: '.
-            $deviceRecognitionVerdict[0].', '.
-            $deviceRecognitionVerdict[1].' and '.
+    if (!in_array($check, $deviceRecognitionVerdict, true))
+      error("Missing $check, found: ".$deviceRecognitionVerdict[0].', '.$deviceRecognitionVerdict[1].' and '.
             $deviceRecognitionVerdict[2]);
   }
   $folder = '';
