@@ -1,10 +1,11 @@
 /* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
-import QrScanner from './qr-scanner.min.js';
 import Translator from './translator.js';
 
+const TESTING = true;
+
 const DIRECTDEMOCRACY_VERSION = '2';
-const APP_PUBLIC_KEY = // public key of the app
+const PRODUCTION_APP_KEY = // public key of the genuine app
   'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvD20QQ18u761ean1+zgq' +
   'lDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8I' +
   'k4CN63elBj4ELU70xZeYXIMxxxDqisFgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5' +
@@ -12,7 +13,7 @@ const APP_PUBLIC_KEY = // public key of the app
   'zfmkXiVqFrQ5BHAf+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4O' +
   'tklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3Iga' +
   'rQIDAQAB';
-const TEST_PUBLIC_KEY = // private key of the emulator and test app
+const TEST_APP_KEY = // public key of the test app
   'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnRhEkRo47vT2Zm4Cquza' +
   'vyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2sz' +
   'MMUwGCkqJSPi6fa90pQKx81QHY8Ab4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3' +
@@ -23,12 +24,11 @@ const TEST_PUBLIC_KEY = // private key of the emulator and test app
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
+let appKey = '';
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
 let challenge = '';
-let petitionScanner = null;
-let referendumScanner = null;
 let translator = new Translator('i18n');
 let citizen = {
   schema: '',
@@ -378,6 +378,7 @@ async function signChallenge(signature) {
 }
 
 function onDeviceReady() {
+  appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
     showMenu();
@@ -543,27 +544,12 @@ function showMenu() {
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
     citizen.familyName = document.getElementById('register-family-name').value.trim();
     citizen.signature = '';
-    citizen.appKey = device.isVirtual ? TEST_PUBLIC_KEY : APP_PUBLIC_KEY;
+    citizen.appKey = appKey;
     citizen.appSignature = '';
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
 
     return false;
   });
-
-  function qrVideo() { // display video as a square centered in the video rectangle
-    if (this.videoWidth > this.videoHeight) {
-      const margin = Math.round(-10000 * (this.videoWidth - this.videoHeight) / this.videoWidth) / 100.0;
-      const size = -2 * margin + 100;
-      this.style.width = size + '%';
-      this.style.marginLeft = margin + '%';
-      this.style.marginRight = margin + '%';
-    } else {
-      const margin = Math.round(-10000 * (this.videoHeight - this.videoWidth) / (2 * this.videoWidth)) / 100.0;
-      this.style.width = '100%';
-      this.style.marginTop = margin + '%';
-      this.style.marginBottom = margin + '%';
-    }
-  }
 
   function stopScanner(page) {
     hide('scanner');
@@ -690,8 +676,8 @@ function showMenu() {
         // verify app signature on citizen card of endorsed
         bytes = base64ToByteArray(endorsedAppSignature);
         encoded = new TextEncoder().encode(endorsedSignature);
-        const appKey = await importKey(endorsed.appKey);
-        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', appKey, bytes, encoded);
+        const binaryAppKey = await importKey(endorsed.appKey);
+        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', binaryAppKey, bytes, encoded);
         if (!verify) {
           app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
           enable('endorse-button');
@@ -802,33 +788,29 @@ function showMenu() {
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
+      appKey: appKey,
+      appSignature: '',
       endorsedSignature: endorsed.signature
     };
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
 
-  const referendumVideo = document.getElementById('referendum-video');
-  referendumVideo.addEventListener('loadedmetadata', qrVideo);
-  referendumScanner = new QrScanner(referendumVideo, scanProposal, { returnDetailedScanResult: true });
-
-  const petitionVideo = document.getElementById('petition-video');
-  petitionVideo.addEventListener('loadedmetadata', qrVideo);
-  petitionScanner = new QrScanner(petitionVideo, scanProposal, { returnDetailedScanResult: true });
-
   document.getElementById('scan-referendum').addEventListener('click', function() {
     hide('referendum-page');
-    show('referendum-scanner');
     disable('scan-referendum');
     disable('enter-referendum');
-    referendumScanner.start();
+    scan(function() {
+      // FIXME
+    });
   });
 
   document.getElementById('scan-petition').addEventListener('click', function() {
     hide('petition-page');
-    show('petition-scanner');
     disable('scan-petition');
     disable('enter-petition');
-    petitionScanner.start();
+    scan(function() {
+      // FIXME
+    });
   });
 
   let referendumSearch = document.getElementById('enter-referendum');
@@ -885,6 +867,7 @@ function showMenu() {
     }
   }
 
+  /* FIXME: remove this
   document.getElementById('cancel-scan-referendum-button').addEventListener('click', function() {
     referendumScanner.stop();
     hide('referendum-scanner');
@@ -895,11 +878,12 @@ function showMenu() {
 
   document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
     petitionScanner.stop();
-    hide('petition-scanner');
+    // hide('petition-scanner'); FIXME
     show('petition-page');
     enable('scan-petition');
     enable('enter-petition');
   });
+  */
 
   referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
@@ -1179,6 +1163,8 @@ function showMenu() {
               key: citizen.key,
               signature: '',
               published: Math.trunc(new Date().getTime() / 1000),
+              appKey: appKey,
+              appSignature: '',
               endorsedSignature: proposal.signature
             };
             petitionButton = button;
@@ -1234,6 +1220,8 @@ function showMenu() {
                   key: citizen.key,
                   signature: '',
                   published: Math.trunc(new Date().getTime() / 1000),
+                  appKey: appKey,
+                  appSignature: '',
                   blindKey: participation.blindKey,
                   encryptedVote: encryptedVote
                 };
@@ -1592,6 +1580,8 @@ function updateEndorsements() {
             key: citizen.key,
             signature: '',
             published: Math.trunc(new Date().getTime() / 1000),
+            appKey: appKey,
+            appSignature: '',
             revoke: true,
             endorsedSignature: endorsement.signature
           };
