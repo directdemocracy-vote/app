@@ -254,80 +254,52 @@ async function publish(publication, signature, type) {
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
   integrity.check(nonce, function(token) { // success
     publication.token = token;
+    publication.notary = notary;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(publication)
     }).then(response => response.json())
       .then(async answer => {
-        delete publication.token;
         console.log(answer);
-        if (answer.hasOwnProperty('error')) {
-          alert(answer.error);
-          return;
+        if (answer.hasOwnProperty('error'))
+          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+        else {
+          if (type === 'citizen card') {
+            updateCitizenCard();
+            app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
+            localStorage.setItem('registered', true);
+          } else if (type === 'endorsement') {
+            app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`,
+              'Endorsement Success');
+            // FIXME: we should actually add the new endorsee in the endorsements list
+            updateEndorsements();
+          } else if (type === 'petition signature') {
+            app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
+            petitionButton.textContent = 'Signed';
+            petitionProposal.done = true;
+            localStorage.setItem(`petitions`, JSON.stringify(petitions));
+            disable(petitionButton);
+          } else if (type === 'revocation') {
+            app.dialog.alert(
+              `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
+              'Revocation success');
+            endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
+            updateEndorsements();
+          } else if (type === 'vote registration') {
+            fetch(`${station}/api/registration.php`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(voteRegistration)
+            }).then(response => response.json())
+              .then(answer => {
+                if (answer.error)
+                  app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
+              });
+          }
         }
-        if (!answer.hasOwnProperty('appSignature')) {
-          alert('Missing app signature');
-          return;
-        }
-        publication.appSignature = answer.appSignature;
-        // verify app signature
-        const publicKey = await importKey(publication.appKey);
-        const bytes = base64ToByteArray(publication.appSignature);
-        const buffer = new TextEncoder().encode(publication.signature);
-        const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, buffer);
-        if (!verify) {
-          alert('Wrong app signature');
-          return;
-        }
-        fetch(`${notary}/api/publish.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(publication)
-        }).then(response => response.json())
-          .then(answer => {
-            if (answer.error)
-              app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
-            else {
-              if (type === 'citizen card') {
-                updateCitizenCard();
-                app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
-                localStorage.setItem('registered', true);
-              } else if (type === 'endorsement') {
-                app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`,
-                  'Endorsement Success');
-                // FIXME: we should actually add the new endorsee in the endorsements list
-                updateEndorsements();
-              } else if (type === 'petition signature') {
-                app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
-                petitionButton.textContent = 'Signed';
-                petitionProposal.done = true;
-                localStorage.setItem(`petitions`, JSON.stringify(petitions));
-                disable(petitionButton);
-              } else if (type === 'revocation') {
-                app.dialog.alert(
-                  `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
-                  'Revocation success');
-                endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
-                updateEndorsements();
-              } else if (type === 'vote registration') {
-                fetch(`${station}/api/registration.php`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(voteRegistration)
-                }).then(response => response.json())
-                  .then(answer => {
-                    if (answer.error)
-                      app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-                  });
-              }
-            }
-            if (type === 'endorsement')
-              enable('endorse-button');
-          })
-          .catch((error) => {
-            app.dialog.alert(error, `Could not publish ${type}`);
-          });
+        if (type === 'endorsement')
+          enable('endorse-button');
       });
   }, function(message) { // integrity check failure
     console.error('Integrity check failure: ' + message);
@@ -799,8 +771,8 @@ function showMenu() {
     hide('referendum-page');
     disable('scan-referendum');
     disable('enter-referendum');
-    scan(function() {
-      // FIXME
+    scan(function(error, contents) {
+      scanProposal(error, contents, 'referendum');
     });
   });
 
@@ -808,8 +780,8 @@ function showMenu() {
     hide('petition-page');
     disable('scan-petition');
     disable('enter-petition');
-    scan(function() {
-      // FIXME
+    scan(function(error, contents) {
+      scanProposal(error, contents, 'petition');
     });
   });
 
@@ -901,15 +873,16 @@ function showMenu() {
       addProposal(petition, 'petition', false);
   });
 
-  function scanProposal(value) {
-    const type = (this === petitionScanner) ? 'petition' : 'referendum';
+  function scanProposal(error, contents, type) {
+    if (error)
+      alert(error);
     this.stop();
     hide(`${type}-scanner`);
     show(`${type}-page`);
     let fingerprint = '';
     const hex = '0123456789abcdef';
     for (let i = 0; i < 20; i++) {
-      const b = value.bytes[i];
+      const b = contents[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     getProposal(fingerprint, type);
