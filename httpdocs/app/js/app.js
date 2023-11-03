@@ -78,7 +78,6 @@ let referendums = [];
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
-const base128Padding = ''; // FIXME: we could probably remove all the padding stuff
 
 function encodeBase128(byteArray) { // Uint8Array
   function toBin(byteArray) {
@@ -93,19 +92,12 @@ function encodeBase128(byteArray) { // Uint8Array
   }
   const bin = toBin(byteArray);
   const sevenBits = bin.match(/.{1,7}/g);
-  let paddingCounter = 0;
-  while (sevenBits[sevenBits.length - 1].length < 7) {
-    sevenBits[sevenBits.length - 1] += '0';
-    ++paddingCounter;
-  }
   let res = [];
   for (let i in sevenBits) {
     const interger = parseInt('0' + sevenBits[i], 2);
     res.push(base128Charset[interger]);
   }
   res = res.join('');
-  if (paddingCounter)
-    res += base128Padding.repeat(paddingCounter);
   return res;
 }
 
@@ -118,12 +110,6 @@ function decodeBase128(text) {
       res[i] = parseInt(bytes[i], 2);
     return res;
   }
-  let paddingCounter = 0;
-  for (let i in text) {
-    if (text[i] === base128Padding)
-      paddingCounter++;
-  }
-  text = text.replace(base128Padding, '');
   let sevenBits = [];
   for (let i in text) {
     for (let j = 0; j < base128Charset.length; ++j) {
@@ -133,10 +119,6 @@ function decodeBase128(text) {
         sevenBits.push(aux2);
       }
     }
-  }
-  if (paddingCounter) {
-    sevenBits[sevenBits.length - 1] = sevenBits[sevenBits.length - 1]
-      .substring(0, sevenBits[sevenBits.length - 1].length - paddingCounter);
   }
   return toByteArray(sevenBits.join('')); // Uint8Array
 }
@@ -231,6 +213,7 @@ app.on('pageBeforeRemove', function(page) {
 app.views.create('.view-main', { iosDynamicNavbar: false });
 
 addEventListener('online', () => {
+  console.log('online');
   online = true;
   disable('endorse-me-button');
   downloadCitizen();
@@ -238,6 +221,7 @@ addEventListener('online', () => {
 });
 
 addEventListener('offline', () => {
+  console.log('offline');
   online = false;
   enable('endorse-me-button');
 });
@@ -261,7 +245,6 @@ async function publish(publication, signature, type) {
       body: JSON.stringify(publication)
     }).then(response => response.json())
       .then(async answer => {
-        console.log(answer);
         if (answer.hasOwnProperty('error'))
           app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
         else {
@@ -270,9 +253,19 @@ async function publish(publication, signature, type) {
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
           } else if (type === 'endorsement') {
-            app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`,
-              'Endorsement Success');
-            // FIXME: we should actually add the new endorsee in the endorsements list
+            app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
+            hide('endorse-citizen');
+            show('endorse-page');
+            hide('endorse-button-preloader');
+            enable('endorse-confirm');
+            enable('endorse-cancel-confirm');
+            for (let i in endorsements) { // remove if already in the endorsements list
+              if (endorsements[i].signature === endorsed.signature) {
+                endorsements.splice(i, 1);
+                break;
+              }
+            }
+            endorsements.push(endorsed);
             updateEndorsements();
           } else if (type === 'petition signature') {
             app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
@@ -284,7 +277,10 @@ async function publish(publication, signature, type) {
             app.dialog.alert(
               `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
               'Revocation success');
-            endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from array
+            endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from list
+            endorsementToRevoke.revoke = true;
+            endorsementToRevoke.published = revocationToPublish.published; // set the recovation date
+            endorsements.push(endorsementToRevoke); // add it at the end of the list
             updateEndorsements();
           } else if (type === 'vote registration') {
             fetch(`${station}/api/registration.php`, {
@@ -340,8 +336,6 @@ async function signChallenge(signature) {
   for (let i in buffer)
     buffer[i] = binaryString.charCodeAt(i);
   const code = encodeBase128(buffer); // code should a be 316 bytes long
-  console.log('code length = ' + code.length);
-  console.log('code = ' + code);
   const qr = new QRious({ value: code, level: 'L', size: 1024, padding: 0 });
   document.getElementById('qrcode-image').src = qr.toDataURL();
   document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
@@ -527,19 +521,15 @@ function showMenu() {
     hide('scanner');
     show(page);
     QRScanner.hide(function(status) {
-      console.log('QRScanner hide: ' + status);
       QRScanner.destroy(function(status) {
-        console.log('QRScanner destroy: ' + status);
       });
     });
   }
 
   document.getElementById('cancel-scanner').addEventListener('click', function() {
-    console.log('cancel scanner');
     if (!online)
       enable('endorse-me-button');
     QRScanner.cancelScan(function(status) {
-      console.log('QRScanner cancelScan: ' + status);
       stopScanner('home');
     });
   });
@@ -549,11 +539,7 @@ function showMenu() {
       if (error)
         console.error(error._message);
       else {
-        console.log('QRScanner prepare: ');
-        console.log(status);
         QRScanner.show(function(status) {
-          console.log('QRScanner show: ');
-          console.log(status);
           hide('home');
           show('scanner');
           QRScanner.scan(callback);
@@ -575,7 +561,6 @@ function showMenu() {
         return;
       }
       stopScanner('home');
-      console.log('contents = ' + contents);
       const length = decodeBase128(contents).length;
       if (length !== 20)
         console.error(`Wrong challenge received, size is ${length} whereas it should be 20.`);
@@ -585,9 +570,8 @@ function showMenu() {
 
   function scanChallengeAnswer(error, contents) {
     if (error) {
-      console.log('scan challenge canceled');
       if (error.name !== 'SCAN_CANCELED')
-        console.log(error._message);
+        console.error(error._message);
       enable('endorse-button');
       stopScanner('home');
       return;
@@ -604,7 +588,6 @@ function showMenu() {
       const b = byteArray[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
-    console.log(fingerprint);
     let binarySignature = '';
     for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(byteArray[i]);
@@ -720,7 +703,6 @@ function showMenu() {
           const randomBytes = new Uint8Array(20);
           crypto.getRandomValues(randomBytes);
           challenge = encodeBase128(randomBytes);
-          console.log('challenge = ' + challenge);
           const qr = new QRious({
             value: challenge,
             level: 'L',
@@ -752,9 +734,10 @@ function showMenu() {
     enable('endorse-button');
   });
 
-  document.getElementById('endorse-confirm').addEventListener('click', function() {
-    hide('endorse-citizen');
-    show('endorse-page');
+  document.getElementById('endorse-confirm').addEventListener('click', function(event) {
+    show('endorse-button-preloader');
+    disable(event.currentTarget);
+    disable('endorse-cancel-confirm');
     endorsementToPublish = {
       schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
       key: citizen.key,
@@ -839,24 +822,6 @@ function showMenu() {
     }
   }
 
-  /* FIXME: remove this
-  document.getElementById('cancel-scan-referendum-button').addEventListener('click', function() {
-    referendumScanner.stop();
-    hide('referendum-scanner');
-    show('referendum-page');
-    enable('scan-referendum');
-    enable('enter-referendum');
-  });
-
-  document.getElementById('cancel-scan-petition-button').addEventListener('click', function() {
-    petitionScanner.stop();
-    // hide('petition-scanner'); FIXME
-    show('petition-page');
-    enable('scan-petition');
-    enable('enter-petition');
-  });
-  */
-
   referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
     referendums = [];
@@ -883,9 +848,7 @@ function showMenu() {
         alert(error._message);
       return;
     }
-    console.log('contents = ' + contents);
     const binaryContents = decodeBase128(contents);
-    console.log(binaryContents.toString());
     let fingerprint = '';
     const hex = '0123456789abcdef';
     for (let i = 0; i < 20; i++) {
@@ -1416,7 +1379,6 @@ function downloadCitizen() {
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
-        // updateArea();  FIXME
       }
     })
     .catch((error) => {
@@ -1555,6 +1517,9 @@ function updateEndorsements() {
       a.style.textTransform = 'uppercase';
       a.addEventListener('click', function() {
         function revoke() {
+          disable(a);
+          message.style.color = 'red';
+          message.textContent = 'Revoking, please wait...';
           revocationToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
             key: citizen.key,
@@ -1565,9 +1530,7 @@ function updateEndorsements() {
             revoke: true,
             endorsedSignature: endorsement.signature
           };
-
           endorsementToRevoke = endorsement;
-
           Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(revocationToPublish), publishRevocation, keystoreFailure);
         }
         const text = '<p class="text-align-left">' +
