@@ -92,6 +92,8 @@ function encodeBase128(byteArray) { // Uint8Array
   }
   const bin = toBin(byteArray);
   const sevenBits = bin.match(/.{1,7}/g);
+  while (sevenBits[sevenBits.length - 1].length < 7)
+    sevenBits[sevenBits.length - 1] += '0';
   let res = [];
   for (let i in sevenBits) {
     const interger = parseInt('0' + sevenBits[i], 2);
