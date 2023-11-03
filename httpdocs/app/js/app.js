@@ -218,6 +218,7 @@ addEventListener('online', () => {
   console.log('online');
   online = true;
   disable('endorse-me-button');
+  document.getElementById('endorse-me-message').textContent = translator.translate('airplane-mode');
   downloadCitizen();
   getReputationFromJudge();
 });
@@ -226,6 +227,7 @@ addEventListener('offline', () => {
   console.log('offline');
   online = false;
   enable('endorse-me-button');
+  document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
 });
 
 // Wait for Cordova to be initialized.
@@ -399,7 +401,7 @@ function showMenu() {
       }, keystoreFailure);
     }
     const text = '<p class="text-align-left">' +
-    'If you revoke your citizen card, you will have to create a new one and get endorsements to be able to vote and sign.' +
+    'If you revoke your citizen card, you will have to create a new one and get endorsements to be able to vote and sign. ' +
     'Do you really want to revoke your citizen card?</p><p>Please type <b>I understand</b> here:</p>';
     app.dialog.create({
       title: 'Revoke Citizen Card',
@@ -588,8 +590,10 @@ function showMenu() {
   }
 
   document.getElementById('cancel-scanner').addEventListener('click', function() {
-    if (!online)
+    if (!online) {
       enable('endorse-me-button');
+      document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
+    }
     QRScanner.cancelScan(function(status) {
       stopScanner('home');
     });
@@ -610,6 +614,7 @@ function showMenu() {
   }
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
+    console.log('click endorse me');
     disable('endorse-me-button');
     scan(function(error, contents) {
       show('home');
