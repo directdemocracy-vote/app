@@ -118,46 +118,47 @@
         <swiper-container class="tabs" id='swiper-container' allow-touch-move='false' speed='0'>
           <swiper-slide class="tab tab-active page-content" id="tab-card">
             <div id="register-page" class="display-none">
-              <div class="block-title" id="tab-card-title" data-i18n="become-citizen"></div>
+              <div class="block-title margin-top" id="tab-card-title" data-i18n="become-citizen"></div>
               <div class="list">
                 <ul>
-                  <li class="item-content item-input">
+                  <li class="item-content item-input item-input-with-value item-input-outline">
                     <div class="item-inner">
                       <div class="item-title item-label" data-i18n="given-names"></div>
                       <div class="item-input-wrap">
-                        <input type="url" id="register-given-names" data-i18n="enter-given-names" required>
+                        <input type="text" id="register-given-names" data-i18n="enter-given-names" required>
                         <span class="input-clear-button"></span>
                       </div>
                     </div>
                   </li>
-                  <li class="item-content item-input">
+                  <li class="item-content item-input item-input-with-value item-input-outline">
                     <div class="item-inner">
                       <div class="item-title item-label" data-i18n="family-name"></div>
                       <div class="item-input-wrap">
-                        <input type="url" id="register-family-name" data-i18n="enter-family-name" required>
+                        <input type="text" id="register-family-name" data-i18n="enter-family-name" required>
                         <span class="input-clear-button"></span>
                       </div>
                     </div>
                   </li>
-                  <li class="item-content item-input">
+                  <li class="item-content item-input item-input-outline">
                     <div class="item-inner">
                       <div class="item-title item-label" data-i18n="picture"></div>
-                      <div class="item-input-wrap display-flex">
+                      <div class="item-input-wrap display-flex justify-content-space-between">
                         <img id="register-picture" src="images/default-picture.png">
-                        <div>
-                          <div class="item-title item-label margin-left margin-bottom padding-bottom"
-                            data-i18n="provide-picture"></div>
-                          <button class="button" id="register-camera-picture">
+                        <div class="display-flex flex-direction-column justify-content-center margin-right">
+                          <div class="item-title margin-left margin-bottom padding-bottom" style="font-size:80%"
+                            data-i18n="provide-picture">
+                          </div>
+                          <button class="button margin-left" id="register-camera-picture">
                             <i class="icon f7-icons">camera_fill</i>
                           </button>
-                          <button class="button" id="register-file-picture">
+                          <button class="button margin-left" id="register-file-picture">
                             <i class="icon f7-icons">folder_fill</i>
                           </button>
                         </div>
                       </div>
                     </div>
                   </li>
-                  <li class="item-content item-input">
+                  <li class="item-content item-input item-input-outline">
                     <div class="item-inner">
                       <div class="item-title item-label" data-i18n="home-location"></div>
                       <div class="item-input-wrap display-flex">
@@ -169,30 +170,25 @@
                       </div>
                     </div>
                   </li>
-                  <li class="item-content item-input">
-                    <div class="item-inner">
-                      <label class="checkbox display-flex"><input type="checkbox" id="register-adult">
-                        <i class="icon-checkbox margin-right-half"></i>
-                        <div class="item-label" data-i18n="adult-confirm"></div>
-                      </label>
-                    </div>
+                  <li class="block margin">
+                    <label class="checkbox display-flex align-items-center"><input type="checkbox" id="register-adult">
+                      <i class="icon-checkbox margin-right-half"></i>
+                      <div data-i18n="adult-confirm"></div>
+                    </label>
                   </li>
-                  <li class="item-content item-input">
-                    <div class="item-inner">
-                      <label class="checkbox display-flex"><input type="checkbox" id="register-confirm">
-                        <i class="icon-checkbox margin-right-half"></i>
-                        <div class="item-label" data-i18n="citizen-confirm"></div>
-                      </label>
-                    </div>
+                  <li class="block margin">
+                    <label class="checkbox display-flex align-items-center"><input type="checkbox"
+                        id="register-confirm">
+                      <i class="icon-checkbox margin-right-half"></i>
+                      <div data-i18n="citizen-confirm"></div>
+                    </label>
                   </li>
-                  <li class="item-content item-input">
-                    <div class="item-inner">
-                      <button class="button button-fill disabled" id="register-button">
-                        <div id="register-button-text" data-i18n="register"></div>
-                        <div id="register-button-preloader"
-                          class="preloader text-color-white padding-left display-none"></div>
-                      </button>
-                    </div>
+                  <li class="block">
+                    <button class="button button-fill disabled" id="register-button">
+                      <div id="register-button-text" data-i18n="register"></div>
+                      <div id="register-button-preloader" class="preloader text-color-white padding-left display-none">
+                      </div>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -371,6 +367,7 @@
                       <div class="item-input-wrap">
                         <input type="url" id="notary" placeholder="https://notary.directdemocracy.org"
                           value="https://notary.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
                       </div>
                     </div>
                   </div>
@@ -382,6 +379,7 @@
                       <div class="item-input-wrap">
                         <input type="url" id="judge" placeholder="https://judge.directdemocracy.org"
                           value="https://judge.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
                       </div>
                     </div>
                   </div>
@@ -393,6 +391,7 @@
                       <div class="item-input-wrap">
                         <input type="url" id="station" placeholder="https://station.directdemocracy.org"
                           value="https://station.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
                       </div>
                     </div>
                   </div>
@@ -408,6 +407,9 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="block">
+              <button id="revoke" class="button button-fill color-red">Revoke my citizen card</button>
             </div>
           </swiper-slide>
         </swiper-container>
