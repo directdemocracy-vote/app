@@ -78,8 +78,15 @@ if ($private_key == FALSE)
   error('Failed to read private key');
 $binarySignature = '';
 $success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
-$appSignature = base64_encode($binarySignature);
 if ($success === FALSE)
   error('Failed to sign citizen');
-die("{\"appSignature\":\"$appSignature\"}");
+$citizen->appSignature = base64_encode($binarySignature);
+unset($citizen->token);
+$notary = $citizen->notary;
+unset($citizen->notary);
+$options = array('http' => array('method' => 'POST',
+                                 'content' => json_encode($citizen),
+                                 'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
+$context  = stream_context_create($options);
+die(file_get_contents("$notary/api/publish.php", false, $context));
 ?>
