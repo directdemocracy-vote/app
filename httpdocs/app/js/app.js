@@ -380,6 +380,65 @@ function showMenu() {
     showPage('splash');
     downloadCitizen();
   }
+
+  document.getElementById('revoke').addEventListener('click', function() {
+    function revokeCard() {
+      localStorage.removeItem('registered');
+      localStorage.removeItem('citizenFingerprint');
+      localStorage.removeItem('publicKey');
+      localStorage.removeItem('referendums');
+      localStorage.removeItem('petitions');
+      endorsements = [];
+      citizenEndorsements = [];
+      updateEndorsements();
+      updateCitizenEndorsements();
+      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+        localStorage.setItem('publicKey', publicKey);
+        showPage('register');
+        console.log('revoked card');
+      }, keystoreFailure);
+    }
+    const text = '<p class="text-align-left">' +
+    'If you revoke your citizen card, you will have to create a new one and get endorsements to be able to vote and sign.' +
+    'Do you really want to revoke your citizen card?</p><p>Please type <b>I understand</b> here:</p>';
+    app.dialog.create({
+      title: 'Revoke Citizen Card',
+      text,
+      content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
+      buttons: [{
+        text: app.params.dialog.buttonCancel,
+        keyCodes: app.keyboardActions ? [27] : null
+      }, {
+        text: app.params.dialog.buttonOk,
+        bold: true,
+        keyCodes: app.keyboardActions ? [13] : null
+      }],
+      destroyOnClose: true,
+      onClick: function(dialog, index) {
+        if (index === 1) // OK
+          revokeCard();
+      },
+      on: {
+        open: function(d) {
+          let input = d.$el.find('.dialog-input')[0];
+          let okButton = d.$el.find('.dialog-button')[1];
+          disable(okButton);
+          input.addEventListener('input', function(event) {
+            if (event.target.value === 'I understand')
+              enable(okButton);
+            else
+              disable(okButton);
+          });
+          input.addEventListener('change', function(event) {
+            if (event.target.value === 'I understand') {
+              d.close();
+              revokeCard();
+            }
+          });
+        }
+      }
+    }).open();
+  });
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
