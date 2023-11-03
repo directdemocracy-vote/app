@@ -217,8 +217,7 @@
                 </div>
                 <div id="citizen-endorsements-list"></div>
                 <div>
-                  <!-- FIXME: add `disabled` attribute on the button below -->
-                  <button class="button button-fill" id="endorse-me-button" data-i18n="endorse-me"></button>
+                  <button class="button button-fill" id="endorse-me-button" data-i18n="endorse-me" disabled></button>
                   <div id="endorse-me-message" class="item-label display-flex justify-content-center" style="width:100%"
                     data-i18n="airplane-mode"></div>
                 </div>
@@ -286,10 +285,11 @@
                   </li>
                 </ul>
                 <div class="grid grid-cols-2 grid-gap margin-top-half">
-                  <button class="button button-fill disabled" id="endorse-confirm">Endorse<div
-                      id="endorse-button-preloader display-none"
-                      class="preloader text-color-white padding-left display-none">
-                    </div></button>
+                  <button class="button button-fill disabled" id="endorse-confirm">
+                    Endorse
+                    <div id="endorse-button-preloader" class="preloader text-color-white padding-left display-none">
+                    </div>
+                  </button>
                   <button class="button button-fill color-red" id="endorse-cancel-confirm">Cancel</button>
                 </div>
                 <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">
