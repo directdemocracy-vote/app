@@ -874,15 +874,22 @@ function showMenu() {
   });
 
   function scanProposal(error, contents, type) {
-    if (error)
-      alert(error);
-    this.stop();
-    hide(`${type}-scanner`);
+    stopScanner('home');
     show(`${type}-page`);
+    enable(`scan-${type}`);
+    enable(`enter-${type}`);
+    if (error) {
+      if (error.name !== 'SCAN_CANCELED')
+        alert(error._message);
+      return;
+    }
+    console.log('contents = ' + contents);
+    const binaryContents = decodeBase128(contents);
+    console.log(binaryContents.toString());
     let fingerprint = '';
     const hex = '0123456789abcdef';
     for (let i = 0; i < 20; i++) {
-      const b = contents[i];
+      const b = binaryContents[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
     getProposal(fingerprint, type);
