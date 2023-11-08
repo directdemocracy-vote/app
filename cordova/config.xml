@@ -31,6 +31,8 @@
       ic_launcher_foreground="resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
   </platform>
   <platform name="ios">
+    <preference name="scheme" value="app" />
+    <preference name="hostname" value="localhost" />
     <splash src="resources/ios/Default@2x~universal~anyany.png" />
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="FadeSplashScreen" value="true"/>
