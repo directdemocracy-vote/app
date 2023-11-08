@@ -31,11 +31,18 @@
       ic_launcher_foreground="resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
   </platform>
   <platform name="ios">
-      <preference name="AllowNewWindows" value="FALSE" />
-      <preference name="MediaPlaybackAllowsAirPlay" value="TRUE" />
-      <preference name="LimitsNavigationsToAppBoundDomains" value="FALSE" />
-      <preference name="AllowBackForwardNavigationGestures" value="FALSE" />
-      <preference name="Allow3DTouchLinkPreview" value="TRUE" />
-      <preference name="AutoHideSplashScreen" value="TRUE" />
+    <preference name="AllowNewWindows" value="FALSE" />
+    <preference name="MediaPlaybackAllowsAirPlay" value="TRUE" />
+    <preference name="LimitsNavigationsToAppBoundDomains" value="FALSE" />
+    <preference name="AllowBackForwardNavigationGestures" value="FALSE" />
+    <preference name="Allow3DTouchLinkPreview" value="TRUE" />
+    <preference name="AutoHideSplashScreen" value="TRUE" />
+    <config-file target="*-Info.plist">
+      <key>UIApplicationSceneManifest</key>
+      <dict>
+        <key>UISceneConfigurations</key>
+        <dict/>
+      </dict>
+    </config-file>
   </platform>
 </widget>
