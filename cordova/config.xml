@@ -31,6 +31,7 @@
       ic_launcher_foreground="resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
   </platform>
   <platform name="ios">
+    <splash src="resources/ios/Default@2x~universal~anyany.png" />
     <preference name="AllowNewWindows" value="FALSE" />
     <preference name="MediaPlaybackAllowsAirPlay" value="TRUE" />
     <preference name="LimitsNavigationsToAppBoundDomains" value="FALSE" />
