@@ -32,12 +32,14 @@
   </platform>
   <platform name="ios">
     <splash src="resources/ios/Default@2x~universal~anyany.png" />
-    <preference name="AllowNewWindows" value="FALSE" />
-    <preference name="MediaPlaybackAllowsAirPlay" value="TRUE" />
-    <preference name="LimitsNavigationsToAppBoundDomains" value="FALSE" />
-    <preference name="AllowBackForwardNavigationGestures" value="FALSE" />
-    <preference name="Allow3DTouchLinkPreview" value="TRUE" />
-    <preference name="AutoHideSplashScreen" value="TRUE" />
+    <preference name="AutoHideSplashScreen" value="false" />
+    <preference name="FadeSplashScreen" value="true"/>
+    <preference name="AllowNewWindows" value="false" />
+    <preference name="MediaPlaybackAllowsAirPlay" value="true" />
+    <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
+    <preference name="AllowBackForwardNavigationGestures" value="false" />
+    <preference name="Allow3DTouchLinkPreview" value="true" />
+    <preference name="AutoHideSplashScreen" value="true" />
     <config-file target="*-Info.plist">
       <key>UIApplicationSceneManifest</key>
       <dict>
