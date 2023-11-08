@@ -34,6 +34,12 @@
     <splash src="resources/ios/Default@2x~universal~anyany.png" />
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="FadeSplashScreen" value="true"/>
+    <icon src="resources/ios/AppIcon~ipad.png" width="76" height="76" />
+    <icon src="resources/ios/AppIcon-40@2x.png" width="80" height="80" />
+    <icon src="resources/ios/AppIcon-60@2x~car.png" width="120" height="120" />
+    <icon src="resources/ios/AppIcon-83.5@2x~ipad.png" width="167" height="167" />
+    <icon src="resources/ios/AppIcon-60@3x~car.png" width="180" height="180" />
+    <icon src="resources/ios/AppIcon~ios-marketing.png" width="1024" height="1024" />
     <preference name="AllowNewWindows" value="false" />
     <preference name="MediaPlaybackAllowsAirPlay" value="true" />
     <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
