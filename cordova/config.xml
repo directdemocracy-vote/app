@@ -48,16 +48,23 @@
     <preference name="AllowBackForwardNavigationGestures" value="false" />
     <preference name="Allow3DTouchLinkPreview" value="true" />
     <preference name="AutoHideSplashScreen" value="true" />
-    <config-file target="*-Info.plist">
-      <key>UIApplicationSceneManifest</key>
+    <edit-config target="*-Info.plist" parent="UIApplicationSceneManifest">
       <dict>
         <key>UISceneConfigurations</key>
         <dict/>
       </dict>
-      <key>NSLocationAlwaysUsageDescription</key>
+    </edit-config>
+    <edit-config target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
       <string>Your location is useful to help you quickly locate your home</string>
-      <key>NSLocationWhenInUseUsageDescription</key>
+    </edit-config>
+    <edit-config target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
       <string>Your location is useful to help you quickly locate your home</string>
-    </config-file>
+    </edit-config>
+    <edit-config target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+      <string>Access to your photo library is needed to select your ID picture</string>
+    </edit-config>
+    <edit-config target="*-Info.plist" parent="NSCameraUsageDescription">
+      <string>Access to your camera is needed to capture your ID picture</string>
+    </edit-config>
   </platform>
 </widget>
