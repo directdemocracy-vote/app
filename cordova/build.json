@@ -1,0 +1,19 @@
+{
+  "ios": {
+    "debug": {
+      "codeSignIdentity": "Olivier Michel",
+      "developmentTeam": "LMJV45BD42",
+      "packageType": "development",
+      "automaticProvisioning": true
+    },
+    "release": {
+      "codeSignIdentity": "iPhone Developer",
+      "developmentTeam": "LMJV45BD42",
+      "packageType": "app-store",
+      "automaticProvisioning": true,
+      "authenticationKeyPath": "/path/to/AuthKey_D383SF739.p8",
+      "authenticationKeyID": "D383SF739",
+      "authenticationKeyIssuerID": "6053b7fe-68a8-4acb-89be-165aa6465141"
+    }
+  }
+}
