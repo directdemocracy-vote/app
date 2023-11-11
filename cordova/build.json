@@ -1,7 +1,7 @@
 {
   "ios": {
     "debug": {
-      "codeSignIdentity": "Olivier Michel",
+      "codeSignIdentity": "iPhone Developer",
       "developmentTeam": "LMJV45BD42",
       "packageType": "development",
       "automaticProvisioning": true
@@ -11,9 +11,9 @@
       "developmentTeam": "LMJV45BD42",
       "packageType": "app-store",
       "automaticProvisioning": true,
-      "authenticationKeyPath": "/path/to/AuthKey_D383SF739.p8",
-      "authenticationKeyID": "D383SF739",
-      "authenticationKeyIssuerID": "6053b7fe-68a8-4acb-89be-165aa6465141"
+      "authenticationKeyPath": "/Users/olivier/directdemocracy/keys/ios/AuthKey_937HJXDT52.p8",
+      "authenticationKeyID": "937HJXDT52",
+      "authenticationKeyIssuerID": "69a6de7b-f8e8-47e3-e053-5b8c7c11a4d1"
     }
   }
 }
