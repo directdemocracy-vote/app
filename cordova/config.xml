@@ -54,17 +54,20 @@
         <dict/>
       </dict>
     </edit-config>
+    <edit-config target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card</string>
+    </edit-config>
     <edit-config target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
-      <string>Your location is useful to help you quickly locate your home</string>
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card</string>
     </edit-config>
     <edit-config target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
-      <string>Your location is useful to help you quickly locate your home</string>
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card</string>
     </edit-config>
     <edit-config target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
-      <string>Access to your photo library is needed to select your ID picture</string>
+      <string>Access to your photo library is needed to select your ID picture when registering your citizen card</string>
     </edit-config>
     <edit-config target="*-Info.plist" parent="NSCameraUsageDescription">
-      <string>Access to your camera is needed to capture your ID picture</string>
+      <string>Access to your camera is needed to capture your ID picture when registering your citizen card</string>
     </edit-config>
   </platform>
 </widget>
