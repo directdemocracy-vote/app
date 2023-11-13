@@ -88,8 +88,8 @@ if ($os === 'android') {
     }
   }
 } elseif ($os === 'ios') {
-  $token = new Token(['iss' => $iosTeamId, 'iat' => time()], ['kid' => $iosKeyId]);
-  $jwt = (string)$token->sign(new ES256(), $iosPrivateKeyFilePath);
+  $token = new Token(['iss' => 'LMJV45BD42', 'iat' => time()], ['kid' => '2TPW39HHX8']);
+  $jwt = (string)$token->sign(new ES256(), '../../AuthKey_2TPW39HHX8.p8');
   $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
   $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
   $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
