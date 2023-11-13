@@ -1,2 +1,6 @@
 /composer.lock
 /vendor
+/id_rsa
+/id_rsa.pub
+/directdemocracy.json
+/AuthKey_2TPW39HHX8.p8
