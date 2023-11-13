@@ -242,6 +242,7 @@ async function publish(publication, signature, type) {
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
   integrity.check(nonce, function(token) { // success
     publication.token = token;
+    publication.os = device.platform;
     publication.notary = notary;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
