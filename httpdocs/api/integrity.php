@@ -109,6 +109,7 @@ if ($success === FALSE)
   error('Failed to sign citizen');
 $citizen->appSignature = base64_encode($binarySignature);
 unset($citizen->token);
+unset($citizen->os);
 $notary = $citizen->notary;
 unset($citizen->notary);
 $options = array('http' => array('method' => 'POST',
