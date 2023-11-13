@@ -49,7 +49,7 @@ elseif ($citizen->appKey === stripped_key($app_public_key))
 else
   error('Unknown app key');
 
-if ($os === 'android') {
+if ($os === 'Android') {
   $client = new Client();
   $client->setAuthConfig('../../directdemocracy.json');
   $client->addScope(PlayIntegrity::PLAYINTEGRITY);
@@ -87,7 +87,7 @@ if ($os === 'android') {
               $deviceRecognitionVerdict[2]);
     }
   }
-} elseif ($os === 'ios') {
+} elseif ($os === 'iOS') {
   $token = new Token(['iss' => 'LMJV45BD42', 'iat' => time()], ['kid' => '2TPW39HHX8']);
   $jwt = (string)$token->sign(new ES256(), '../../AuthKey_2TPW39HHX8.p8');
   $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
