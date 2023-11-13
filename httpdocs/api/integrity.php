@@ -93,7 +93,8 @@ if ($os === 'android') {
   $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
   $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
   $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
-  $answer = file_get_contents("https://api.development.devicecheck.apple.com/v1/query_two_bits", false, stream_context_create($context));
+  # FIXME, use https://api.devicecheck.apple.com for production
+  $answer = file_get_contents("https://api.development.devicecheck.apple.com/v1/validate_device_token", false, stream_context_create($context));
   if ($answer === false)
     error('Device check failed');
 } else
