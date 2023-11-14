@@ -87,7 +87,7 @@ if ($os === 'Android') {
     }
   }
 } elseif ($os === 'iOS') {
-  $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], '2TPW39HHX8', 'ES256');  
+  $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], '2TPW39HHX8', 'ES256');
   $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
   $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
   $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
