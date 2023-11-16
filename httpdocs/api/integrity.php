@@ -31,7 +31,7 @@ if (!$citizen)
 
 $headers = getallheaders();
 if (!isset($headers['integrity-token']))
-  error('Unable to read integrity-token header: '. implode(' ', array_keys($headers)));
+  error('Unable to read integrity-token header: ');
 $token = $headers['integrity-token'];
 
 if (!isset($headers['directdemocracy-version']))
@@ -45,6 +45,12 @@ $os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6) + 
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in DirectDemocracy-Version header: $os");
 
+if (!isset(headers['user-notary']))
+  error('Unable to read user-notary header');
+$notary = $headers['user-notary'];
+if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
+  error("Bad user-notary header: $notary");
+  
 # if the integrity check is successful, this means the citizen blob is well formed because
 # it was created by a geniune app, so we don't need to check it
 
@@ -119,10 +125,6 @@ $success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPE
 if ($success === FALSE)
   error('Failed to sign citizen');
 $citizen->appSignature = base64_encode($binarySignature);
-unset($citizen->token);
-unset($citizen->os);
-$notary = $citizen->notary;
-unset($citizen->notary);
 $options = array('http' => array('method' => 'POST',
                                  'content' => json_encode($citizen),
                                  'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
