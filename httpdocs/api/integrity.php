@@ -45,7 +45,7 @@ $os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6) + 
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in DirectDemocracy-Version header: $os");
 
-if (!isset(headers['user-notary']))
+if (!isset($headers['user-notary']))
   error('Unable to read user-notary header');
 $notary = $headers['user-notary'];
 if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
