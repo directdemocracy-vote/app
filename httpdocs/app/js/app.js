@@ -2,7 +2,7 @@
 
 import Translator from './translator.js';
 
-const TESTING = true;
+const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
@@ -246,6 +246,8 @@ async function publish(publication, signature, type) {
   publication.signature = signature;
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
   integrity.check(nonce, function(token) { // success
+    if (TESTING && device.platform === 'iOS')
+      token = 'N/A';
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
       headers: {
