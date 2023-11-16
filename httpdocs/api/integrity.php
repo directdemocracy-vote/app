@@ -29,21 +29,28 @@ $citizen = json_decode(file_get_contents("php://input"));
 if (!$citizen)
   error('Unable to parse JSON post');
 
-if (!isset($_SERVER['INTEGRITY_TOKEN']))
-  error('Unable to read Integrity-Token header');
-$token = $_SERVER['INTEGRITY_TOKEN'];
+$headers = getallheaders();
+if (!isset($headers['integrity-token']))
+  error('Unable to read integrity-token header: ');
+$token = $headers['integrity-token'];
 
-if (!isset($_SERVER['DIRECTDEMOCRACY_VERSION']))
-  error('Unable to read DirectDemocracy-Version header');
-$directdemocracyVersion = $_SERVER['DIRECTDEMOCRACY_VERSION'];
+if (!isset($headers['directdemocracy-version']))
+  error('Unable to read directdemocracy-version header');
+$directdemocracyVersion = $headers['directdemocracy-version'];
 
-$version = explode(explode($directdemocracyVersion, ' ')[0]), '.');
+$version = explode('.', explode(' ', $directdemocracyVersion)[0]);
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
   error("Wrong version set in DirectDemocracy-Version header: $version[0].$version[1].$version[2]");
-$os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6), -1);
+$os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6) + 1, -1);
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in DirectDemocracy-Version header: $os");
 
+if (!isset($headers['user-notary']))
+  error('Unable to read user-notary header');
+$notary = $headers['user-notary'];
+if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
+  error("Bad user-notary header: $notary");
+  
 # if the integrity check is successful, this means the citizen blob is well formed because
 # it was created by a geniune app, so we don't need to check it
 
@@ -118,10 +125,6 @@ $success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPE
 if ($success === FALSE)
   error('Failed to sign citizen');
 $citizen->appSignature = base64_encode($binarySignature);
-unset($citizen->token);
-unset($citizen->os);
-$notary = $citizen->notary;
-unset($citizen->notary);
 $options = array('http' => array('method' => 'POST',
                                  'content' => json_encode($citizen),
                                  'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
