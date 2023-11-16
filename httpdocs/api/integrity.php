@@ -10,6 +10,9 @@ use Google\Service\PlayIntegrity\DecodeIntegrityTokenRequest;
 use Firebase\JWT\JWT;
 use Ramsey\Uuid\Uuid;
 
+$DIRECTDEMOCRACY_VERSION_MAJOR = 2;
+$DIRECTDEMOCRACY_VERSION_MINOR = 0;
+
 function error($message) {
   die("{\"error\":\"$message\"}");
 }
@@ -25,12 +28,24 @@ function stripped_key($public_key) {
 $citizen = json_decode(file_get_contents("php://input"));
 if (!$citizen)
   error('Unable to parse JSON post');
-if (!isset($citizen->token))
-  error('Unable to read token');
-$token = $citizen->token;
-if (!isset($citizen->os))
-  error('Unable to read os');
-$os = $citizen->os;
+
+if (!isset($_SERVER['INTEGRITY_TOKEN']))
+  error('Unable to read Integrity-Token header');
+$token = $_SERVER['INTEGRITY_TOKEN'];
+
+if (!isset($_SERVER['USER_AGENT']))
+  error('Unable to read User-Agent header');
+$userAgent = $_SERVER['USER_AGENT'];
+
+if (!str_start_with($userAgent, 'DirectDemocracy/')
+  error("Wrong User-Agent: $userAgent");
+
+$version = explode(explode(explode($userAgent, '/')[1], ' ')[0], '.');
+if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
+  error("Wrong version set in User-Agent: $version[0].$version[1].$version[2]");
+$os = substr($userAgent, strpos($userAgent, '(', 22), -1);
+if ($os !== 'iOS' && $os !== 'Android')
+  error("Wrong os in User-Agent: $os");
 
 # if the integrity check is successful, this means the citizen blob is well formed because
 # it was created by a geniune app, so we don't need to check it
