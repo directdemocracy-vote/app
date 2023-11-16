@@ -41,7 +41,7 @@ $directdemocracyVersion = $headers['directdemocracy-version'];
 $version = explode('.', explode(' ', $directdemocracyVersion)[0]);
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
   error("Wrong version set in DirectDemocracy-Version header: $version[0].$version[1].$version[2]");
-$os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6), -1);
+$os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6) + 1, -1);
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in DirectDemocracy-Version header: $os");
 
