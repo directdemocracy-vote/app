@@ -29,13 +29,14 @@ $citizen = json_decode(file_get_contents("php://input"));
 if (!$citizen)
   error('Unable to parse JSON post');
 
-if (!isset($_SERVER['INTEGRITY_TOKEN']))
+$headers = getallheaders();
+if (!isset($headers['Integrity-Token']))
   error('Unable to read Integrity-Token header');
-$token = $_SERVER['INTEGRITY_TOKEN'];
+$token = $headers['Integrity-Token'];
 
-if (!isset($_SERVER['DIRECTDEMOCRACY_VERSION']))
+if (!isset($headers['DirectDemocracy-Version']))
   error('Unable to read DirectDemocracy-Version header');
-$directdemocracyVersion = $_SERVER['DIRECTDEMOCRACY_VERSION'];
+$directdemocracyVersion = $headers['DirectDemocracy-Version'];
 
 $version = explode(explode($directdemocracyVersion, ' ')[0], '.');
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
