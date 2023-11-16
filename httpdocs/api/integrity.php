@@ -106,15 +106,20 @@ if ($os === 'Android') {
     }
   }
 } else { # $os === 'iOS'
-  $key = file_get_contents('../../AuthKey_2TPW39HHX8.p8');
-  $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], $key, 'ES256', '2TPW39HHX8');
-  $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
-  $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
-  $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
-  # FIXME, use https://api.devicecheck.apple.com for production
-  $answer = file_get_contents("https://api.development.devicecheck.apple.com/v1/validate_device_token", false, stream_context_create($context));
-  if ($answer === false)
-    error('Device check failed');
+  if ($token === 'N/A' && $folder ==='')
+    error('Bad N/A token for iOS');
+  if ($token !== 'N/A') { # perform device check
+    if ($folder === 'test/')
+      error('Bad token for iOS simulator');
+    $key = file_get_contents('../../AuthKey_2TPW39HHX8.p8');
+    $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], $key, 'ES256', '2TPW39HHX8');
+    $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
+    $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
+    $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
+    $answer = file_get_contents("https://api.devicecheck.apple.com/v1/validate_device_token", false, stream_context_create($context));
+    if ($answer === false)
+      error('Device check failed');
+  }
 }
 
 $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
