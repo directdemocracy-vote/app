@@ -31,7 +31,7 @@ if (!$citizen)
 
 $headers = getallheaders();
 if (!isset($headers['Integrity-Token']))
-  error('Unable to read Integrity-Token header: '. implode(' ', $headers));
+  error('Unable to read Integrity-Token header: '. implode(' ', array_keys($headers)));
 $token = $headers['Integrity-Token'];
 
 if (!isset($headers['DirectDemocracy-Version']))
