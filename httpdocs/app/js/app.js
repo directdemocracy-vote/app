@@ -467,7 +467,7 @@ function showMenu() {
     disable('register-location-button');
     let content = {};
     content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-  <div class="toolbar">
+  <div class="toolbar" style="margin-top:16px">
     <div class="toolbar-inner">
       <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
       <div class="right">
@@ -1319,7 +1319,7 @@ function showMenu() {
     function successCallback(imageData) {
       let content = {};
       content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-    <div class="toolbar">
+    <div class="toolbar" style="margin-top:16px">
       <div class="toolbar-inner">
         <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
         <div class="right">
@@ -1488,7 +1488,7 @@ function getReputationFromJudge() {
         iAmEndorsedByJudge = answer.endorsed;
         const color = answer.endorsed ? 'blue' : 'red';
         span.setAttribute('style', `font-weight:bold;color:${color}`);
-        span.textContent = answer.error;
+        span.textContent = answer.reputation;
         reputation.innerHTML = '';
         reputation.appendChild(span);
         badge.classList.remove('color-red');
