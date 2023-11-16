@@ -39,10 +39,10 @@ $directdemocracyVersion = $_SERVER['DIRECTDEMOCRACY_VERSION'];
 
 $version = explode(explode($directdemocracyVersion, ' ')[0]), '.');
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
-  error("Wrong version set in User-Agent: $version[0].$version[1].$version[2]");
-$os = substr($userAgent, strpos($userAgent, '(', 6), -1);
+  error("Wrong version set in DirectDemocracy-Version header: $version[0].$version[1].$version[2]");
+$os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6), -1);
 if ($os !== 'iOS' && $os !== 'Android')
-  error("Wrong os in User-Agent: $os");
+  error("Wrong os in DirectDemocracy-Version header: $os");
 
 # if the integrity check is successful, this means the citizen blob is well formed because
 # it was created by a geniune app, so we don't need to check it
