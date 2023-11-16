@@ -4,7 +4,10 @@ import Translator from './translator.js';
 
 const TESTING = true;
 
-const DIRECTDEMOCRACY_VERSION = '2';
+const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
+const DIRECTDEMOCRACY_VERSION_MINOR = '0';
+const DIRECTDEMOCRACY_VERSION_BUILD = '30';
+
 const PRODUCTION_APP_KEY = // public key of the genuine app
   'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvD20QQ18u761ean1+zgq' +
   'lDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8I' +
@@ -24,6 +27,8 @@ const TEST_APP_KEY = // public key of the test app
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
+let directDemocracyVersion =
+  `${DIRECTDEMOCRACY_VERSION_MAJOR}.${DIRECTDEMOCRACY_VERSION_MINOR}.${DIRECTDEMOCRACY_VERSION_BUILD}`;
 let appKey = '';
 let languagePicker;
 let homePageIsReady = false;
@@ -241,12 +246,14 @@ async function publish(publication, signature, type) {
   publication.signature = signature;
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
   integrity.check(nonce, function(token) { // success
-    publication.token = token;
-    publication.os = device.platform;
-    publication.notary = notary;
     fetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'directdemocracy-version': directDemocracyVersion,
+        'integrity-token': token,
+        'user-notary': notary,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(publication)
     }).then(response => response.json())
       .then(async answer => {
@@ -290,7 +297,10 @@ async function publish(publication, signature, type) {
           } else if (type === 'vote registration') {
             fetch(`${station}/api/registration.php`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'directdemocracy-version': directDemocracyVersion,
+                'Content-Type': 'application/json'
+              },
               body: JSON.stringify(voteRegistration)
             }).then(response => response.json())
               .then(answer => {
@@ -349,6 +359,7 @@ async function signChallenge(signature) {
 }
 
 function onDeviceReady() {
+  directDemocracyVersion += ` (${device.platform})`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
   const successCreateKey = function(publicKey) {
     localStorage.setItem('publicKey', publicKey);
@@ -568,7 +579,7 @@ function showMenu() {
     text.innerHTML = translator.translate(registration);
     text.setAttribute('data-i18n', registration);
     show('register-button-preloader');
-    citizen.schema = 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/citizen.schema.json';
+    citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
     citizen.key = localStorage.getItem('publicKey');
     citizen.published = Math.trunc(new Date().getTime() / 1000);
     citizen.givenNames = document.getElementById('register-given-names').value.trim();
@@ -806,7 +817,7 @@ function showMenu() {
     disable(event.currentTarget);
     disable('endorse-cancel-confirm');
     endorsementToPublish = {
-      schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
@@ -1169,7 +1180,7 @@ function showMenu() {
           'Your name and signature will be published to show publicly your support to this petition.',
           'Sign Petition?', function() {
             petitionSignature = {
-              schema: 'https://directdemocracy.vote/json-schema/' + DIRECTDEMOCRACY_VERSION + '/endorsement.schema.json',
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
               key: citizen.key,
               signature: '',
               published: Math.trunc(new Date().getTime() / 1000),
@@ -1196,7 +1207,7 @@ function showMenu() {
               .then((response) => response.json())
               .then(async function(participation) {
                 if (participation.schema !==
-                  `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/participation.schema.json`) {
+                  `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`) {
                   app.dialog.alert('Wrong participation schema', 'Vote error');
                   return;
                 }
@@ -1226,7 +1237,7 @@ function showMenu() {
                 };
                 const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
                 voteRegistration = {
-                  schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/registration.schema.json`,
+                  schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
                   key: citizen.key,
                   signature: '',
                   published: Math.trunc(new Date().getTime() / 1000),
@@ -1425,7 +1436,10 @@ function updateCitizenCard() {
 function downloadCitizen() {
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'directdemocracy-version': directDemocracyVersion,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
     body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
   })
     .then((response) => response.json())
@@ -1588,7 +1602,7 @@ function updateEndorsements() {
           message.style.color = 'red';
           message.textContent = 'Revoking, please wait...';
           revocationToPublish = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION}/endorsement.schema.json`,
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
             key: citizen.key,
             signature: '',
             published: Math.trunc(new Date().getTime() / 1000),
