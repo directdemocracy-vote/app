@@ -33,17 +33,14 @@ if (!isset($_SERVER['INTEGRITY_TOKEN']))
   error('Unable to read Integrity-Token header');
 $token = $_SERVER['INTEGRITY_TOKEN'];
 
-if (!isset($_SERVER['USER_AGENT']))
-  error('Unable to read User-Agent header');
-$userAgent = $_SERVER['USER_AGENT'];
+if (!isset($_SERVER['DIRECTDEMOCRACY_VERSION']))
+  error('Unable to read DirectDemocracy-Version header');
+$directdemocracyVersion = $_SERVER['DIRECTDEMOCRACY_VERSION'];
 
-if (!str_start_with($userAgent, 'DirectDemocracy/')
-  error("Wrong User-Agent: $userAgent");
-
-$version = explode(explode(explode($userAgent, '/')[1], ' ')[0], '.');
+$version = explode(explode($directdemocracyVersion, ' ')[0]), '.');
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
   error("Wrong version set in User-Agent: $version[0].$version[1].$version[2]");
-$os = substr($userAgent, strpos($userAgent, '(', 22), -1);
+$os = substr($userAgent, strpos($userAgent, '(', 6), -1);
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in User-Agent: $os");
 
@@ -101,7 +98,7 @@ if ($os === 'Android') {
               $deviceRecognitionVerdict[2]);
     }
   }
-} elseif ($os === 'iOS') {
+} else { # $os === 'iOS'
   $key = file_get_contents('../../AuthKey_2TPW39HHX8.p8');
   $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], $key, 'ES256', '2TPW39HHX8');
   $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
@@ -111,8 +108,7 @@ if ($os === 'Android') {
   $answer = file_get_contents("https://api.development.devicecheck.apple.com/v1/validate_device_token", false, stream_context_create($context));
   if ($answer === false)
     error('Device check failed');
-} else
-  error("Unknown OS: $os");
+}
 
 $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
 if ($private_key == FALSE)
