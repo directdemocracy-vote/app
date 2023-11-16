@@ -30,13 +30,13 @@ if (!$citizen)
   error('Unable to parse JSON post');
 
 $headers = getallheaders();
-if (!isset($headers['Integrity-Token']))
-  error('Unable to read Integrity-Token header: '. implode(' ', array_keys($headers)));
-$token = $headers['Integrity-Token'];
+if (!isset($headers['integrity-token']))
+  error('Unable to read integrity-token header: '. implode(' ', array_keys($headers)));
+$token = $headers['integrity-token'];
 
-if (!isset($headers['DirectDemocracy-Version']))
-  error('Unable to read DirectDemocracy-Version header');
-$directdemocracyVersion = $headers['DirectDemocracy-Version'];
+if (!isset($headers['directdemocracy-version']))
+  error('Unable to read directdemocracy-version header');
+$directdemocracyVersion = $headers['directdemocracy-version'];
 
 $version = explode(explode($directdemocracyVersion, ' ')[0], '.');
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
