@@ -108,7 +108,7 @@ if ($os === 'Android') {
 } else { # $os === 'iOS'
   if ($token === 'N/A' && $folder ==='')
     error('Bad N/A token for iOS');
-  if ($token !== 'N/A') # perform device check
+  if ($token !== 'N/A') { # perform device check
     if ($folder === 'test/')
       error('Bad token for iOS simulator');
     $key = file_get_contents('../../AuthKey_2TPW39HHX8.p8');
