@@ -1,10 +1,12 @@
-"use strict"
+'use strict';
 
 class Translator {
   #url;
   #dictionary;
   #languages;
+  #ready;
   constructor(url, language) {
+    this.#ready = false;
     if (!url.endsWith('/'))
       url += '/';
     this.#url = url;
@@ -35,8 +37,11 @@ class Translator {
       .then((dictionary) => {
         this.#dictionary = dictionary;
         this.translatePage();
-        if (typeof this.onready === "function")
-          this.onready();
+        if (this.#ready === false) {
+          this.#ready = true;
+          if (typeof this.onready === 'function')
+            this.onready();
+        }
       })
       .catch((error) => {
         console.error(`Could not load "${this.#url}${language}.json".`);
@@ -50,7 +55,7 @@ class Translator {
     return this.#languages;
   }
   translatePage() {
-    let elements = document.querySelectorAll("[data-i18n]");
+    let elements = document.querySelectorAll('[data-i18n]');
     elements.forEach((element) => {
       const key = element.dataset.i18n;
       if (element.nodeName === 'INPUT')
