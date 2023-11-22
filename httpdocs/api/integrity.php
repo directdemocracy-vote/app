@@ -65,7 +65,7 @@ if ($citizen->appKey === stripped_key($test_public_key))
 elseif ($citizen->appKey === stripped_key($app_public_key))
   $folder = '';
 else
-  error('Unknown app key');
+  error("Unknown app key ". stripped_key($test_public_key));
 
 if ($os === 'Android') {
   $client = new Client();
