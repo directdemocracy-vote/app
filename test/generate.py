@@ -13,7 +13,9 @@ notary = 'https://notary.directdemocracy.vote'
 
 
 def public_key(key):
-    return key.publicKey().exportKey('PEM')[27:-25].decode('ascii').replace("\n", '')
+    # we remove the first 70 characters, e.g., "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"
+    # and the last 30 character "IDAQAB-----END PUBLIC KEY-----" so that the total length is reduced to 343 characters
+    return key.publickey().exportKey('PEM').decode('utf8').replace("\n", '')[70:-30]
 
 def generate_app():
     key = RSA.generate(2048)
@@ -25,7 +27,7 @@ def generate_app():
     with open(pkey_file, 'wb') as file:
         file.write(key.publickey().exportKey('PEM'))
 
-def generate_citizens(save=False):
+def generate_citizens(save=True):
     with open('id_rsa', 'r') as file:
         app_key = RSA.importKey(file.read())
     if not os.path.isdir('key'):
@@ -45,7 +47,7 @@ def generate_citizens(save=False):
             if not file:
                 sys.exit('Cannot open ' + picture_file)
             picture = file.read()
-            citizen['picture'] = 'data:image/jpeg;base64,' + base64.b64encode(picture).decode('ascii')
+            citizen['picture'] = 'data:image/jpeg;base64,' + base64.b64encode(picture).decode('utf8')
             key = RSA.generate(2048)
             key_file = os.path.join('key', citizen_name + '.pem')
             with open(key_file, 'wb') as file:
@@ -57,10 +59,9 @@ def generate_citizens(save=False):
             citizen['appSignature'] = ''
             message = json.dumps(citizen, ensure_ascii=False, separators=(',', ':')).encode('utf8')
             h = SHA256.new(message)
-            citizen['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
-            message = json.dumps(citizen, ensure_ascii=False, separators=(',', ':')).encode('utf8')
-            h = SHA256.new(message)
-            citizen['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')
+            citizen['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')[:-2]
+            h = SHA256.new(citizen['signature'].encode('utf-8'))
+            citizen['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')[:-2]
             url = notary + '/api/publish.php'
             response = requests.post(url, json=citizen)
             try:
@@ -109,10 +110,9 @@ def generate_endorsements():
                     key_file = os.path.join('key', citizen_name + '.pem')
                     with open(key_file, 'r') as file:
                         key = RSA.importKey(file.read())
-                    endorsement['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')
-                    message = json.dumps(endorsement, ensure_ascii=False, separators=(',', ':')).encode('utf8')
-                    h = SHA256.new(message)
-                    endorsement['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')
+                    endorsement['signature'] = base64.b64encode(PKCS1_v1_5.new(key).sign(h)).decode('utf8')[:-2]
+                    h = SHA256.new(endorsement['signature'].encode('utf-8'))
+                    endorsement['appSignature'] = base64.b64encode(PKCS1_v1_5.new(app_key).sign(h)).decode('utf8')[:-2]
                     print(' ' + endorsed_name, end='', flush=True)
                     response = requests.post(notary + '/api/publish.php', json=endorsement)
                     try:
