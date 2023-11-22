@@ -21,7 +21,7 @@ function stripped_key($public_key) {
   $stripped = str_replace('-----BEGIN PUBLIC KEY-----', '', $public_key);
   $stripped = str_replace('-----END PUBLIC KEY-----', '', $stripped);
   $stripped = str_replace(array("\r", "\n", '='), '', $stripped);
-  return $stripped.substr(44, -6);
+  return substr($stripped, 44, -6);
 }
 
 $citizen = json_decode(file_get_contents("php://input"));
