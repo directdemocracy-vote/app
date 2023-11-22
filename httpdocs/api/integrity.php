@@ -78,7 +78,7 @@ if ($os === 'Android') {
   $file = fopen('../../verdict.json', 'w') or error('Unable to open verdict file!');
   fwrite($file, json_encode($verdict));
   fclose($file);
-  $nonce = str_replace('_', '/', str_replace('-', '+', $verdict->requestDetails->nonce));
+  $nonce = str_replace(array('_', '-', '='), array('/', '+', ''), $verdict->requestDetails->nonce);
   if ($nonce !== $citizen->signature)
     error("Wrong nonce: $nonce  !==  $citizen->signature");
   if ($verdict->requestDetails->requestPackageName !== 'vote.directdemocracy.app')
