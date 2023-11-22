@@ -20,8 +20,8 @@ function error($message) {
 function stripped_key($public_key) {
   $stripped = str_replace('-----BEGIN PUBLIC KEY-----', '', $public_key);
   $stripped = str_replace('-----END PUBLIC KEY-----', '', $stripped);
-  $stripped = str_replace("\r\n", '', $stripped);
-  $stripped = str_replace("\n", '', $stripped);
+  $stripped = str_replace(array("\r", "\n", '='), '', $stripped);
+  $stripped.substr(44, -6);
   return $stripped;
 }
 
