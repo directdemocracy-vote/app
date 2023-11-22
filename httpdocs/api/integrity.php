@@ -128,7 +128,7 @@ $binarySignature = '';
 $success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
 if ($success === FALSE)
   error('Failed to sign citizen');
-$citizen->appSignature = base64_encode($binarySignature);
+$citizen->appSignature = str_replace('=', '', base64_encode($binarySignature));
 $options = array('http' => array('method' => 'POST',
                                  'content' => json_encode($citizen),
                                  'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
