@@ -11,13 +11,13 @@ $test_blind_sig   = '3f4a79eacd4445fca628a310d41e12fcd813c4d43aa4ef2b81226953248
 
 function blind_sign($sk, $blinded_msg) {
   echo bcadd('1', '1');
-  $blind_sign = $blinded_msg;
+  $blind_sig = $blinded_msg;
   return $blind_sig;
 }
 
 $test_sk = [ $test_p, $test_q ];
 
-if (blind_sign($test_sk, $test_blinded_msg) === $test_blind_sign)
+if (blind_sign($test_sk, $test_blinded_msg) === $test_blind_sig)
   die("Success");
 else
   die("Failure");
