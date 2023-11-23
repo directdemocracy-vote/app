@@ -5,13 +5,12 @@ class RSABlind {
     hash,
     hashOutputLength,
     generateMask,
-    saltLength,
     signerPublicKey
   ) {
     this.hash = hash;
     this.hashOutputLength = hashOutputLength;
     this.generateMask = generateMask;
-    this.saltLen = saltLength;
+    this.saltLen = 48; // as defined in https://datatracker.ietf.org/doc/html/rfc9474#name-rsabssa-variants for RSABSSA-SHA384-PSS-Randomized
     this.signerPublicKey = signerPublicKey;
   }
 
@@ -29,7 +28,6 @@ class RSABlind {
     const hLen = hashFunction.length;
     const generateMask = (seed, maskLength) =>
       generateMGF1(seed, maskLength, hash, hashOutputLength);
-    const saltLength = 48;
 
     const publicKeyObj = await crypto.subtle.exportKey(
       'jwk',
@@ -49,63 +47,38 @@ class RSABlind {
       hash,
       hashOutputLength,
       generateMask,
-      saltLength,
       publicKeyData
     );
   }
 
   /**
-   * Prepares the vote to be signed by the polling station.
-   * @param {number} voteIndex - The index of the voter's choice vote.
-   * @returns {string} - The prepared unique vote.
+   * Prepares the message to be blind signed.
+   * @param {string} message - The message to be blind signed.
+   * @returns {Uint8Array} - The prepared unique vote.
    */
-  prepare(voteIndex) {
-    if (!this.#isValidIndex(voteIndex)) {
-      throw new Error(
-        'The vote index must be an integer greater or equal to zero.'
-      );
-    }
+  prepare(message) {
+    let textEncoder = new TextEncoder();
+    const binaryMessage = textEncoder.encode(message);
 
-    let byteVoteIndex = this.#integerToUint8Array(voteIndex);
+    // Generate 32 bytes of random data
+    const randomBytes = new Uint8Array(32);
+    self.crypto.getRandomValues(randomBytes);
 
-    // Generate 32 bytes of random data for votePrefix
-    const votePrefix = crypto.randomBytes(32);
-    window.crypto.getRandomValues(votePrefix);
-
-    // Concatenate votePrefix and the voteIndex
-    const preparedVote = new Uint8Array(
-      votePrefix.length + byteVoteIndex.length
-    );
-    preparedVote.set(votePrefix);
-    preparedVote.set(byteVoteIndex, votePrefix.length);
-
-    const textDecoder = new TextDecoder();
-    return textDecoder.decode(preparedVote);
-  }
-
-  #isValidIndex(index) {
-    return index === Math.floor(index) && index >= 0;
-  }
-
-  /**
-   * Convert an integer to a Uint8Array.
-   * @param {number} integer - The integer to be converted.
-   * @returns {Uint8Array} - Uint8Array representing the integer.
-   */
-  #integerToUint8Array(integer) {
-    const buffer = new ArrayBuffer(4);
-    const view = new DataView(buffer);
-    view.setUint32(0, integer, false); // false indicates big-endian byte order
-    return new Uint8Array(buffer);
+    // Concatenate the 32 random bytes with the binary message
+    const prepared = new Uint8Array(32 + binaryMessage.length);
+    prepared.set(randomBytes);
+    prepared.set(binaryMessage, 32);
+    return prepared;
   }
 
   /**
    * Blinds the vote using the polling station's public key.
-   * @param {string} uniqueVote - The prepared unique vote.
+   * @param {Uint8Array} prepared - The prepared message.
    * @returns {object} - An object containing the blinded unique vote and the unblinder.
    */
-  blind(uniqueVote) {
-    const encodedUniqueVote = this.#emsaPssEncode(uniqueVote, modulusBitLength);
+  blind(pkey, prepared) {
+    // the modulus of the public key of the server has a binary length of 2048
+    const encodedUniqueVote = this.#emsaPssEncode(prepared, 2048);
     const voteInteger = bytesToInt(encodedUniqueVote);
     if (!isCoprime(voteInteger, modulus)) {
       throw new Error(
@@ -151,8 +124,8 @@ class RSABlind {
    */
   #emsaPssEncode(message, keySize) {
     const messageHash = this.hash(message);
-    const salt = generateRandomUint8Array(this.saltLength);
-    salt.word;
+    const salt = new Uint8Array(this.saltLength);
+    crypto.getRandomValues(salt);
     const mask = this.generateMask(messageHash, keySize - this.saltLength - 1);
 
     // XOR mask with hash
@@ -234,7 +207,8 @@ export function secureRandomBigIntUniform(min, max) {
 
   // Generate random bytes
   const byteLength = Math.ceil(log2BigInt(range) / 8);
-  const randomBytes = generateRandomUint8Array(byteLength);
+  const randomBytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(randomBytes);
 
   // Convert random bytes to a BigInt
   let randomValue = 0n;
@@ -244,17 +218,6 @@ export function secureRandomBigIntUniform(min, max) {
   randomValue = (randomValue % range) + min;
 
   return randomValue;
-}
-
-/**
- * @param {number} size
- * @returns {Uint8Array}
- */
-function generateRandomUint8Array(size) {
-  const buffer = new Uint8Array(size);
-  crypto.getRandomValues(buffer);
-
-  return buffer;
 }
 
 /**
@@ -347,9 +310,7 @@ function base64urlToBigInt(base64url) {
   return BigInt(`0x${hex}`);
 }
 
-async function hashToBytes(algorithm, inputString) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(inputString);
+async function hashToBytes(algorithm, data) {
   try {
     const hashBuffer = await crypto.subtle.digest(algorithm, data);
     return new Uint8Array(hashBuffer);
@@ -368,10 +329,7 @@ async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
   const output = new Uint8Array(this.maskLength);
   let offset = 0;
 
-  for (
-    let counter = 0;
-    counter <= Math.ceil(maskLength / this.hashOutputLength) - 1;
-    counter++
+  for (let counter = 0; counter <= Math.ceil(maskLength / this.hashOutputLength) - 1; counter++
   ) {
     const counterBytes = new Uint8Array(4);
     counterBytes[0] = (counter >> 24) & 0xff;
