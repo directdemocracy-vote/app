@@ -46,9 +46,9 @@ $dec = gmp_strval($gmpResult);
 */
 
 $time_start = microtime(true);
-$test_sk = [gmp_init($test_n, 16), gmp_init($test_d, 16)];
-$blinded_msg = gmp_init($test_blinded_msg);
-$blind_sig = gmp_init($test_blind_sig);
+$test_sk = [gmp_init("0x$test_n", 16), gmp_init("0x$test_d", 16)];
+$blinded_msg = gmp_init("0x$test_blinded_msg");
+$blind_sig = gmp_init("0x$test_blind_sig");
 $time_end = microtime(true);
 $execution_time = round($time_end - $time_start, 1);
 print("setup took $execution_time microseconds<br>\n");
