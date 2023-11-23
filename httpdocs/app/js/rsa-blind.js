@@ -1,3 +1,5 @@
+'use strict';
+
 class RSABlind {
   constructor(
     hash,
@@ -37,7 +39,7 @@ class RSABlind {
     const publicExponent = base64urlToBigInt(publicKeyObj.e);
     const modulusLength = signerPublicKey.algorithm.modulusLength;
 
-    publicKeyData = {
+    const publicKeyData = {
       modulus: modulus,
       publicExponent: publicExponent,
       modulusLength: modulusLength
@@ -151,15 +153,15 @@ class RSABlind {
     const messageHash = this.hash(message);
     const salt = generateRandomUint8Array(this.saltLength);
     salt.word;
-    const mask = this.generateMask(messageHash, keySize - saltLength - 1);
+    const mask = this.generateMask(messageHash, keySize - this.saltLength - 1);
 
     // XOR mask with hash
     const maskedHash = messageHash.clone();
     for (let i = 0; i < mask.words.length; i++)
       maskedHash.words[i] ^= mask.words[i];
 
-    // Set the leftmost 8 * saltLength bits to zero
-    maskedHash.words[0] &= 0xffffffff >>> (32 - 8 * saltLength);
+    // Set the leftmost 8 * this.saltLength bits to zero
+    maskedHash.words[0] &= 0xffffffff >>> (32 - 8 * this.saltLength);
 
     const encryptedMessage = salt.clone().concat(maskedHash);
     encryptedMessage.words[encryptedMessage.words.length - 1] |= 0x000000bc;
@@ -360,7 +362,7 @@ async function hashToBytes(algorithm, inputString) {
 async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
   const hashFunction = new TextEncoder().encode(this.hash);
 
-  if (maskLen > 0xffffffff * this.hashOutputLength)
+  if (maskLength > 0xffffffff * this.hashOutputLength)
     throw new Error('mask too long');
 
   const output = new Uint8Array(this.maskLength);
@@ -368,7 +370,7 @@ async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
 
   for (
     let counter = 0;
-    counter <= Math.ceil(maskLen / this.hashOutputLength) - 1;
+    counter <= Math.ceil(maskLength / this.hashOutputLength) - 1;
     counter++
   ) {
     const counterBytes = new Uint8Array(4);
@@ -386,10 +388,12 @@ async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
     const hashBytes = new Uint8Array(hashBuffer);
 
     const copyLength =
-      counter < Math.ceil(maskLen / hLen) - 1 ? hLen : maskLen % hLen || hLen;
+      counter < Math.ceil(maskLength / hLen) - 1 ? hLen : maskLen % hLen || hLen;
     output.set(hashBytes.slice(0, copyLength), offset);
     offset += copyLength;
   }
 
   return output;
 }
+
+export default RSABlind;
