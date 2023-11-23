@@ -21,8 +21,8 @@ function blind_sign($sk, $blinded_msg) {
   $time_start = microtime(true);
   $blind_sig = bcpowmod($blinded_msg, $sk[1], $sk[0]);
   $time_end = microtime(true);
-  $execution_time = ($time_end - $time_start);
-  print("bcpowmod took $execution_time microseconds");
+  $execution_time = round($time_end - $time_start, 1);
+  print("bcpowmod took $execution_time seconds<br>\n");
   return $blind_sig;
 }
 
@@ -31,8 +31,8 @@ $test_sk = [bchex2dec($test_n), bchex2dec($test_d)];
 $blinded_msg = bchex2dec($test_blinded_msg);
 $blind_sig = bchex2dec($test_blind_sig);
 $time_end = microtime(true);
-$execution_time = ($time_end - $time_start);
-print("setup took $execution_time microseconds");
+$execution_time = round($time_end - $time_start, 1);
+print("setup took $execution_time microseconds<br>\n");
 if (blind_sign($test_sk, $blinded_msg) === $blind_sig)
   die("Success");
 else
