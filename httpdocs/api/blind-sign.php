@@ -26,7 +26,7 @@ $d = gmp_init("0x$test_d");
 $blinded_msg = gmp_init("0x$test_blinded_msg");
 $blind_sig = gmp_init("0x$test_blind_sig");
 
-if (gmp_cmp(blind_sign($test_sk, $blinded_msg, $n, $e), $blind_sig) === 0)
+if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) === 0)
   die("Success");
 else
   die("Failure");
