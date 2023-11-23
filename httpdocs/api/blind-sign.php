@@ -19,7 +19,9 @@ function bchex2dec($hex) {
 
 function blind_sign($sk, $blinded_msg) {
   print(bchex2dec('ff'));
+  print("<br>\n");
   print(bchex2dec('ffff'));
+  print("<br>\n");
   print(bchex2dec('10000'));
   print("<br>\n");
   print(bcadd('1', '1'));
