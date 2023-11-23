@@ -30,7 +30,7 @@ function blind_sign($sk, $blinded_msg) {
   return $blind_sig;
 }
 
-$test_sk = [ bchex2dec($test_p), bchex2dec($test_q) ];
+$test_sk = [bchex2dec($test_n), bchex2dec($test_d)];
 
 if (blind_sign($test_sk, bchex2dec($test_blinded_msg)) === bchex2dec($test_blind_sig))
   die("Success");
