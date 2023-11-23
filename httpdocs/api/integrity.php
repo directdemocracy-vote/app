@@ -20,9 +20,8 @@ function error($message) {
 function stripped_key($public_key) {
   $stripped = str_replace('-----BEGIN PUBLIC KEY-----', '', $public_key);
   $stripped = str_replace('-----END PUBLIC KEY-----', '', $stripped);
-  $stripped = str_replace("\r\n", '', $stripped);
-  $stripped = str_replace("\n", '', $stripped);
-  return $stripped;
+  $stripped = str_replace(array("\r", "\n", '='), '', $stripped);
+  return substr($stripped, 44, -6);
 }
 
 $citizen = json_decode(file_get_contents("php://input"));
@@ -65,7 +64,7 @@ if ($citizen->appKey === stripped_key($test_public_key))
 elseif ($citizen->appKey === stripped_key($app_public_key))
   $folder = '';
 else
-  error('Unknown app key');
+  error("Unknown app key ". stripped_key($test_public_key));
 
 if ($os === 'Android') {
   $client = new Client();
@@ -79,7 +78,7 @@ if ($os === 'Android') {
   $file = fopen('../../verdict.json', 'w') or error('Unable to open verdict file!');
   fwrite($file, json_encode($verdict));
   fclose($file);
-  $nonce = str_replace('_', '/', str_replace('-', '+', $verdict->requestDetails->nonce));
+  $nonce = str_replace(array('_', '-', '='), array('/', '+', ''), $verdict->requestDetails->nonce);
   if ($nonce !== $citizen->signature)
     error("Wrong nonce: $nonce  !==  $citizen->signature");
   if ($verdict->requestDetails->requestPackageName !== 'vote.directdemocracy.app')
@@ -129,7 +128,7 @@ $binarySignature = '';
 $success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
 if ($success === FALSE)
   error('Failed to sign citizen');
-$citizen->appSignature = base64_encode($binarySignature);
+$citizen->appSignature = substr(base64_encode($binarySignature), 0, -2);
 $options = array('http' => array('method' => 'POST',
                                  'content' => json_encode($citizen),
                                  'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));

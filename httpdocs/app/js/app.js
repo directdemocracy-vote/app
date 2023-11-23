@@ -9,21 +9,13 @@ const DIRECTDEMOCRACY_VERSION_MINOR = '0';
 const DIRECTDEMOCRACY_VERSION_BUILD = '30';
 
 const PRODUCTION_APP_KEY = // public key of the genuine app
-  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvD20QQ18u761ean1+zgq' +
-  'lDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8I' +
-  'k4CN63elBj4ELU70xZeYXIMxxxDqisFgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5' +
-  'd4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFh' +
-  'zfmkXiVqFrQ5BHAf+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4O' +
-  'tklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3Iga' +
-  'rQIDAQAB';
+  'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
+  'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
+  '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
 const TEST_APP_KEY = // public key of the test app
-  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnRhEkRo47vT2Zm4Cquza' +
-  'vyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2sz' +
-  'MMUwGCkqJSPi6fa90pQKx81QHY8Ab4z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3' +
-  'iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXC' +
-  'yGxbXJ8B/B5hV4QIor7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vM' +
-  'yw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2w' +
-  'tQIDAQAB';
+  'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
+  'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
+  'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
@@ -138,7 +130,7 @@ function sanitizeWebservice(string) {
 }
 
 async function importKey(key) {
-  const bytes = base64ToByteArray(key);
+  const bytes = base64ToByteArray('MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA' + key + 'IDAQAB');
   const publicKey = await crypto.subtle.importKey(
     'spki',
     bytes,
@@ -224,8 +216,10 @@ addEventListener('online', () => {
   online = true;
   disable('endorse-me-button');
   document.getElementById('endorse-me-message').textContent = translator.translate('airplane-mode');
-  downloadCitizen();
-  getReputationFromJudge();
+  if (localStorage.getItem('registered') && localStorage.getItem('publicKey')) {
+    downloadCitizen();
+    getReputationFromJudge();
+  }
 });
 
 addEventListener('offline', () => {
@@ -243,7 +237,7 @@ function keystoreFailure(e) {
 }
 
 async function publish(publication, signature, type) {
-  publication.signature = signature;
+  publication.signature = signature.slice(0, -2);
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
   integrity.check(nonce, function(token) { // success
     if (TESTING && device.platform === 'iOS')
@@ -364,7 +358,7 @@ function onDeviceReady() {
   directDemocracyVersion += ` (${device.platform})`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
   const successCreateKey = function(publicKey) {
-    localStorage.setItem('publicKey', publicKey);
+    localStorage.setItem('publicKey', publicKey.slice(44, -6));
     showMenu();
   };
   if (!localStorage.getItem('publicKey'))
@@ -409,7 +403,7 @@ function showMenu() {
       updateEndorsements();
       updateCitizenEndorsements();
       Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-        localStorage.setItem('publicKey', publicKey);
+        localStorage.setItem('publicKey', publicKey.slice(44, -6));
         showPage('register');
         console.log('revoked card');
       }, keystoreFailure);
@@ -671,7 +665,7 @@ function showMenu() {
     let binarySignature = '';
     for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(byteArray[i]);
-    const signature = btoa(binarySignature);
+    const signature = btoa(binarySignature).slice(0, -2);
     // get endorsee from fingerprint
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then((response) => response.text())
