@@ -26,13 +26,13 @@ function blind_sign($sk, $blinded_msg) {
   print("<br>\n");
   print(bcadd('1', '1'));
   print("<br>\n");
-  $blind_sig = $blinded_msg;
+  $blind_sig = bcpowmod($blinded_msg, $sk[1], sk[0]);
   return $blind_sig;
 }
 
-$test_sk = [ $test_p, $test_q ];
+$test_sk = [ bchex2dec($test_p), bchex2dec($test_q) ];
 
-if (blind_sign($test_sk, $test_blinded_msg) === $test_blind_sig)
+if (blind_sign($test_sk, bchex2dec($test_blinded_msg)) === bchex2dec($test_blind_sig))
   die("Success");
 else
   die("Failure");
