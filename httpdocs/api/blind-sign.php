@@ -18,21 +18,22 @@ function bchex2dec($hex) {
 }
 
 function blind_sign($sk, $blinded_msg) {
-  print(bchex2dec('ff'));
-  print("<br>\n");
-  print(bchex2dec('ffff'));
-  print("<br>\n");
-  print(bchex2dec($sk[0]));
-  print("<br>\n");
-  print(bcadd('1', '1'));
-  print("<br>\n");
+  $time_start = microtime(true);
   $blind_sig = bcpowmod($blinded_msg, $sk[1], $sk[0]);
+  $time_end = microtime(true);
+  $execution_time = ($time_end - $time_start);
+  print("bcpowmod took $execution_time microseconds");
   return $blind_sig;
 }
 
+$time_start = microtime(true);
 $test_sk = [bchex2dec($test_n), bchex2dec($test_d)];
-
-if (blind_sign($test_sk, bchex2dec($test_blinded_msg)) === bchex2dec($test_blind_sig))
+$blinded_msg = bchex2dec($test_blinded_msg);
+$blind_sig = bchex2dec($test_blind_sig);
+$time_end = microtime(true);
+$execution_time = ($time_end - $time_start);
+print("setup took $execution_time microseconds");
+if (blind_sign($test_sk, $blinded_msg) === $blind_sig)
   die("Success");
 else
   die("Failure");
