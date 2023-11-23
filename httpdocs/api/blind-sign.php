@@ -32,7 +32,7 @@ $blinded_msg = gmp_init("0x$test_blinded_msg");
 $blind_sig = gmp_init("0x$test_blind_sig");
 $time_end = microtime(true);
 $execution_time = round($time_end - $time_start, 3);
-print("setup took $execution_time microseconds<br>\n");
+print("setup took $execution_time seconds<br>\n");
 
 if (gmp_cmp(blind_sign($test_sk, $blinded_msg), $blind_sig) === 0)
   die("Success");
