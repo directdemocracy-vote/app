@@ -22,7 +22,7 @@ function blind_sign($sk, $blinded_msg) {
   print("<br>\n");
   print(bchex2dec('ffff'));
   print("<br>\n");
-  print(bchex2dec('10000'));
+  print(bchex2dec($sk[0]));
   print("<br>\n");
   print(bcadd('1', '1'));
   print("<br>\n");
