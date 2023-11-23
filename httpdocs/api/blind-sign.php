@@ -16,10 +16,10 @@ function blind_sign($sk, $blinded_msg, $n, $e) {
   $execution_time = round($time_end - $time_start, 3);
   // check
   $m = gmp_powm($blind_sig, $e, $n);
-  if (gmp_cmp($m, $blinded_msg) !== 0)
-    print("Error<br>\n");
-  else
-    print("OK<br>\n");
+  if (gmp_cmp($m, $blinded_msg) !== 0) {
+    print("Signing failure<br>\n");
+    return 0;
+  }
   print("gmp_powm took $execution_time seconds<br>\n");
   return $blind_sig;
 }
