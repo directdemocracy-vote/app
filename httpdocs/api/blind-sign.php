@@ -26,7 +26,7 @@ function blind_sign($sk, $blinded_msg) {
   print("<br>\n");
   print(bcadd('1', '1'));
   print("<br>\n");
-  $blind_sig = bcpowmod($blinded_msg, $sk[1], sk[0]);
+  $blind_sig = bcpowmod($blinded_msg, $sk[1], $sk[0]);
   return $blind_sig;
 }
 
