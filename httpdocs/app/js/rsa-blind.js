@@ -20,7 +20,7 @@ class RSABlind {
    * @returns {RSABlind} A new RSABlind instance with the specified parameters.
    */
   static async sha384PssRandomized(signerPublicKey) {
-    const hashAlgorithm = "SHA-384";
+    const hashAlgorithm = 'SHA-384';
     const hash = (input) => hashToBytes(hashAlgorithm, input);
     const hashOutputLength = new TextEncoder().encode(hashAlgorithm).length;
 
@@ -30,7 +30,7 @@ class RSABlind {
     const saltLength = 48;
 
     const publicKeyObj = await crypto.subtle.exportKey(
-      "jwk",
+      'jwk',
       keyPair.publicKey
     );
     const modulus = base64urlToBigInt(publicKeyObj.n);
@@ -40,7 +40,7 @@ class RSABlind {
     publicKeyData = {
       modulus: modulus,
       publicExponent: publicExponent,
-      modulusLength: modulusLength,
+      modulusLength: modulusLength
     };
 
     return new RSABlind(
@@ -60,7 +60,7 @@ class RSABlind {
   prepare(voteIndex) {
     if (!this.#isValidIndex(voteIndex)) {
       throw new Error(
-        "The vote index must be an integer greater or equal to zero."
+        'The vote index must be an integer greater or equal to zero.'
       );
     }
 
@@ -107,7 +107,7 @@ class RSABlind {
     const voteInteger = bytesToInt(encodedUniqueVote);
     if (!isCoprime(voteInteger, modulus)) {
       throw new Error(
-        "invalid input: the voteInteger must be comprime with the modulus of the public key"
+        'invalid input: the voteInteger must be comprime with the modulus of the public key'
       );
     }
     const randomBigInt = secureRandomBigIntUniform(
@@ -155,9 +155,8 @@ class RSABlind {
 
     // XOR mask with hash
     const maskedHash = messageHash.clone();
-    for (let i = 0; i < mask.words.length; i++) {
+    for (let i = 0; i < mask.words.length; i++)
       maskedHash.words[i] ^= mask.words[i];
-    }
 
     // Set the leftmost 8 * saltLength bits to zero
     maskedHash.words[0] &= 0xffffffff >>> (32 - 8 * saltLength);
@@ -196,9 +195,8 @@ class RSABlind {
 function bytesToInt(x) {
   const xLen = x.length;
   let output = 0n;
-  for (let i = 0; i < xLen; i++) {
+  for (let i = 0; i < xLen; i++)
     output += BigInt(x[xLen - 1 - i]) * 256n ** BigInt(i);
-  }
 
   return output;
 }
@@ -227,9 +225,8 @@ export function isCoprime(a, b) {
  * @returns {BigInt} A random BigInt between min and max (inclusive).
  */
 export function secureRandomBigIntUniform(min, max) {
-  if (min > max) {
-    throw new Error("min must be less than or equal to max.");
-  }
+  if (min > max)
+    throw new Error('min must be less than or equal to max.');
 
   const range = max - min + 1n;
 
@@ -239,9 +236,8 @@ export function secureRandomBigIntUniform(min, max) {
 
   // Convert random bytes to a BigInt
   let randomValue = 0n;
-  for (let i = 0; i < byteLength; i++) {
+  for (let i = 0; i < byteLength; i++)
     randomValue = (randomValue << 8n) | BigInt(randomBytes[i]);
-  }
 
   randomValue = (randomValue % range) + min;
 
@@ -266,9 +262,8 @@ function generateRandomUint8Array(size) {
  * @returns {number} The log2 of the input BigInt as a number.
  */
 function log2BigInt(value) {
-  if (value <= 0n) {
-    throw new Error("Value must be greater than 0.");
-  }
+  if (value <= 0n)
+    throw new Error('Value must be greater than 0.');
 
   let result = -1;
   while (value > 0n) {
@@ -288,9 +283,9 @@ function log2BigInt(value) {
  */
 export function inverseMod(a, modulus) {
   a = ((a % modulus) + modulus) % modulus;
-  if (modulus < 2n) {
-    return Error("invalid input: the modulus should be greater or equal to 2");
-  }
+  if (modulus < 2n)
+    return Error('invalid input: the modulus should be greater or equal to 2');
+
   // find the gcd
   const s = [];
   let b = modulus;
@@ -298,15 +293,15 @@ export function inverseMod(a, modulus) {
     [a, b] = [b, a % b];
     s.push({ a, b });
   }
-  if (a !== 1n) {
-    return Error("the inverse does not exist");
-  }
+  if (a !== 1n)
+    return Error('the inverse does not exist');
+
   // find the inverse
   let x = 1n;
   let y = 0n;
-  for (let i = s.length - 2; i >= 0; --i) {
+  for (let i = s.length - 2; i >= 0; --i)
     [x, y] = [y, x - y * (s[i].a / s[i].b)];
-  }
+
   return ((y % modulus) + modulus) % modulus;
 }
 
@@ -331,9 +326,9 @@ export function getBitLength(bigInt) {
 export function bigIntModularExponentiation(base, exponent, modulus) {
   let result = 1n;
   while (exponent > 0n) {
-    if (exponent % 2n === 1n) {
+    if (exponent % 2n === 1n)
       result = (result * base) % modulus;
-    }
+
     base = (base * base) % modulus;
     exponent = exponent / 2n;
   }
@@ -341,12 +336,12 @@ export function bigIntModularExponentiation(base, exponent, modulus) {
 }
 
 function base64urlToBigInt(base64url) {
-  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
   const binary = atob(base64);
-  let hex = "";
-  for (let i = 0; i < binary.length; i++) {
-    hex += ("00" + binary.charCodeAt(i).toString(16)).slice(-2);
-  }
+  let hex = '';
+  for (let i = 0; i < binary.length; i++)
+    hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
+
   return BigInt(`0x${hex}`);
 }
 
@@ -357,7 +352,7 @@ async function hashToBytes(algorithm, inputString) {
     const hashBuffer = await crypto.subtle.digest(algorithm, data);
     return new Uint8Array(hashBuffer);
   } catch (error) {
-    console.error("Error calculating hash:", error);
+    console.error('Error calculating hash:', error);
     return null;
   }
 }
@@ -365,9 +360,8 @@ async function hashToBytes(algorithm, inputString) {
 async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
   const hashFunction = new TextEncoder().encode(this.hash);
 
-  if (maskLen > 0xffffffff * this.hashOutputLength) {
-    throw new Error("mask too long");
-  }
+  if (maskLen > 0xffffffff * this.hashOutputLength)
+    throw new Error('mask too long');
 
   const output = new Uint8Array(this.maskLength);
   let offset = 0;
