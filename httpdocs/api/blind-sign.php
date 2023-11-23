@@ -9,11 +9,17 @@ $test_d           = '0d43242aefe1fb2c13fbc66e20b678c4336d20b1808c558b6e62ad16a28
 $test_blinded_msg = 'aa3ee045138d874669685ffaef962c7694a9450aa9b4fd6465db9b3b75a522bb921c4c0fdcdfae9667593255099cff51f5d3fd65e8ffb9d3b3036252a6b51b6edfb3f40382b2bbf34c0055e4cbcc422850e586d84f190cd449af11dc65545f5fe26fd89796eb87da4bda0c545f397cddfeeb56f06e28135ec74fd477949e7677f6f36cfae8fd5c1c5898b03b9c244cf6d1a4fb7ad1cb43aff5e80cb462fac541e72f67f0a50f1843d1759edfaae92d1a916d3f0efaf4d650db416c3bf8abdb5414a78cebc97de676723cb119e77aea489f2bbf530c440ebc5a75dccd3ebf5a412a5f346badd61bee588e5917bdcce9dc33c882e39826951b0b8276c6203971947072b726e935816056ff5cb11a71ca2946478584126bb877acdf87255f26e6cca4e0878801307485d3b7bb89b289551a8b65a7a6b93db010423d1406e149c87731910306e5e410b41d4da3234624e74f92845183e323cf7eb244f212a695f8856c675fbc3a021ce649e22c6f0d053a9d238841cf3afdc2739f99672a419ae13c17f1f8a3bc302ec2e7b98e8c353898b7150ad8877ec841ea6e4b288064c254fefd0d049c3ad196bf7ffa535e74585d0120ce728036ed500942fbd5e6332c298f1ffebe9ff60c1e117b274cf0cb9d70c36ee4891528996ec1ed0b178e9f3c0c0e6120885f39e8ccaadbb20f3196378c07b1ff22d10049d3039a7a92fe7efdd95d';
 $test_blind_sig   = '3f4a79eacd4445fca628a310d41e12fcd813c4d43aa4ef2b81226953248d6d00adfee6b79cb88bfa1f99270369fd063c023e5ed546719b0b2d143dd1bca46b0e0e615fe5c63d95c5a6b873b8b50bc52487354e69c3dfbf416e7aca18d5842c89b676efdd38087008fa5a810161fcdec26f20ccf2f1e6ab0f9d2bb93e051cb9e86a9b28c5bb62fd5f5391379f887c0f706a08bcc3b9e7506aaf02485d688198f5e22eefdf837b2dd919320b17482c5cc54271b4ccb41d267629b3f844fd63750b01f5276c79e33718bb561a152acb2eb36d8be75bce05c9d1b94eb609106f38226fb2e0f5cd5c5c39c59dda166862de498b8d92f6bcb41af433d65a2ac23da87f39764cb64e79e74a8f4ce4dd567480d967cefac46b6e9c06434c3715635834357edd2ce6f105eea854ac126ccfa3de2aac5607565a4e5efaac5eed491c335f6fc97e6eb7e9cea3e12de38dfb315220c0a3f84536abb2fdd722813e083feda010391ac3d8fd1cd9212b5d94e634e69ebcc800c4d5c4c1091c64afc37acf563c7fc0a6e4c082bc55544f50a7971f3fb97d5853d72c3af34ffd5ce123998be5360d1059820c66a81e1ee6d9c1803b5b62af6bc877526df255b6d1d835d8c840bebbcd6cc0ee910f17da37caf8488afbc08397a1941fcc79e76a5888a95b3d5405e13f737bea5c78d716a48eb9dc0aec8de39c4b45c6914ad4a8185969f70b1adf46';
 
-function blind_sign($sk, $blinded_msg) {
+function blind_sign($sk, $blinded_msg, $n, $e) {
   $time_start = microtime(true);
   $blind_sig = gmp_powm($blinded_msg, $sk[1], $sk[0]);
   $time_end = microtime(true);
   $execution_time = round($time_end - $time_start, 3);
+  // check
+  $m = gmp_powm($blind_sig, $e, $n);
+  if (gmp_cmp($m, $blinded_msg) !== 0)
+    print("Error<br>\n");
+  else
+    print("OK<br>\n");
   print("gmp_powm took $execution_time seconds<br>\n");
   return $blind_sig;
 }
@@ -22,11 +28,13 @@ $time_start = microtime(true);
 $test_sk = [gmp_init("0x$test_n"), gmp_init("0x$test_d")];
 $blinded_msg = gmp_init("0x$test_blinded_msg");
 $blind_sig = gmp_init("0x$test_blind_sig");
+$n = gmp_init("0x$test_n");
+$e = gmp_init("0x$test_e");
 $time_end = microtime(true);
 $execution_time = round($time_end - $time_start, 3);
 print("setup took $execution_time seconds<br>\n");
 
-if (gmp_cmp(blind_sign($test_sk, $blinded_msg), $blind_sig) === 0)
+if (gmp_cmp(blind_sign($test_sk, $blinded_msg, $n, $e), $blind_sig) === 0)
   die("Success");
 else
   die("Failure");
