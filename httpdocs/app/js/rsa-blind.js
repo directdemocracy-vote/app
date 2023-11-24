@@ -270,6 +270,27 @@ export function inverseMod(a, modulus) {
   return ((y % modulus) + modulus) % modulus;
 }
 
+export function bigIntToUint8Array(bigInt, arraySize) {
+  const array = new Uint8Array(arraySize);
+  const hex = bigInt.toString(16).padStart(2 * arraySize, '0');
+  for (let i = 0; i < arraySize; i++)
+    array[i] = parseInt(hex.slice(2 * i, 2 * i + 2), 16);
+  return array;
+}
+
+export function base64ToBase64u(a) {
+  a = a.replace(/=/g, '');
+  a = a.replace(/\+/g, '-');
+  a = a.replace(/\//g, '_');
+  return a;
+}
+
+export function hexToBase64u(hexstring) {
+  return base64ToBase64u(btoa(hexstring.match(/\w{2}/g).map(function(a) {
+    return String.fromCharCode(parseInt(a, 16));
+  }).join('')));
+}
+
 /**
  * Calculate the bit length of a positive BigInt.
  *

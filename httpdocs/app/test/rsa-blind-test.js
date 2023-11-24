@@ -5,16 +5,18 @@ import {
   isCoprime,
   secureRandomBigIntUniform,
   getBitLength,
-  bigIntModularExponentiation
+  bigIntModularExponentiation,
+  bigIntToUint8Array,
+  hexToBase64u
 } from '../js/rsa-blind.js';
 
-(function() { // use an iife to avoid poluting the name space
-  function test(desc, func) {
+(async function() { // use an iife to avoid poluting the name space
+  async function test(desc, func) {
     const results = document.getElementById('results');
     const line = document.createElement('div');
     results.appendChild(line);
     try {
-      func();
+      await func();
       line.style.color = '#090'; // green
       line.innerHTML = '✔ ' + desc;
     } catch (error) {
@@ -141,7 +143,7 @@ import {
     assert(result === 4n);
   });
 
-  test('finalize (test vector from RFC 9474)', function() {
+  await test('finalize (test vector from RFC 9474)', async function() {
     // Test vector for RSABSSA-SHA384-PSS-Randomized from https://datatracker.ietf.org/doc/html/rfc9474#appendix-A.1
     const inv = BigInt('0x80682c48982407b489d53d1261b19ec8627d02b8cda5336750b8cee332ae260de57b02d72609c1e0e9f28e2040fc65b6f0' +
     '2d56dbd6aa9af8fde656f70495dfb723ba01173d4707a12fddac628ca29f3e32340bd8f7ddb557cf819f6b01e445ad96f874ba235584ee71f6581f6' +
@@ -152,7 +154,7 @@ import {
     '86530930ed19f68507540eed9e1bab8b00f00d8ca09b3f099aae46180e04e3584bd7ca054df18a1504b89d1d1675d0966c4ae1407be325cdf623cf1' +
     '3ff13e4a28b594d59e3eadbadf6136eee7a59d6a444c9eb4e2198e8a974f27a39eb63af2c9af3870488b8adaad444674f512133ad80b9220e091585' +
     '21614f1faadfe8505ef57b7df6813048603f0dd04f4280177a11380fbfc861dbcbd7418d62155248dad5fdec0991f');
-    const n = BigInt('0xaec4d69addc70b990ea66a5e70603b6fee27aafebd08f2d94cbe1250c556e047a928d635c3f45ee9b66d1bc628a03bac9b7c' +
+    const n = 'aec4d69addc70b990ea66a5e70603b6fee27aafebd08f2d94cbe1250c556e047a928d635c3f45ee9b66d1bc628a03bac9b7c' +
     '3f416fe20dabea8f3d7b4bbf7f963be335d2328d67e6c13ee4a8f955e05a3283720d3e1f139c38e43e0338ad058a9495c53377fc35be64d208f89b4' +
     'aa721bf7f7d3fef837be2a80e0f8adf0bcd1eec5bb040443a2b2792fdca522a7472aed74f31a1ebe1eebc1f408660a0543dfe2a850f106a617ec668' +
     '5573702eaaa21a5640a5dcaf9b74e397fa3af18a2f1b7c03ba91a6336158de420d63188ee143866ee415735d155b7c2d854d795b7bc236cffd71542' +
@@ -160,8 +162,8 @@ import {
     '2e90e1e4deec52999bdc6c29144e8d52a125232c8c6d75c706ea3cc06841c7bda33568c63a6c03817f722b50fcf898237d788a4400869e44d90a302' +
     '0923dc646388abcc914315215fcd1bae11b1c751fd52443aac8f601087d8d42737c18a3fa11ecd4131ecae017ae0a14acfc4ef85b83c19fed33cfd1' +
     'cd629da2c4c09e222b398e18d822f77bb378dea3cb360b605e5aa58b20edc29d000a66bd177c682a17e7eb12a63ef7c2e4183e0d898f3d6bf567ba8' +
-    'ae84f84f1d23bf8b8e261c3729e2fa6d07b832e07cddd1d14f55325c6f924267957121902dc19b3b32948bdead5');
-    const e = BigInt('0x010001');
+    'ae84f84f1d23bf8b8e261c3729e2fa6d07b832e07cddd1d14f55325c6f924267957121902dc19b3b32948bdead5';
+    const e = '010001';
     const blindSig = BigInt('0x3f4a79eacd4445fca628a310d41e12fcd813c4d43aa4ef2b81226953248d6d00adfee6b79cb88bfa1f99270369fd' +
     '063c023e5ed546719b0b2d143dd1bca46b0e0e615fe5c63d95c5a6b873b8b50bc52487354e69c3dfbf416e7aca18d5842c89b676efdd38087008fa5' +
     'a810161fcdec26f20ccf2f1e6ab0f9d2bb93e051cb9e86a9b28c5bb62fd5f5391379f887c0f706a08bcc3b9e7506aaf02485d688198f5e22eefdf83' +
@@ -180,8 +182,25 @@ import {
     '18127cd1f7a93c3cf9f2d869d5a78878c03fe808a0d799e910be6f26d18db61c485b303631d3568368fc41986d08a95ea6ac0592240c19d7b22416b' +
     '9c82ae6241e211dd5610d0baaa9823158f9c32b66318f5529491b7eeadcaa71898a63bac9d95f4aa548d5e97568d744fc429104e32edd9c87519892' +
     'a198a30d333d427739ffb9607b092e910ae37771abf2adb9f63bc058bf58062ad456cb934679795bbdfcdfad5e0f2';
+    const msg = '8f3dc6fb8c4a02f4d6352edf0907822c1210a9b32f9bdda4c45a698c80023aa6b59f8cfec5fdbb36331372ebefedae7d';
+    const msgPrefix = '8417e699b219d583fb6216ae0c53ca0e9723442d02f1d1a34295527e7d929e8b';
+    const preparedMsg = msgPrefix + msg;
     const sigData = Uint8Array.from(sig.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+    const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     assert(sigData.length === 512, 'unexpected input size: expecting 512, got ' + sigData.length);
-    const s = (blindSig * inv) % n;
+    const s = (blindSig * inv) % BigInt(`0x${n}`);
+    const signature = bigIntToUint8Array(s, 512);
+    var keyData = {
+      kty: 'RSA',
+      e: hexToBase64u(e),
+      n: hexToBase64u(n),
+      alg: 'PS384',
+      ext: true
+    };
+    var algorithm = {name: 'RSA-PSS', hash: {name: 'SHA-384'}};
+    const publicKey = await crypto.subtle.importKey('jwk', keyData, algorithm, false, ['verify']);
+    console.log(publicKey);
+    const verify = await window.crypto.subtle.verify({name: 'RSA-PSS', saltLength: 48}, publicKey, signature, msgData);
+    assert(verify, 'failed to verify blind signature');
   });
 })();
