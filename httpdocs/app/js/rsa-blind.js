@@ -430,7 +430,7 @@ export async function emsaPssEncode(message, emBits, salt) {
   // however, if we don't set the first bit to 0, the official vector test fails, don't know why...
   // const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff; // FIXME: this is the correct formula
   const mask = 0x80; // FIXME: this should not be needed!
-  console.log('mask = ' + mask);
+  console.log('Warning mask value forced to ' + mask + '(or maybe emBits should be 4095 instead of 4096?)');
   maskedDb[0] &= ~mask;
   encodedMessage.set(maskedDb);
   encodedMessage.set(h, maskedDb.length);
