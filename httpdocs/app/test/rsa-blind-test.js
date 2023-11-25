@@ -4,7 +4,7 @@ import {
   inverseMod,
   isCoprime,
   secureRandomBigIntUniform,
-  getBitLength,
+  bitLength,
   bigIntModularExponentiation,
   bigIntToUint8Array,
   hexToBase64u,
@@ -176,8 +176,8 @@ import {
 
   test('should calculate the bit length of a positive BigInt', function() {
     const positiveBigInt = 0x1bcdef1234567890n;
-    const bitLength = getBitLength(positiveBigInt);
-    assert(bitLength === 61);
+    const length = bitLength(positiveBigInt);
+    assert(length === 61);
   });
 
   test('should calculate (2^3) % 5 correctly', function() {
@@ -235,8 +235,9 @@ import {
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const saltData = Uint8Array.from(salt.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const encodedMsgData = Uint8Array.from(encodedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-    const resultData = await emsaPssEncode(msgData, 4096, saltData);
-    assert(resultData.length === encodedMsgData.length, 'size mismatch');
+    const emBits = bitLength(BigInt(`0x${n}`));
+    const resultData = await emsaPssEncode(msgData, emBits, saltData);
+    assert(resultData.length === encodedMsgData.length, 'emsaPssEncode size mismatch');
     const result = Array.from(resultData, i => i.toString(16).padStart(2, '0')).join('');
     assert(encodedMsg === result, 'failed to encode message with emsaPssEncode');
   });
