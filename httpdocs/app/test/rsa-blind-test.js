@@ -86,6 +86,7 @@ import {
   const msg = '8f3dc6fb8c4a02f4d6352edf0907822c1210a9b32f9bdda4c45a698c80023aa6b59f8cfec5fdbb36331372ebefedae7d';
   const msgPrefix = '8417e699b219d583fb6216ae0c53ca0e9723442d02f1d1a34295527e7d929e8b';
   const preparedMsg = msgPrefix + msg;
+  const salt = '051722b35f458781397c3a671a7d3bd3096503940e4c4f1aaa269d60300ce449555cd7340100df9d46944c5356825abf';
 
   async function test(desc, func) {
     const results = document.getElementById('results');
@@ -219,20 +220,25 @@ import {
     assert(result === 4n);
   });
 
-  await test('MGF1', async function() {
+  await test('MGF1 with SHA-384', async function() {
     // test vector generated thanks to Python implementation at https://en.wikipedia.org/wiki/Mask_generation_function
     const seed = 'ce09df919320b17482c5cc54271b4ccb41d267629b3f849a32';
     const seedData = Uint8Array.from(seed.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const mask = 'ae30a2eaa0c53c23d340665851ab2abd37835a6572b1c11185acc8cee447e1b9';
     const maskData = Uint8Array.from(mask.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-    const m = await MGF1(seedData, maskData.length);
-    const mHex = Array.from(m, i => i.toString(16).padStart(2, '0')).join('');
-    assert(mHex === mask, 'MGF1 returned wrong mask');
+    const mData = await MGF1(seedData, maskData.length);
+    const m = Array.from(mData, i => i.toString(16).padStart(2, '0')).join('');
+    assert(m === mask, 'MGF1 returned wrong mask');
   });
 
   await test('prepare (test vector from RFC 9474)', async function() {
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-    assert(encodedMsg === emsaPssEncode(msgData, 2048), 'failed to encode message with emsaPssEncode');
+    const saltData = Uint8Array.from(salt.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+    const encodedMsgData = Uint8Array.from(encodedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+    const resultData = await emsaPssEncode(msgData, 4096, saltData);
+    assert(resultData.length === encodedMsgData.length, 'size mismatch');
+    const result = Array.from(resultData, i => i.toString(16).padStart(2, '0')).join('');
+    assert(encodedMsg === result, 'failed to encode message with emsaPssEncode');
   });
 
   await test('finalize (test vector from RFC 9474)', async function() {
