@@ -257,7 +257,7 @@ import {
     assert(blindedMsg === blindedMsgComputed, 'failed to produce correct blindedMsg');
   });
 
-  await test('finalize (test vector from RFC 9474)', async function() {
+  await test('finalize and verify (test vector from RFC 9474)', async function() {
     const sigData = Uint8Array.from(sig.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     assert(sigData.length === 512, 'unexpected input size: expecting 512, got ' + sigData.length);
