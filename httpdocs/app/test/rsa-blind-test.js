@@ -9,7 +9,8 @@ import {
   bigIntToUint8Array,
   hexToBase64u,
   emsaPssEncode,
-  MGF1
+  MGF1,
+  bytesToInt
 } from '../js/rsa-blind.js';
 
 (async function() { // use an iife to avoid poluting the name space
@@ -235,11 +236,25 @@ import {
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const saltData = Uint8Array.from(salt.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const encodedMsgData = Uint8Array.from(encodedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-    const emBits = bitLength(BigInt(`0x${n}`));
+    const nInt = BigInt(`0x${n}`);
+    const emBits = bitLength(nInt);
     const resultData = await emsaPssEncode(msgData, emBits, saltData);
     assert(resultData.length === encodedMsgData.length, 'emsaPssEncode size mismatch');
     const result = Array.from(resultData, i => i.toString(16).padStart(2, '0')).join('');
-    assert(encodedMsg === result, 'failed to encode message with emsaPssEncode');
+    assert(encodedMsg === result, 'failed to encode correct message with emsaPssEncode');
+    const mInt = bytesToInt(resultData);
+    assert(isCoprime(mInt, nInt), 'invalue input (isCoprime failed)');
+    const rInt = secureRandomBigIntUniform(1n, nInt);
+    const invInt = inverseMod(rInt, nInt);
+    console.log('Computed inv = ' + invInt);
+    const eInt = BigInt(`0x${e}`);
+    const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
+    const zInt = (mInt * xInt) % nInt;
+    const blindedMsgData = bigIntToUint8Array(zInt, emBits / 8);
+    const blindedMsgComputed = Array.from(blindedMsgData, i => i.toString(16).padStart(2, '0')).join('');
+    console.log('Computed: ' + blindedMsgComputed);
+    console.log('Expected: ' + blindedMsg);
+    assert(blindedMsg === blindedMsgComputed, 'failed to produce correct blindedMsg');
   });
 
   await test('finalize (test vector from RFC 9474)', async function() {

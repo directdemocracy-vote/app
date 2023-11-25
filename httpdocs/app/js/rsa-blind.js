@@ -167,7 +167,7 @@ class RSABlind {
  * @param {Uint8Array} x - The octet string to be converted.
  * @returns {BigInt} The corresponding nonnegative integer.
  */
-function bytesToInt(x) {
+export function bytesToInt(x) {
   const xLen = x.length;
   let output = 0n;
   for (let i = 0; i < xLen; i++)
@@ -314,7 +314,6 @@ export function bigIntModularExponentiation(base, exponent, modulus) {
   while (exponent > 0n) {
     if (exponent % 2n === 1n)
       result = (result * base) % modulus;
-
     base = (base * base) % modulus;
     exponent = exponent / 2n;
   }
