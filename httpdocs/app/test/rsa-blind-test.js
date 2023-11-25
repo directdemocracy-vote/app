@@ -247,6 +247,9 @@ import {
     const rInt = secureRandomBigIntUniform(1n, nInt);
     const invInt = inverseMod(rInt, nInt);
     console.log('Computed inv = ' + invInt);
+
+    // FIXME: we should compute a new value for rInt using inv from the test vector
+
     const eInt = BigInt(`0x${e}`);
     const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
     const zInt = (mInt * xInt) % nInt;
