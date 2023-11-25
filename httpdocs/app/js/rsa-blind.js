@@ -311,6 +311,7 @@ export function bitLength(bigInt) {
  */
 export function bigIntModularExponentiation(base, exponent, modulus) {
   let result = 1n;
+  base = base % modulus;
   while (exponent > 0n) {
     if (exponent % 2n === 1n)
       result = (result * base) % modulus;
