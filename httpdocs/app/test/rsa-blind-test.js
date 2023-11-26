@@ -237,23 +237,21 @@ import {
     const saltData = Uint8Array.from(salt.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const encodedMsgData = Uint8Array.from(encodedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const nInt = BigInt(`0x${n}`);
-    const emBits = bitLength(nInt);
-    const resultData = await emsaPssEncode(msgData, emBits, saltData);
+    const emBitLen = bitLength(nInt);
+    const resultData = await emsaPssEncode(msgData, emBitLen, saltData);
     assert(resultData.length === encodedMsgData.length, 'emsaPssEncode size mismatch');
     const result = Array.from(resultData, i => i.toString(16).padStart(2, '0')).join('');
     assert(encodedMsg === result, 'failed to encode correct message with emsaPssEncode');
     const mInt = bytesToInt(resultData);
     assert(isCoprime(mInt, nInt), 'invalue input (isCoprime failed)');
-    const rInt = secureRandomBigIntUniform(1n, nInt);
-    const invInt = inverseMod(rInt, nInt);
-    console.log('Computed inv = ' + invInt);
 
-    // FIXME: we should compute a new value for rInt using inv from the test vector
+    // Instead of generating 'r' randomly we retrieve it from 'inv'
+    const rInt = inverseMod(inv, nInt);
 
     const eInt = BigInt(`0x${e}`);
     const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
     const zInt = (mInt * xInt) % nInt;
-    const blindedMsgData = bigIntToUint8Array(zInt, emBits / 8);
+    const blindedMsgData = bigIntToUint8Array(zInt, emBitLen / 8);
     const blindedMsgComputed = Array.from(blindedMsgData, i => i.toString(16).padStart(2, '0')).join('');
     console.log('Computed: ' + blindedMsgComputed);
     console.log('Expected: ' + blindedMsg);

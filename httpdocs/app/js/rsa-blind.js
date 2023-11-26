@@ -341,40 +341,6 @@ async function hashToBytes(algorithm, data) {
   }
 }
 
-async function generateMGF1(seed, maskLength, hash, hashOutputLength) {
-  const hashFunction = new TextEncoder().encode(this.hash);
-
-  if (maskLength > 0xffffffff * this.hashOutputLength)
-    throw new Error('mask too long');
-
-  const output = new Uint8Array(this.maskLength);
-  let offset = 0;
-
-  for (let counter = 0; counter <= Math.ceil(maskLength / this.hashOutputLength) - 1; counter++
-  ) {
-    const counterBytes = new Uint8Array(4);
-    counterBytes[0] = (counter >> 24) & 0xff;
-    counterBytes[1] = (counter >> 16) & 0xff;
-    counterBytes[2] = (counter >> 8) & 0xff;
-    counterBytes[3] = counter & 0xff;
-
-    const C = counterBytes;
-    const mgfSeedAndC = new Uint8Array(mgfSeed.length + C.length);
-    mgfSeedAndC.set(mgfSeed, 0);
-    mgfSeedAndC.set(C, mgfSeed.length);
-
-    const hashBuffer = await crypto.subtle.digest(hashAlgorithm, mgfSeedAndC);
-    const hashBytes = new Uint8Array(hashBuffer);
-
-    const copyLength =
-      counter < Math.ceil(maskLength / hLen) - 1 ? hLen : maskLen % hLen || hLen;
-    output.set(hashBytes.slice(0, copyLength), offset);
-    offset += copyLength;
-  }
-
-  return output;
-}
-
 export async function MGF1(mgfSeed, maskLen) {
   const hLen = 48;
   if (maskLen > Math.pow(2, 32) * hLen)
@@ -398,8 +364,14 @@ export async function MGF1(mgfSeed, maskLen) {
   return output.slice(0, maskLen);
 }
 
-export async function emsaPssEncode(message, emBits, salt) {
-  const emLen = Math.ceil(emBits / 8);
+export async function emsaPssEncode(message, emBitLen, salt) {
+  // In the POC of the RSA signature emBits is equals to bitLength(encodedMessage) - 1.
+  // see https://github.com/cfrg/draft-irtf-cfrg-blind-signatures/blob/63ec6de689af673795ab39719c2b4cbd008bd863/poc/rsabssa.py#L47.
+  // This implementation is similar to the POC.
+  // Note that this is different from the original definition of emsaPssEncode (see https://www.rfc-editor.org/rfc/rfc8017#section-9.1.1)
+  // where emBits is equals to bitLength(encodedMessage).
+  const emBits = emBitLen - 1;
+  const emLen = Math.ceil((emBits) / 8);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-384', message));
   if (!salt) {
     salt = new Uint8Array(48);
@@ -424,13 +396,7 @@ export async function emsaPssEncode(message, emBits, salt) {
   for (let i = 0; i < db.length; i++)
     maskedDb[i] = db[i] ^ dbMask[i];
   const encodedMessage = new Uint8Array(maskedDb.length + h.length + 1);
-  console.log('emBits = ' + emBits);
-  console.log('emLen = ' + emLen);
-  // since emBits is 4096, 8 * emLen - emBits == 0, so normally, we don't have to set any bit to 0
-  // however, if we don't set the first bit to 0, the official vector test fails, don't know why...
-  // const mask = (0xff00 >> (8 * emLen - emBits)) & 0xff; // FIXME: this is the correct formula
-  const mask = 0x80; // FIXME: this should not be needed!
-  console.log('Warning mask value forced to ' + mask + ' (or maybe emBits should be ' + (emBits - 1) + '?)');
+  const mask = (0xff00 >> (8 * emLen - emBits) & 0xff);
   maskedDb[0] &= ~mask;
   encodedMessage.set(maskedDb);
   encodedMessage.set(h, maskedDb.length);
