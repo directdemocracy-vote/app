@@ -10,7 +10,7 @@ import {
   hexToBase64u,
   emsaPssEncode,
   MGF1,
-  bytesToInt
+  bytesToBigInt
 } from '../js/rsa-blind.js';
 
 (async function() { // use an iife to avoid poluting the name space
@@ -242,7 +242,7 @@ import {
     assert(resultData.length === encodedMsgData.length, 'emsaPssEncode size mismatch');
     const result = Array.from(resultData, i => i.toString(16).padStart(2, '0')).join('');
     assert(encodedMsg === result, 'failed to encode correct message with emsaPssEncode');
-    const mInt = bytesToInt(resultData);
+    const mInt = bytesToBigInt(resultData);
     assert(isCoprime(mInt, nInt), 'invalue input (isCoprime failed)');
 
     // Instead of generating 'r' randomly we retrieve it from 'inv'
@@ -264,11 +264,11 @@ import {
     assert(sigData.length === 512, 'unexpected input size: expecting 512, got ' + sigData.length);
     const s = (blindSig * inv) % BigInt(`0x${n}`);
     const signature = bigIntToUint8Array(s, 512);
-    const keyData = {kty: 'RSA', e: hexToBase64u(e), n: hexToBase64u(n), alg: 'PS384', ext: true};
-    const algorithm = {name: 'RSA-PSS', hash: {name: 'SHA-384'}};
+    const keyData = { kty: 'RSA', e: hexToBase64u(e), n: hexToBase64u(n), alg: 'PS384', ext: true };
+    const algorithm = { name: 'RSA-PSS', hash: { name: 'SHA-384' } };
     const publicKey = await crypto.subtle.importKey('jwk', keyData, algorithm, false, ['verify']);
     assert(publicKey, 'failed to create public key from exponent and modulus');
-    const verify = await window.crypto.subtle.verify({name: 'RSA-PSS', saltLength: 48}, publicKey, signature, msgData);
+    const verify = await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 48 }, publicKey, signature, msgData);
     assert(verify, 'failed to verify blind signature');
   });
 })();

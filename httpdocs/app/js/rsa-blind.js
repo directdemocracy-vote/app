@@ -79,7 +79,7 @@ class RSABlind {
   blind(pkey, prepared) {
     // the modulus of the public key of the server has a binary length of 2048
     const encodedUniqueVote = this.#emsaPssEncode(prepared, 2048);
-    const voteInteger = bytesToInt(encodedUniqueVote);
+    const voteInteger = bytesToBigInt(encodedUniqueVote);
     if (!isCoprime(voteInteger, modulus)) {
       throw new Error(
         'invalid input: the voteInteger must be comprime with the modulus of the public key'
@@ -162,95 +162,56 @@ class RSABlind {
   }
 }
 
-/**
- * Converts a Uint8Array (octet string) to a nonnegative integer using OS2IP.
- * @param {Uint8Array} x - The octet string to be converted.
- * @returns {BigInt} The corresponding nonnegative integer.
- */
-export function bytesToInt(x) {
+export function bytesToBigInt(x) { // converts a Uint8Array to a non-negative BigInt (OS2IP)
   const xLen = x.length;
   let output = 0n;
   for (let i = 0; i < xLen; i++)
     output += BigInt(x[xLen - 1 - i]) * 256n ** BigInt(i);
-
   return output;
 }
 
-/**
- * Checks if two numbers are coprime (relatively prime).
- * @param {BigInt} a - The first number.
- * @param {BigInt} b - The second number.
- * @returns {boolean} True if a and b are coprime, false otherwise.
- */
-export function isCoprime(a, b) {
+export function isCoprime(a, b) { // Checks if two BigInt numbers are coprime (relatively prime)
   // Euclidean algorithm to find the greatest common divisor
   while (b !== 0n) {
     const temp = b;
     b = a % b;
     a = temp;
   }
-
   return a === 1n;
 }
 
-/**
- * Generates a cryptographically secure random BigInt between min (inclusive) and max (inclusive).
- * @param {BigInt} min - The minimum value of the random BigInt.
- * @param {BigInt} max - The maximum value of the random BigInt.
- * @returns {BigInt} A random BigInt between min and max (inclusive).
- */
 export function secureRandomBigIntUniform(min, max) {
+  // Generates a cryptographically secure random BigInt between min (inclusive) and max (inclusive)
+  function log2BigInt(value) {
+    // computes the base-2 logarithm (log2) of a BigInt
+    if (value <= 0n)
+      throw new Error('Value must be greater than 0.');
+    let result = -1;
+    while (value > 0n) {
+      value >>= 1n; // Right-shift the value by 1 bit
+      result++;
+    }
+    return result;
+  }
   if (min > max)
     throw new Error('min must be less than or equal to max.');
-
   const range = max - min + 1n;
-
   // Generate random bytes
   const byteLength = Math.ceil(log2BigInt(range) / 8);
   const randomBytes = new Uint8Array(byteLength);
   crypto.getRandomValues(randomBytes);
-
   // Convert random bytes to a BigInt
   let randomValue = 0n;
   for (let i = 0; i < byteLength; i++)
     randomValue = (randomValue << 8n) | BigInt(randomBytes[i]);
-
   randomValue = (randomValue % range) + min;
-
   return randomValue;
 }
 
-/**
- * Calculates the base-2 logarithm (log2) of a BigInt.
- * @param {BigInt} value - The BigInt for which to calculate the log2.
- * @throws {Error} Throws an error if the value is not greater than 0.
- * @returns {number} The log2 of the input BigInt as a number.
- */
-function log2BigInt(value) {
-  if (value <= 0n)
-    throw new Error('Value must be greater than 0.');
-
-  let result = -1;
-  while (value > 0n) {
-    value >>= 1n; // Right-shift the value by 1 bit
-    result++;
-  }
-
-  return result;
-}
-
-/**
- * Calculates the modular multiplicative inverse of a BigInt.
- * @param {BigInt} a - The BigInt for which to find the inverse.
- * @param {BigInt} modulus - The modulus.
- * @returns {BigInt} The modular multiplicative inverse of a (mod modulus).
- * @throws {Error} If the modular inverse does not exist.
- */
 export function inverseMod(a, modulus) {
   a = ((a % modulus) + modulus) % modulus;
   if (modulus < 2n)
     return Error('invalid input: the modulus should be greater or equal to 2');
-
   // find the gcd
   const s = [];
   let b = modulus;
@@ -260,13 +221,11 @@ export function inverseMod(a, modulus) {
   }
   if (a !== 1n)
     return Error('the inverse does not exist');
-
   // find the inverse
   let x = 1n;
   let y = 0n;
   for (let i = s.length - 2; i >= 0; --i)
     [x, y] = [y, x - y * (s[i].a / s[i].b)];
-
   return ((y % modulus) + modulus) % modulus;
 }
 
@@ -291,24 +250,10 @@ export function hexToBase64u(hexstring) {
   }).join('')));
 }
 
-/**
- * Calculate the bit length of a positive BigInt.
- *
- * @param {BigInt} bigInt - The positive BigInt for which to calculate the bit length.
- * @returns {number} The bit length of the BigInt.
- */
 export function bitLength(bigInt) {
-  const binaryString = bigInt.toString(2);
-  return binaryString.length;
+  return bigInt.toString(2).length;
 }
 
-/**
- * Perform modular exponentiation with BigInt values.
- * @param {BigInt} base - The base.
- * @param {BigInt} exponent - The exponent.
- * @param {BigInt} modulus - The modulus.
- * @returns {BigInt} The result of (base^exponent) % modulus.
- */
 export function bigIntModularExponentiation(base, exponent, modulus) {
   let result = 1n;
   base = base % modulus;
@@ -319,26 +264,6 @@ export function bigIntModularExponentiation(base, exponent, modulus) {
     exponent = exponent / 2n;
   }
   return result;
-}
-
-function base64urlToBigInt(base64url) {
-  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(base64);
-  let hex = '';
-  for (let i = 0; i < binary.length; i++)
-    hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
-
-  return BigInt(`0x${hex}`);
-}
-
-async function hashToBytes(algorithm, data) {
-  try {
-    const hashBuffer = await crypto.subtle.digest(algorithm, data);
-    return new Uint8Array(hashBuffer);
-  } catch (error) {
-    console.error('Error calculating hash:', error);
-    return null;
-  }
 }
 
 export async function MGF1(mgfSeed, maskLen) {
@@ -402,6 +327,43 @@ export async function emsaPssEncode(message, emBitLen, salt) {
   encodedMessage.set(h, maskedDb.length);
   encodedMessage.set(new Uint8Array([0xbc]), maskedDb.length + h.length);
   return encodedMessage;
+}
+
+/**
+   * Converts a CryptoJS WordArray to a Uint8Array of bytes.
+   * @param {CryptoKey} publicKey - The public key of the app.
+   * @param {Uint8Array} message - The prepared message to be blind signed.
+   * @param {Uint8Array} salt - The salt provided.
+   * @returns {Uint8Array} message - The prepared message to be blind signed.
+   */
+export async function rsaBlind(publicKey, message) {
+  function base64urlToBigInt(base64url) {
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    let hex = '';
+    for (let i = 0; i < binary.length; i++)
+      hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
+    return BigInt(`0x${hex}`);
+  }
+  const publicKeyExport = await crypto.subtle.exportKey('jwk', publicKey);
+  const nInt = base64urlToBigInt(publicKeyExport.n);
+  const eInt = base64urlToBigInt(publicKeyExport.e);
+  const salt = new Uint8Array(48);
+  self.crypto.getRandomValues(salt);
+  const emBitLen = bitLength(nInt);
+  const result = await emsaPssEncode(message, emBitLen, salt);
+  if (result.length !== message.length)
+    console.error('emsaPssEncode size mismatch');
+  const mInt = bytesToBigInt(result);
+  if (!isCoprime(mInt, nInt))
+    console.error('invalue input (isCoprime failed)');
+  const rInt = secureRandomBigIntUniform(1n, nInt);
+  const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
+  const zInt = (mInt * xInt) % nInt;
+  return {
+    'blinded_msg': bigIntToUint8Array(zInt, emBitLen / 8),
+    'inv': inverseMod(rInt, nInt)
+  };
 }
 
 export default RSABlind;
