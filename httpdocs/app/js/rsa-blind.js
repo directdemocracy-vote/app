@@ -371,7 +371,7 @@ export async function emsaPssEncode(message, emBitLen, salt) {
   // Note that this is different from the original definition of emsaPssEncode (see https://www.rfc-editor.org/rfc/rfc8017#section-9.1.1)
   // where emBits is equals to bitLength(encodedMessage).
   const emBits = emBitLen - 1;
-  const emLen = Math.ceil((emBits) / 8);
+  const emLen = Math.ceil(emBits / 8);
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-384', message));
   if (!salt) {
     salt = new Uint8Array(48);
