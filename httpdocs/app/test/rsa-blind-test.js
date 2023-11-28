@@ -157,7 +157,7 @@ import {
       assert(false, 'Expected an error but got none.');
     } catch (error) {
       assert(error instanceof Error);
-      assert(error.message === 'min must be less than or equal to max.');
+      assert(error.message === 'min must be less than or equal to max');
     }
   });
 
@@ -232,7 +232,7 @@ import {
     assert(m === mask, 'MGF1 returned wrong mask');
   });
 
-  await test('prepare (test vector from RFC 9474)', async function() {
+  await test('prepare and blind (test vector from RFC 9474)', async function() {
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const saltData = Uint8Array.from(salt.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const encodedMsgData = Uint8Array.from(encodedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));

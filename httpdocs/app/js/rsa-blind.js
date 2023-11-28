@@ -1,167 +1,5 @@
 'use strict';
 
-class RSABlind {
-  constructor(
-    hash,
-    hashOutputLength,
-    generateMask,
-    signerPublicKey
-  ) {
-    this.hash = hash;
-    this.hashOutputLength = hashOutputLength;
-    this.generateMask = generateMask;
-    this.saltLen = 48; // as defined in https://datatracker.ietf.org/doc/html/rfc9474#name-rsabssa-variants for RSABSSA-SHA384-PSS-Randomized
-    this.signerPublicKey = signerPublicKey;
-  }
-
-  /**
-   * Creates a new instance of the RSABlind class with the SHA-384 hash function,
-   * randomized PSS encoding.
-   * @param {CryptoKey} singerPublicKey - The singer's public key as a string.
-   * @returns {RSABlind} A new RSABlind instance with the specified parameters.
-   */
-  static async sha384PssRandomized(signerPublicKey) {
-    const hashAlgorithm = 'SHA-384';
-    const hash = (input) => hashToBytes(hashAlgorithm, input);
-    const hashOutputLength = new TextEncoder().encode(hashAlgorithm).length;
-
-    const hLen = hashFunction.length;
-    const generateMask = (seed, maskLength) =>
-      generateMGF1(seed, maskLength, hash, hashOutputLength);
-
-    const publicKeyObj = await crypto.subtle.exportKey(
-      'jwk',
-      keyPair.publicKey
-    );
-    const modulus = base64urlToBigInt(publicKeyObj.n);
-    const publicExponent = base64urlToBigInt(publicKeyObj.e);
-    const modulusLength = signerPublicKey.algorithm.modulusLength;
-
-    const publicKeyData = {
-      modulus: modulus,
-      publicExponent: publicExponent,
-      modulusLength: modulusLength
-    };
-
-    return new RSABlind(
-      hash,
-      hashOutputLength,
-      generateMask,
-      publicKeyData
-    );
-  }
-
-  /**
-   * Prepares the message to be blind signed.
-   * @param {string} message - The message to be blind signed.
-   * @returns {Uint8Array} - The prepared unique vote.
-   */
-  prepare(message) {
-    let textEncoder = new TextEncoder();
-    const binaryMessage = textEncoder.encode(message);
-
-    // Generate 32 bytes of random data
-    const randomBytes = new Uint8Array(32);
-    self.crypto.getRandomValues(randomBytes);
-
-    // Concatenate the 32 random bytes with the binary message
-    const prepared = new Uint8Array(32 + binaryMessage.length);
-    prepared.set(randomBytes);
-    prepared.set(binaryMessage, 32);
-    return prepared;
-  }
-
-  /**
-   * Blinds the vote using the polling station's public key.
-   * @param {Uint8Array} prepared - The prepared message.
-   * @returns {object} - An object containing the blinded unique vote and the unblinder.
-   */
-  blind(pkey, prepared) {
-    // the modulus of the public key of the server has a binary length of 2048
-    const encodedUniqueVote = this.#emsaPssEncode(prepared, 2048);
-    const voteInteger = bytesToBigInt(encodedUniqueVote);
-    if (!isCoprime(voteInteger, modulus)) {
-      throw new Error(
-        'invalid input: the voteInteger must be comprime with the modulus of the public key'
-      );
-    }
-    const randomBigInt = secureRandomBigIntUniform(
-      1,
-      this.signerPublicKey.modulus
-    );
-    const unblindingKey = inverseMod(
-      randomBigInt,
-      this.signerPublicKey.modulus
-    );
-    const x = bigIntModularExponentiation(
-      randomBigInt,
-      this.signerPublicKey.publicExponent,
-      this.signerPublicKey.modulus
-    );
-    const z = (m * x) % pk.n;
-
-    // TODO: transform the resulting int z to bytes
-    // TODO: Return the blinded message and the inverse
-    return 0;
-  }
-
-  /**
-   * Recovers the final signature from the blinded signature.
-   * @param {string} publicKey - The polling station's public key.
-   * @param {object} blindedUniqueVote - The blinded unique vote.
-   * @param {object} blindSignature - The blind signature.
-   * @returns {string} - The final signature.
-   */
-  finalize(publicKey, blindedUniqueVote, blindSignature) {
-    // TODO
-  }
-
-  /**
-   * Performs EMSA-PSS encoding for the given message.
-   * @param {string} message - The message to be encoded.
-   * @param {number} keySize - The size of the RSA key in bits.
-   * @returns {Uint8Array} The encoded message.
-   */
-  #emsaPssEncode(message, keySize) {
-    const messageHash = this.hash(message);
-    const salt = new Uint8Array(this.saltLength);
-    crypto.getRandomValues(salt);
-    const mask = this.generateMask(messageHash, keySize - this.saltLength - 1);
-
-    // XOR mask with hash
-    const maskedHash = messageHash.clone();
-    for (let i = 0; i < mask.words.length; i++)
-      maskedHash.words[i] ^= mask.words[i];
-
-    // Set the leftmost 8 * this.saltLength bits to zero
-    maskedHash.words[0] &= 0xffffffff >>> (32 - 8 * this.saltLength);
-
-    const encryptedMessage = salt.clone().concat(maskedHash);
-    encryptedMessage.words[encryptedMessage.words.length - 1] |= 0x000000bc;
-    return this.#convertWordArrayToUint8Array(encryptedMessage);
-  }
-
-  /**
-   * Converts a CryptoJS WordArray to a Uint8Array of bytes.
-   * @param {CryptoJS.lib.WordArray} wordArray - The WordArray to be converted.
-   * @returns {Uint8Array} The Uint8Array containing the bytes from the WordArray.
-   */
-  #convertWordArrayToUint8Array(wordArray) {
-    const len = wordArray.words.length;
-    const uint8Array = new Uint8Array(len * 4);
-
-    for (let i = 0, offset = 0; i < len; i++) {
-      const word = wordArray.words[i];
-      uint8Array[offset++] = (word >> 24) & 0xff;
-      uint8Array[offset++] = (word >> 16) & 0xff;
-      uint8Array[offset++] = (word >> 8) & 0xff;
-      uint8Array[offset++] = word & 0xff;
-    }
-
-    return uint8Array;
-  }
-}
-
 export function bytesToBigInt(x) { // converts a Uint8Array to a non-negative BigInt (OS2IP)
   const xLen = x.length;
   let output = 0n;
@@ -171,8 +9,7 @@ export function bytesToBigInt(x) { // converts a Uint8Array to a non-negative Bi
 }
 
 export function isCoprime(a, b) { // Checks if two BigInt numbers are coprime (relatively prime)
-  // Euclidean algorithm to find the greatest common divisor
-  while (b !== 0n) {
+  while (b !== 0n) { // Euclidean algorithm to find the greatest common divisor
     const temp = b;
     b = a % b;
     a = temp;
@@ -182,10 +19,9 @@ export function isCoprime(a, b) { // Checks if two BigInt numbers are coprime (r
 
 export function secureRandomBigIntUniform(min, max) {
   // Generates a cryptographically secure random BigInt between min (inclusive) and max (inclusive)
-  function log2BigInt(value) {
-    // computes the base-2 logarithm (log2) of a BigInt
+  function log2BigInt(value) { // computes the base-2 logarithm (log2) of a BigInt
     if (value <= 0n)
-      throw new Error('Value must be greater than 0.');
+      throw new Error('value must be greater than 0');
     let result = -1;
     while (value > 0n) {
       value >>= 1n; // Right-shift the value by 1 bit
@@ -194,24 +30,18 @@ export function secureRandomBigIntUniform(min, max) {
     return result;
   }
   if (min > max)
-    throw new Error('min must be less than or equal to max.');
+    throw new Error('min must be less than or equal to max');
   const range = max - min + 1n;
-  // Generate random bytes
   const byteLength = Math.ceil(log2BigInt(range) / 8);
   const randomBytes = new Uint8Array(byteLength);
   crypto.getRandomValues(randomBytes);
-  // Convert random bytes to a BigInt
-  let randomValue = 0n;
-  for (let i = 0; i < byteLength; i++)
-    randomValue = (randomValue << 8n) | BigInt(randomBytes[i]);
-  randomValue = (randomValue % range) + min;
-  return randomValue;
+  return bytesToBigInt(randomBytes) % range + min;
 }
 
 export function inverseMod(a, modulus) {
   a = ((a % modulus) + modulus) % modulus;
   if (modulus < 2n)
-    return Error('invalid input: the modulus should be greater or equal to 2');
+    throw new Error('invalid input: the modulus should be greater or equal to 2');
   // find the gcd
   const s = [];
   let b = modulus;
@@ -220,7 +50,7 @@ export function inverseMod(a, modulus) {
     s.push({ a, b });
   }
   if (a !== 1n)
-    return Error('the inverse does not exist');
+    throw new Error('the inverse does not exist');
   // find the inverse
   let x = 1n;
   let y = 0n;
@@ -248,6 +78,15 @@ export function hexToBase64u(hexstring) {
   return base64ToBase64u(btoa(hexstring.match(/\w{2}/g).map(function(a) {
     return String.fromCharCode(parseInt(a, 16));
   }).join('')));
+}
+
+function base64uToBigInt(base64url) {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(base64);
+  let hex = '';
+  for (let i = 0; i < binary.length; i++)
+    hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
+  return BigInt(`0x${hex}`);
 }
 
 export function bitLength(bigInt) {
@@ -317,7 +156,7 @@ export async function emsaPssEncode(message, emBitLen, salt) {
   const dbMask = await MGF1(h, emLen - hash.length - 1);
   const maskedDb = new Uint8Array(db.length);
   if (db.length !== maskedDb.length)
-    console.error('Wrong db length: ' + db.length);
+    throw new Error('wrong db length: ' + db.length);
   for (let i = 0; i < db.length; i++)
     maskedDb[i] = db[i] ^ dbMask[i];
   const encodedMessage = new Uint8Array(maskedDb.length + h.length + 1);
@@ -330,40 +169,65 @@ export async function emsaPssEncode(message, emBitLen, salt) {
 }
 
 /**
-   * Converts a CryptoJS WordArray to a Uint8Array of bytes.
-   * @param {CryptoKey} publicKey - The public key of the app.
+   * prepare a message to be blind signed by the owner of a RSA public key.
+   * Note: the message should already be prepared and include the random part (see RFC 9474).
+   * @param {CryptoKey} publicKey - The public key.
    * @param {Uint8Array} message - The prepared message to be blind signed.
    * @param {Uint8Array} salt - The salt provided.
-   * @returns {Uint8Array} message - The prepared message to be blind signed.
+   * @returns {Uint8Array, BigInt} {blindMessage, inv} - The prepared message to be blind signed and the inv key
    */
-export async function rsaBlind(publicKey, message) {
-  function base64urlToBigInt(base64url) {
-    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-    const binary = atob(base64);
-    let hex = '';
-    for (let i = 0; i < binary.length; i++)
-      hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
-    return BigInt(`0x${hex}`);
-  }
+export async function rsaBlind(publicKey, message, salt) {
   const publicKeyExport = await crypto.subtle.exportKey('jwk', publicKey);
-  const nInt = base64urlToBigInt(publicKeyExport.n);
-  const eInt = base64urlToBigInt(publicKeyExport.e);
-  const salt = new Uint8Array(48);
-  self.crypto.getRandomValues(salt);
+  const nInt = base64uToBigInt(publicKeyExport.n);
+  const eInt = base64uToBigInt(publicKeyExport.e);
+  if (salt === undefined) {
+    salt = new Uint8Array(48);
+    self.crypto.getRandomValues(salt);
+  }
   const emBitLen = bitLength(nInt);
   const result = await emsaPssEncode(message, emBitLen, salt);
   if (result.length !== message.length)
-    console.error('emsaPssEncode size mismatch');
+    throw new Error('emsaPssEncode size mismatch');
   const mInt = bytesToBigInt(result);
   if (!isCoprime(mInt, nInt))
-    console.error('invalue input (isCoprime failed)');
+    throw new Error('isCoprime failed');
   const rInt = secureRandomBigIntUniform(1n, nInt);
   const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
   const zInt = (mInt * xInt) % nInt;
   return {
-    'blinded_msg': bigIntToUint8Array(zInt, emBitLen / 8),
+    'blindMessage': bigIntToUint8Array(zInt, emBitLen / 8),
     'inv': inverseMod(rInt, nInt)
   };
 }
 
-export default RSABlind;
+/**
+   * unblind a blindly signed message and verify it (see RFC 9474 - finalize).
+   * @param {CryptoKey} publicKey - The public key.
+   * @param {Uint8Array} blindMessage - The prepared message which was blind signed.
+   * @param {Uint8Array} blindSignature - The blind signature.
+   * @param {BigInt} inv - The decoding key.
+   * @returns {Uint8Array} signature - The unblinded signature.
+   */
+export async function rsaUnblind(publicKey, blindMessage, blindSignature, inv) {
+  if (blindSignature.length !== 512)
+    throw new Error('unexpected blind signature size: expecting 512, got ' + blindSignature.length);
+  const publicKeyExport = await crypto.subtle.exportKey('jwk', publicKey);
+  const nInt = base64uToBigInt(publicKeyExport.n);
+  const s = (bytesToBigInt(blindSignature) * inv) % nInt;
+  const signature = bigIntToUint8Array(s, 512);
+  const keyData = {
+    kty: 'RSA',
+    e: base64ToBase64u(publicKeyExport.e),
+    n: base64ToBase64u(publicKeyExport.n),
+    alg: 'PS384',
+    ext: true
+  };
+  const algorithm = { name: 'RSA-PSS', hash: { name: 'SHA-384' } };
+  const ps384Key = await crypto.subtle.importKey('jwk', keyData, algorithm, false, ['verify']);
+  if (!ps384Key)
+    throw new Error('failed to create public key from exponent and modulus');
+  const verify = await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 48 }, ps384Key, signature, blindMessage);
+  if (!verify)
+    throw new Error('failed to verify blind signature');
+  return signature;
+}
