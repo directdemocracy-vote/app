@@ -214,8 +214,6 @@ app.views.create('.view-main', { iosDynamicNavbar: false });
 addEventListener('online', () => {
   console.log('online');
   online = true;
-  disable('endorse-me-button');
-  document.getElementById('endorse-me-message').textContent = translator.translate('airplane-mode');
   if (localStorage.getItem('registered') && localStorage.getItem('publicKey')) {
     downloadCitizen();
     getReputationFromJudge();
@@ -225,8 +223,6 @@ addEventListener('online', () => {
 addEventListener('offline', () => {
   console.log('offline');
   online = false;
-  enable('endorse-me-button');
-  document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
 });
 
 // Wait for Cordova to be initialized.
@@ -598,10 +594,6 @@ function showMenu() {
   }
 
   document.getElementById('cancel-scanner').addEventListener('click', function() {
-    if (!online) {
-      enable('endorse-me-button');
-      document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
-    }
     QRScanner.cancelScan(function(status) {
       stopScanner('home');
     });
@@ -622,7 +614,6 @@ function showMenu() {
   }
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
-    console.log('click endorse me');
     disable('endorse-me-button');
     scan(function(error, contents) {
       show('home');
@@ -755,46 +746,25 @@ function showMenu() {
     show('home');
     if (challenge !== '')
       scan(scanChallengeAnswer);
-    else {
-      const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
-      const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
-      app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-      if (!online)
-        enable('endorse-me-button');
-    }
   }
 
   document.getElementById('qrcode-done').addEventListener('click', qrCodeDone);
 
   document.getElementById('endorse-button').addEventListener('click', function() {
     disable('endorse-button');
-    app.dialog.create({
-      title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
-      text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
-      buttons: [{
-        text: 'Confirm',
-        onClick: function() {
-          const randomBytes = new Uint8Array(20);
-          crypto.getRandomValues(randomBytes);
-          challenge = encodeBase128(randomBytes);
-          const qr = new QRious({
-            value: challenge,
-            level: 'L',
-            size: 512,
-            padding: 0
-          });
-          document.getElementById('qrcode-image').src = qr.toDataURL();
-          document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
-          hide('home');
-          show('qrcode');
-        }
-      }, {
-        text: 'Cancel',
-        onClick: function() {
-          enable('endorse-button');
-        }
-      }]
-    }).open();
+    const randomBytes = new Uint8Array(20);
+    crypto.getRandomValues(randomBytes);
+    challenge = encodeBase128(randomBytes);
+    const qr = new QRious({
+      value: challenge,
+      level: 'L',
+      size: 512,
+      padding: 0
+    });
+    document.getElementById('qrcode-image').src = qr.toDataURL();
+    document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
+    hide('home');
+    show('qrcode');
   });
 
   document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
