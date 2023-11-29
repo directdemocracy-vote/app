@@ -4,6 +4,7 @@ import os
 import requests
 import sys
 import time
+import datetime
 
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
@@ -94,7 +95,6 @@ def generate_endorsements(folder=None):
             if folder is None:
                 folder = 'citizen'
             for endorsed_filename in os.listdir(folder):
-                print(endorsed_filename)
                 if endorsed_filename.endswith('.json') and endorsed_filename != citizen_filename:
                     endorsed_name = endorsed_filename[:-5]
                     endorsed_file = os.path.join(folder, endorsed_filename)
@@ -126,8 +126,31 @@ def generate_endorsements(folder=None):
                         sys.exit('Error: ' + answer['error'])
             print('')
 
+def generate_proposals():
+    for proposal_filename in os.listdir('proposal'):
+        if not proposal_filename.endswith('.json'):
+            continue
+        print(proposal_filename[:-5], end='', flush=True)
+        proposal_filename = os.path.join('proposal', proposal_filename)
+        with open(proposal_filename, 'r', encoding='utf8') as file:
+            proposal = json.load(file)
+            if 'area_name' in proposal:
+                proposal['area'] = requests.get('https://judge.directdemocracy.vote/api/publish_area.php?' + proposal['area_name']).json()['signature']
+                del proposal['area_name']
+            if proposal['published'] == '':
+                proposal['published'] = int(time.time())
+            elif not isinstance(proposal['published'], int):
+                proposal['published'] = datetime.datetime.fromisoformat(proposal['published']).timestamp()
+            if not isinstance(proposal['deadline'], int):
+                proposal['deadline'] = datetime.datetime.fromisoformat(proposal['deadline']).timestamp()
+            answer = requests.post('https://judge.directdemocracy.vote/api/publish_proposal.php', json=proposal).json()
+            if 'error' in answer:
+                print(': error: ' + answer['error'])
+            else:
+                print('.')
 
 # generate_app()
 # generate_citizens()
 # generate_endorsements()
-generate_endorsements('others')
+# generate_endorsements('others')
+generate_proposals()
