@@ -1011,7 +1011,6 @@ function showMenu() {
       'key': proposal.key,
       'signature': '',
       'published': proposal.published,
-      'judge': proposal.judge,
       'area': proposal.area,
       'title': proposal.title,
       'description': proposal.description
@@ -1026,16 +1025,11 @@ function showMenu() {
       p['website'] = proposal.website;
 
     const publicKey = await importKey(proposal.key);
-
+    if (!publicKey)
+      console.error('Failed to import public key for proposal');
     const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
-    const verify = await crypto.subtle.verify(
-      'RSASSA-PKCS1-v1_5',
-      publicKey,
-      bytes,
-      packetArrayBuffer
-    );
-
+    const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
     if (!verify) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
       return false;
