@@ -24,8 +24,13 @@ function stripped_key($public_key) {
   return substr($stripped, 44, -6);
 }
 
-$citizen = json_decode(file_get_contents("php://input"));
-if (!$citizen)
+function get_type($schema) {
+  $p = strrpos($schema, '/', 13);
+  return substr($schema, $p + 1, strlen($schema) - $p - 13);  # remove the .schema.json suffix
+}
+
+$publication = json_decode(file_get_contents("php://input"));
+if (!$publication)
   error('Unable to parse JSON post');
 
 $headers = getallheaders();
@@ -50,7 +55,7 @@ $notary = $headers['user-notary'];
 if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
   error("Bad user-notary header: $notary");
   
-# if the integrity check is successful, this means the citizen blob is well formed because
+# if the integrity check is successful, this means the publication is well formed because
 # it was created by a geniune app, so we don't need to check it
 
 $file = fopen('../../test/id_rsa.pub', 'r') or error('Failed to read test public key');
@@ -59,9 +64,9 @@ fclose($file);
 $file = fopen('../../id_rsa.pub', 'r') or error('Failed to read app public key');
 $app_public_key = fread($file, filesize('../../id_rsa.pub'));
 fclose($file);
-if ($citizen->appKey === stripped_key($test_public_key))
+if ($publication->appKey === stripped_key($test_public_key))
   $folder = 'test/';
-elseif ($citizen->appKey === stripped_key($app_public_key))
+elseif ($publication->appKey === stripped_key($app_public_key))
   $folder = '';
 else
   error("Unknown app key ". stripped_key($test_public_key));
@@ -79,8 +84,8 @@ if ($os === 'Android') {
   fwrite($file, json_encode($verdict));
   fclose($file);
   $nonce = str_replace(array('_', '-', '='), array('/', '+', ''), $verdict->requestDetails->nonce);
-  if ($nonce !== $citizen->signature)
-    error("Wrong nonce: $nonce  !==  $citizen->signature");
+  if ($nonce !== $publication->signature)
+    error("Wrong nonce: $nonce  !==  $publication->signature");
   if ($verdict->requestDetails->requestPackageName !== 'vote.directdemocracy.app')
     error('Wrong package name');
   if ($folder === '') {
@@ -125,13 +130,23 @@ $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
 if ($private_key == FALSE)
   error('Failed to read private key');
 $binarySignature = '';
-$success = openssl_sign($citizen->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
+$success = openssl_sign($publication->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
 if ($success === FALSE)
-  error('Failed to sign citizen');
-$citizen->appSignature = substr(base64_encode($binarySignature), 0, -2);
-$options = array('http' => array('method' => 'POST',
-                                 'content' => json_encode($citizen),
-                                 'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
-$context  = stream_context_create($options);
-die(file_get_contents("$notary/api/publish.php", false, $context));
+  error('Failed to sign publication');
+$publication->appSignature = substr(base64_encode($binarySignature), 0, -2);
+$type = get_type($publication->schema);
+if ($type !== 'registration') {
+  $options = array('http' => array('method' => 'POST',
+                                   'content' => json_encode($publication),
+                                   'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
+  $context  = stream_context_create($options);
+  die(file_get_contents("$notary/api/publish.php", false, $context));
+}
+# from here we have a registration publication
+# we need to store it in the database and publish it only after the referendum deadline
+# the signed registration has to be returned to the client app together with the blind signed vote
+$details = openssl_pkey_get_details($private_key);
+
+$answer = array('registration' => $publication, 'vote' => $vote);
+die(json_encode($answer));
 ?>
