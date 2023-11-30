@@ -1,6 +1,7 @@
 /* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
 import Translator from './translator.js';
+import {rsaBlind, rsaUnblind} from './rsa-blind.js';
 
 const TESTING = false;
 
@@ -63,13 +64,12 @@ let endorsed = null;
 let endorsementToPublish = null;
 let endorsementToRevoke = null;
 let petitionSignature = null;
-let voteRegistration = null;
+let participationSignature = null;
 let petitionButton = null;
 let petitionProposal = null;
 let revocationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
-let online = true;
 let petitions = [];
 let referendums = [];
 
@@ -223,7 +223,6 @@ app.views.create('.view-main', { iosDynamicNavbar: false });
 
 addEventListener('online', () => {
   console.log('online');
-  online = true;
   if (localStorage.getItem('registered') && localStorage.getItem('publicKey')) {
     downloadCitizen();
     getReputationFromJudge();
@@ -232,7 +231,6 @@ addEventListener('online', () => {
 
 addEventListener('offline', () => {
   console.log('offline');
-  online = false;
 });
 
 // Wait for Cordova to be initialized.
@@ -296,19 +294,9 @@ async function publish(publication, signature, type) {
             endorsementToRevoke.published = revocationToPublish.published; // set the recovation date
             endorsements.push(endorsementToRevoke); // add it at the end of the list
             updateEndorsements();
-          } else if (type === 'vote registration') {
-            fetch(`${station}/api/registration.php`, {
-              method: 'POST',
-              headers: {
-                'directdemocracy-version': directDemocracyVersion,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(voteRegistration)
-            }).then(response => response.json())
-              .then(answer => {
-                if (answer.error)
-                  app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-              });
+          } else if (type === 'registration') {
+            console.log('registration');
+            console.log(answer);
           }
         }
         if (type === 'endorsement')
@@ -340,8 +328,8 @@ function publishRevocation(signature) {
   publish(revocationToPublish, signature, 'revocation');
 }
 
-function publishVoteRegistration(signature) {
-  publish(voteRegistration, signature, 'vote registration');
+function publishParticipation(signature) {
+  publish(participationSignature, signature, 'participation');
 }
 
 async function signChallenge(signature) {
@@ -1169,7 +1157,7 @@ function showMenu() {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(
           `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
-          'Vote?', function() {
+          'Vote?', async function() {
             // prepare the vote aimed at blind signature
             const numberBytes = int64ToUint8Array(1); // FIXME: to be incremented for subsequent votes to the same referendum
             const publishedBytes = int64ToUint8Array(proposal.deadline);
@@ -1193,56 +1181,19 @@ function showMenu() {
             p += answer.length;
             if (voteBytes.length !== p)
               console.error('vote length is wrong');
-
-            const vote = btoa(String.fromCharCode(...voteBytes));
-
-            fetch(
-              `${notary}/api/participation.php?station=${encodeURIComponent(station)}` +
-              `&referendum=${encodeURIComponent(proposal.signature)}`)
-              .then((response) => response.json())
-              .then(async function(participation) {
-                if (participation.schema !==
-                  `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`) {
-                  app.dialog.alert('Wrong participation schema', 'Vote error');
-                  return;
-                }
-                const signature = participation.signature;
-                participation.signature = '';
-
-                // verify signature of endorsed
-                const publicKey = await importKey(participation.key);
-                const bytes = base64ToByteArray(signature);
-                const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
-                let verify = await crypto.subtle.verify(
-                  'RSASSA-PKCS1-v1_5',
-                  publicKey,
-                  bytes,
-                  participationArrayBuffer
-                );
-
-                if (!verify) {
-                  app.dialog.alert('Cannot verify participation signature', 'Vote error');
-                  return;
-                }
-                const voteNumber = new Uint8Array(20);
-                crypto.getRandomValues(voteNumber);
-                let vote = {
-                  number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
-                  answer: answer
-                };
-                const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
-                voteRegistration = {
-                  schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
-                  key: citizen.key,
-                  signature: '',
-                  published: Math.trunc(new Date().getTime() / 1000),
-                  appKey: appKey,
-                  appSignature: '',
-                  blindKey: participation.blindKey,
-                  encryptedVote: encryptedVote
-                };
-                Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(voteRegistration), publishVoteRegistration, keystoreFailure);
-              });
+            const binaryAppKey = await importKey(endorsed.appKey);
+            const blind = rsaBlind(binaryAppKey, voteBytes);
+            const participation = {
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
+              key: citizen.key,
+              signature: '',
+              published: proposal.deadline,
+              appKey: appKey,
+              appSignature: '',
+              referendum: proposal.signature,
+              encryptedVote: btoa(String.fromCharCode(...blind['blindMessage']))
+            };
+            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participation), publishParticipation, keystoreFailure);
           });
       });
     }
