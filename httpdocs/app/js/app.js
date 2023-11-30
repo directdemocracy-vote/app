@@ -1,12 +1,13 @@
 /* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
 import Translator from './translator.js';
+import {rsaBlind, rsaUnblind} from './rsa-blind.js';
 
 const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '30';
+const DIRECTDEMOCRACY_VERSION_BUILD = '31';
 
 const PRODUCTION_APP_KEY = // public key of the genuine app
   'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
@@ -63,13 +64,12 @@ let endorsed = null;
 let endorsementToPublish = null;
 let endorsementToRevoke = null;
 let petitionSignature = null;
-let voteRegistration = null;
+let participationSignature = null;
 let petitionButton = null;
 let petitionProposal = null;
 let revocationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
-let online = true;
 let petitions = [];
 let referendums = [];
 
@@ -120,6 +120,16 @@ function decodeBase128(text) {
     }
   }
   return toByteArray(sevenBits.join('')); // Uint8Array
+}
+
+function int64ToUint8Array(int64) {
+  const byteArray = new Uint8Array(8);
+  for (let i = 0; i < byteArray.length; i++) {
+    const byte = int64 & 0xff;
+    byteArray[i] = byte;
+    int64 = (int64 - byte) / 256;
+  }
+  return byteArray;
 }
 
 function sanitizeWebservice(string) {
@@ -213,9 +223,6 @@ app.views.create('.view-main', { iosDynamicNavbar: false });
 
 addEventListener('online', () => {
   console.log('online');
-  online = true;
-  disable('endorse-me-button');
-  document.getElementById('endorse-me-message').textContent = translator.translate('airplane-mode');
   if (localStorage.getItem('registered') && localStorage.getItem('publicKey')) {
     downloadCitizen();
     getReputationFromJudge();
@@ -224,9 +231,6 @@ addEventListener('online', () => {
 
 addEventListener('offline', () => {
   console.log('offline');
-  online = false;
-  enable('endorse-me-button');
-  document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
 });
 
 // Wait for Cordova to be initialized.
@@ -290,19 +294,9 @@ async function publish(publication, signature, type) {
             endorsementToRevoke.published = revocationToPublish.published; // set the recovation date
             endorsements.push(endorsementToRevoke); // add it at the end of the list
             updateEndorsements();
-          } else if (type === 'vote registration') {
-            fetch(`${station}/api/registration.php`, {
-              method: 'POST',
-              headers: {
-                'directdemocracy-version': directDemocracyVersion,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(voteRegistration)
-            }).then(response => response.json())
-              .then(answer => {
-                if (answer.error)
-                  app.dialog.alert(`Station refusing registration: ${answer.error}`, 'Vote error');
-              });
+          } else if (type === 'registration') {
+            console.log('registration');
+            console.log(answer);
           }
         }
         if (type === 'endorsement')
@@ -318,8 +312,7 @@ async function publishCitizen(signature) {
   const bytes = base64ToByteArray(signature);
   citizenFingerprint = await crypto.subtle.digest('SHA-1', bytes);
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
-  const citizenFingerprintBase64 = btoa(citizenFingerprint);
-  localStorage.setItem('citizenFingerprint', citizenFingerprintBase64);
+  localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   publish(citizen, signature, 'citizen card');
 }
 
@@ -335,8 +328,8 @@ function publishRevocation(signature) {
   publish(revocationToPublish, signature, 'revocation');
 }
 
-function publishVoteRegistration(signature) {
-  publish(voteRegistration, signature, 'vote registration');
+function publishParticipation(signature) {
+  publish(participationSignature, signature, 'participation');
 }
 
 async function signChallenge(signature) {
@@ -598,10 +591,6 @@ function showMenu() {
   }
 
   document.getElementById('cancel-scanner').addEventListener('click', function() {
-    if (!online) {
-      enable('endorse-me-button');
-      document.getElementById('endorse-me-message').textContent = 'This should increase your reputation';
-    }
     QRScanner.cancelScan(function(status) {
       stopScanner('home');
     });
@@ -622,7 +611,6 @@ function showMenu() {
   }
 
   document.getElementById('endorse-me-button').addEventListener('click', function() {
-    console.log('click endorse me');
     disable('endorse-me-button');
     scan(function(error, contents) {
       show('home');
@@ -755,46 +743,25 @@ function showMenu() {
     show('home');
     if (challenge !== '')
       scan(scanChallengeAnswer);
-    else {
-      const airplaneRotation = (app.device.android) ? ' style="rotate:-90deg;"' : '';
-      const airplane = `<i class="icon f7-icons margin-right"${airplaneRotation}>airplane</i>`;
-      app.dialog.alert('You can now safely disable the airplane mode.', `${airplane}Airplane mode`);
-      if (!online)
-        enable('endorse-me-button');
-    }
   }
 
   document.getElementById('qrcode-done').addEventListener('click', qrCodeDone);
 
   document.getElementById('endorse-button').addEventListener('click', function() {
     disable('endorse-button');
-    app.dialog.create({
-      title: '<i class="icon f7-icons margin-right" style="rotate:-45deg;">airplane</i>Airplane mode?',
-      text: 'Please check that the phone of the citizen you are endorsing is set in airplane mode.',
-      buttons: [{
-        text: 'Confirm',
-        onClick: function() {
-          const randomBytes = new Uint8Array(20);
-          crypto.getRandomValues(randomBytes);
-          challenge = encodeBase128(randomBytes);
-          const qr = new QRious({
-            value: challenge,
-            level: 'L',
-            size: 512,
-            padding: 0
-          });
-          document.getElementById('qrcode-image').src = qr.toDataURL();
-          document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
-          hide('home');
-          show('qrcode');
-        }
-      }, {
-        text: 'Cancel',
-        onClick: function() {
-          enable('endorse-button');
-        }
-      }]
-    }).open();
+    const randomBytes = new Uint8Array(20);
+    crypto.getRandomValues(randomBytes);
+    challenge = encodeBase128(randomBytes);
+    const qr = new QRious({
+      value: challenge,
+      level: 'L',
+      size: 512,
+      padding: 0
+    });
+    document.getElementById('qrcode-image').src = qr.toDataURL();
+    document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
+    hide('home');
+    show('qrcode');
   });
 
   document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
@@ -1041,7 +1008,6 @@ function showMenu() {
       'key': proposal.key,
       'signature': '',
       'published': proposal.published,
-      'judge': proposal.judge,
       'area': proposal.area,
       'title': proposal.title,
       'description': proposal.description
@@ -1056,16 +1022,11 @@ function showMenu() {
       p['website'] = proposal.website;
 
     const publicKey = await importKey(proposal.key);
-
+    if (!publicKey)
+      console.error('Failed to import public key for proposal');
     const bytes = base64ToByteArray(proposal.signature);
     const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
-    const verify = await crypto.subtle.verify(
-      'RSASSA-PKCS1-v1_5',
-      publicKey,
-      bytes,
-      packetArrayBuffer
-    );
-
+    const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
     if (!verify) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
       return false;
@@ -1196,54 +1157,43 @@ function showMenu() {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(
           `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
-          'Vote?', function() {
-            fetch(
-              `${notary}/api/participation.php?station=${encodeURIComponent(station)}` +
-              `&referendum=${encodeURIComponent(proposal.signature)}`)
-              .then((response) => response.json())
-              .then(async function(participation) {
-                if (participation.schema !==
-                  `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`) {
-                  app.dialog.alert('Wrong participation schema', 'Vote error');
-                  return;
-                }
-                const signature = participation.signature;
-                participation.signature = '';
-
-                // verify signature of endorsed
-                const publicKey = await importKey(participation.key);
-                const bytes = base64ToByteArray(signature);
-                const participationArrayBuffer = new TextEncoder().encode(JSON.stringify(participation));
-                let verify = await crypto.subtle.verify(
-                  'RSASSA-PKCS1-v1_5',
-                  publicKey,
-                  bytes,
-                  participationArrayBuffer
-                );
-
-                if (!verify) {
-                  app.dialog.alert('Cannot verify participation signature', 'Vote error');
-                  return;
-                }
-                const voteNumber = new Uint8Array(20);
-                crypto.getRandomValues(voteNumber);
-                let vote = {
-                  number: btoa(String.fromCharCode(...voteNumber)), // base64 encoding
-                  answer: answer
-                };
-                const encryptedVote = btoa(JSON.stringify(vote)); // FIXME: should be encrypted for blind signature
-                voteRegistration = {
-                  schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
-                  key: citizen.key,
-                  signature: '',
-                  published: Math.trunc(new Date().getTime() / 1000),
-                  appKey: appKey,
-                  appSignature: '',
-                  blindKey: participation.blindKey,
-                  encryptedVote: encryptedVote
-                };
-                Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(voteRegistration), publishVoteRegistration, keystoreFailure);
-              });
+          'Vote?', async function() {
+            // prepare the vote aimed at blind signature
+            const numberBytes = int64ToUint8Array(1); // FIXME: to be incremented for subsequent votes to the same referendum
+            const publishedBytes = int64ToUint8Array(proposal.deadline);
+            const referendumBytes = base64ToByteArray(proposal.signature);
+            const ballotBytes = new Uint8Array(32);
+            crypto.getRandomValues(ballotBytes);
+            const answerBytes = new TextEncoder().encode(answer);
+            const l = numberBytes.length + publishedBytes.length + referendumBytes.length + ballotBytes.length +
+                      answerBytes.length;
+            const voteBytes = new Uint8Array(l);
+            let p = 0;
+            voteBytes.set(numberBytes);
+            p += numberBytes.length;
+            voteBytes.set(publishedBytes, p);
+            p += publishedBytes.length;
+            voteBytes.set(referendumBytes, p);
+            p += referendumBytes.length;
+            voteBytes.set(ballotBytes, p);
+            p += ballotBytes.length;
+            voteBytes.set(answerBytes, p);
+            p += answer.length;
+            if (voteBytes.length !== p)
+              console.error('vote length is wrong');
+            const binaryAppKey = await importKey(endorsed.appKey);
+            const blind = rsaBlind(binaryAppKey, voteBytes);
+            const participation = {
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
+              key: citizen.key,
+              signature: '',
+              published: proposal.deadline,
+              appKey: appKey,
+              appSignature: '',
+              referendum: proposal.signature,
+              encryptedVote: btoa(String.fromCharCode(...blind['blindMessage']))
+            };
+            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participation), publishParticipation, keystoreFailure);
           });
       });
     }

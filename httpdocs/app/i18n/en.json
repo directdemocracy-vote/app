@@ -19,7 +19,7 @@
   "language-select": "Select",
   "webservices": "Webservices",
   "notary": "Notary",
-  "judge" : "Judge",
+  "judge": "Judge",
   "polling-station": "Polling Station",
   "become-citizen": "Become a Citizen",
   "family-name": "Family name:",
@@ -49,7 +49,7 @@
   "citizen-card-published": "Your citizen card was just published.",
   "congratulations": "Congratulations!",
   "endorse-me": "Ask an Endorsement",
-  "airplane-mode": "Enter airplane mode to enable this button",
+  "endorse-me-message": "From a neighbor or a friend",
   "endorse-button": "Endorse a Citizen",
   "endorse-message": "Press this button to endorse someone as a citizen"
 }
