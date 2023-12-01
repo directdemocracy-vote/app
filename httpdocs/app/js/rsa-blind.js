@@ -80,9 +80,13 @@ export function hexToBase64u(hexstring) {
   }).join('')));
 }
 
-function base64uToBigInt(base64url) {
-  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(base64);
+function base64uToBinary(base64u) {
+  const base64 = base64u.replace(/-/g, '+').replace(/_/g, '/');
+  return atob(base64);
+}
+
+function base64uToBigInt(base64u) {
+  const binary = base64uToBinary(base64u);
   let hex = '';
   for (let i = 0; i < binary.length; i++)
     hex += ('00' + binary.charCodeAt(i).toString(16)).slice(-2);
@@ -209,12 +213,12 @@ export async function rsaBlind(publicKey, message, salt) {
    * @returns {Uint8Array} signature - The unblinded signature.
    */
 export async function rsaUnblind(publicKey, blindMessage, blindSignature, inv) {
-  if (blindSignature.length !== 256)
-    throw new Error('unexpected blind signature size: expecting 256, got ' + blindSignature.length);
+  if (blindSignature.length !== 256 && blindSignature.length !== 512)
+    throw new Error('unexpected blind signature size: expecting 256 or 512, got ' + blindSignature.length);
   const publicKeyExport = await crypto.subtle.exportKey('jwk', publicKey);
   const nInt = base64uToBigInt(publicKeyExport.n);
   const s = (bytesToBigInt(blindSignature) * inv) % nInt;
-  const signature = bigIntToUint8Array(s, 256);
+  const signature = bigIntToUint8Array(s, base64uToBinary(publicKeyExport.n).length);
   const keyData = {
     kty: 'RSA',
     e: base64ToBase64u(publicKeyExport.e),
