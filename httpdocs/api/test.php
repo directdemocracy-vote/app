@@ -1,4 +1,5 @@
 <?php
+$folder = 'test/';
 $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
 if ($private_key == FALSE)
   error('Failed to read private key');
