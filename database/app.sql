@@ -18,6 +18,7 @@ CREATE TABLE `participation` (
 
 ALTER TABLE `participation`
   ADD PRIMARY KEY (`id`);
+  ADD KEY `referendum` (`referendum`);
 
 ALTER TABLE `participation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
