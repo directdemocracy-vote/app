@@ -1,5 +1,5 @@
 <?php
 $timezone = new DateTimeZone('Europe/Zurich');
-$offset = $timezone->getOffset();
+$offset = $timezone->getOffset(new DateTime);
 print($offset);
 ?>
