@@ -1184,7 +1184,7 @@ function showMenu() {
             const binaryAppKey = await importKey(endorsed.appKey);
             const blind = rsaBlind(binaryAppKey, voteBytes);
             const participation = {
-              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/registration.schema.json`,
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
               key: citizen.key,
               signature: '',
               published: proposal.deadline,
