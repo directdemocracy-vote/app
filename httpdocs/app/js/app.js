@@ -65,6 +65,8 @@ let endorsementToPublish = null;
 let endorsementToRevoke = null;
 let petitionSignature = null;
 let participationToPublish = null;
+let vote = null;
+let voteBytes = null;
 let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
@@ -296,14 +298,29 @@ async function publish(publication, signature, type) {
             endorsements.push(endorsementToRevoke); // add it at the end of the list
             updateEndorsements();
           } else if (type === 'participation') {
-            console.log('participation');
-            console.log(answer);
             const binaryAppKey = await importKey(appKey);
-            const participation = answer['participation'];
-            const encryptedVote = base64ToByteArray(participation['encryptedVote']);
             const blindSignature = base64ToByteArray(answer['blind_signature']);
-            const signature = await rsaUnblind(binaryAppKey, encryptedVote, blindSignature, blindInv);
-            console.log('signature = ' + btoa(String.fromCharCode.apply(null, signature)));
+            const signature = await rsaUnblind(binaryAppKey, voteBytes, blindSignature, blindInv);
+            vote.appSignature = signature;
+            vote.appKey = appKey;
+
+            fetch(`${station}/api/vote.php`, {
+              method: 'POST',
+              headers: {
+                'directdemocracy-version': directDemocracyVersion,
+                'user-notary': notary,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(vote)
+            }).then(response => response.json())
+              .then(async answer => {
+                if (answer.hasOwnProperty('error'))
+                  app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
+                else {
+                  console.log('Vote was casted');
+                  console.log('It should be taken into account after some time');
+                }
+              });
           }
         }
         if (type === 'endorsement')
@@ -1166,13 +1183,20 @@ function showMenu() {
           `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
           'Vote?', async function() {
             // prepare the vote aimed at blind signature
-            const referendumBytes = base64ToByteArray(proposal.signature);
-            const numberBytes = int64ToUint8Array(1); // FIXME: to be incremented for subsequent votes to the same referendum
             const ballotBytes = new Uint8Array(32);
             crypto.getRandomValues(ballotBytes);
-            const answerBytes = new TextEncoder().encode(answer);
+            vote = {
+              schema: '',
+              referendum: proposal.signature,
+              number: 1, // FIXME: to be incremented for subsequent votes to the same referendum
+              ballot: btoa(String.fromCharCode.apply(null, ballotBytes)),
+              answer: answer
+            };
+            const referendumBytes = base64ToByteArray(vote.referendum);
+            const numberBytes = int64ToUint8Array(vote.number);
+            const answerBytes = new TextEncoder().encode(vote.answer);
             const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
-            const voteBytes = new Uint8Array(l);
+            voteBytes = new Uint8Array(l);
             let p = 0;
             voteBytes.set(referendumBytes);
             p += referendumBytes.length;
