@@ -64,7 +64,8 @@ let endorsed = null;
 let endorsementToPublish = null;
 let endorsementToRevoke = null;
 let petitionSignature = null;
-let participationSignature = null;
+let participationToPublish = null;
+let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
 let revocationToPublish = null;
@@ -294,9 +295,15 @@ async function publish(publication, signature, type) {
             endorsementToRevoke.published = revocationToPublish.published; // set the recovation date
             endorsements.push(endorsementToRevoke); // add it at the end of the list
             updateEndorsements();
-          } else if (type === 'registration') {
-            console.log('registration');
+          } else if (type === 'participation') {
+            console.log('participation');
             console.log(answer);
+            const binaryAppKey = await importKey(appKey);
+            const participation = answer['participation'];
+            const encryptedVote = base64ToByteArray(participation['encryptedVote']);
+            const blindSignature = base64ToByteArray(answer['blind_signature']);
+            const signature = await rsaUnblind(binaryAppKey, encryptedVote, blindSignature, blindInv);
+            console.log('signature = ' + btoa(String.fromCharCode.apply(null, signature)));
           }
         }
         if (type === 'endorsement')
@@ -329,7 +336,7 @@ function publishRevocation(signature) {
 }
 
 function publishParticipation(signature) {
-  publish(participationSignature, signature, 'participation');
+  publish(participationToPublish, signature, 'participation');
 }
 
 async function signChallenge(signature) {
@@ -1177,9 +1184,10 @@ function showMenu() {
             p += answer.length;
             if (voteBytes.length !== p)
               console.error('vote length is wrong');
-            const binaryAppKey = await importKey(endorsed.appKey);
-            const blind = rsaBlind(binaryAppKey, voteBytes);
-            const participation = {
+            const binaryAppKey = await importKey(appKey);
+            const blind = await rsaBlind(binaryAppKey, voteBytes);
+            blindInv = blind.inv;
+            participationToPublish = {
               schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
               key: citizen.key,
               signature: '',
@@ -1187,9 +1195,9 @@ function showMenu() {
               appKey: appKey,
               appSignature: '',
               referendum: proposal.signature,
-              encryptedVote: btoa(String.fromCharCode(...blind['blindMessage']))
+              encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
             };
-            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participation), publishParticipation, keystoreFailure);
+            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
           });
       });
     }

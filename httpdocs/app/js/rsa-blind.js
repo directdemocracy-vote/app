@@ -186,7 +186,7 @@ export async function rsaBlind(publicKey, message, salt) {
   }
   const emBitLen = bitLength(nInt);
   const result = await emsaPssEncode(message, emBitLen, salt);
-  if (result.length !== message.length)
+  if (result.length !== emBitLen / 8)
     throw new Error('emsaPssEncode size mismatch');
   const mInt = bytesToBigInt(result);
   if (!isCoprime(mInt, nInt))
@@ -195,8 +195,8 @@ export async function rsaBlind(publicKey, message, salt) {
   const xInt = bigIntModularExponentiation(rInt, eInt, nInt);
   const zInt = (mInt * xInt) % nInt;
   return {
-    'blindMessage': bigIntToUint8Array(zInt, emBitLen / 8),
-    'inv': inverseMod(rInt, nInt)
+    blindMessage: bigIntToUint8Array(zInt, emBitLen / 8),
+    inv: inverseMod(rInt, nInt)
   };
 }
 
@@ -209,12 +209,12 @@ export async function rsaBlind(publicKey, message, salt) {
    * @returns {Uint8Array} signature - The unblinded signature.
    */
 export async function rsaUnblind(publicKey, blindMessage, blindSignature, inv) {
-  if (blindSignature.length !== 512)
-    throw new Error('unexpected blind signature size: expecting 512, got ' + blindSignature.length);
+  if (blindSignature.length !== 256)
+    throw new Error('unexpected blind signature size: expecting 256, got ' + blindSignature.length);
   const publicKeyExport = await crypto.subtle.exportKey('jwk', publicKey);
   const nInt = base64uToBigInt(publicKeyExport.n);
   const s = (bytesToBigInt(blindSignature) * inv) % nInt;
-  const signature = bigIntToUint8Array(s, 512);
+  const signature = bigIntToUint8Array(s, 256);
   const keyData = {
     kty: 'RSA',
     e: base64ToBase64u(publicKeyExport.e),
