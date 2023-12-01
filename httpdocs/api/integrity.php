@@ -81,7 +81,7 @@ if ($os === 'Android') {
   $result = $service->v1->decodeIntegrityToken('vote.directdemocracy.app', $tokenRequest);        
   $verdict = $result->tokenPayloadExternal;
   $file = fopen('../../verdict.json', 'w') or error('Unable to open verdict file!');
-  fwrite($file, json_encode($verdict));
+  fwrite($file, json_encode($verdict, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
   fclose($file);
   $nonce = str_replace(array('_', '-', '='), array('/', '+', ''), $verdict->requestDetails->nonce);
   if ($nonce !== $publication->signature)
@@ -117,7 +117,9 @@ if ($os === 'Android') {
       error('Bad token for iOS simulator');
     $key = file_get_contents('../../AuthKey_2TPW39HHX8.p8');
     $jwt = JWT::encode(['iss' => 'LMJV45BD42', 'iat' => time()], $key, 'ES256', '2TPW39HHX8');
-    $body = json_encode(['device_token' => $token, 'transaction_id' => Uuid::uuid4()->toString(), 'timestamp' => ceil(microtime(true)*1000)]);
+    $body = json_encode(['device_token' => $token,
+                         'transaction_id' => Uuid::uuid4()->toString(),
+                         'timestamp' => ceil(microtime(true)*1000)], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $header = ['Authorization: Bearer '. $jwt, 'Content-Type: application/x-www-form-urlencoded', 'Content-Length: '.strlen($body)];
     $context = ['http' => ['method' => 'POST', 'header' => implode("\r\n", $header), 'content' => $body, 'ignore_errors' => true]];
     $answer = file_get_contents("https://api.devicecheck.apple.com/v1/validate_device_token", false, stream_context_create($context));
@@ -137,7 +139,7 @@ $publication->appSignature = substr(base64_encode($binarySignature), 0, -2);
 $type = get_type($publication->schema);
 if ($type !== 'participation') {
   $options = array('http' => array('method' => 'POST',
-                                   'content' => json_encode($publication),
+                                   'content' => json_encode($publication, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                                    'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
   $context  = stream_context_create($options);
   die(file_get_contents("$notary/api/publish.php", false, $context));
@@ -147,9 +149,9 @@ if ($type !== 'participation') {
 
 require_once '../../php/database.php';
 $version = intval(explode('/', $publication->schema)[4]);
-$query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, citizen, referendum, encryptedVote) "
+$query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, referendum, encryptedVote) "
         ."VALUES($version, FROM_BASE64('$publication->key=='), FROM_BASE64('$publication->signature=='), FROM_UNIXTIME($publication->published), "
-        ."FROM_BASE64('$publication->appKey=='), FROM_BASE64('$publication->appSignature=='), FROM_BASE64('$publication->citizen'), "
+        ."FROM_BASE64('$publication->appKey=='), FROM_BASE64('$publication->appSignature=='), "
         ."FROM_BASE64('$publication->referendum=='), FROM_BASE64('$publication->encryptedVote'))";
 $mysqli->query($query) or error($mysqli->error);
 $mysqli->close();
@@ -165,5 +167,5 @@ $m = gmp_powm($blind_signature, $e, $n);
 if (gmp_cmp($m, $blinded_message) !== 0)
   error('Blind signature failed');
 $answer = array('participation' => $publication, 'blind_signature' => base64_encode(gmp_export($blind_signature, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)));
-die(json_encode($answer));
+die(json_encode($answer, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 ?>
