@@ -144,9 +144,26 @@ if ($type !== 'registration') {
 }
 # from here we have a registration publication
 # we need to store it in the database and publish it only after the referendum deadline
+
+require_once '../../php/database.php';
+$version = intval(explode('/', $publication->schema)[4]);
+$query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, citizen, referendum, encryptedVote) "
+        ."VALUES($version, FROM_BASE64('$publication->key=='), FROM_BASE64('$publication->signature=='), FROM_UNIXTIME($publication->published), "
+        ."FROM_BASE64('$publication->appKey=='), FROM_BASE64('$publication->appSignature=='), FROM_BASE64('$publication->citizen'), "
+        ."FROM_BASE64('$publication->referendum=='), FROM_BASE64('$publication->encryptedVote'))";
+$mysqli->query($query) or error($mysqli->error);
+$mysqli->close();
+
 # the signed registration has to be returned to the client app together with the blind signed vote
 $details = openssl_pkey_get_details($private_key);
-
-$answer = array('registration' => $publication, 'vote' => $vote);
+$n = gmp_import($details['rsa']['n'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+$e = gmp_import($details['rsa']['e'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+$d = gmp_import($details['rsa']['d'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+$blinded_message = gmp_import(base64_decode($publication->encryptedVote), 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+$blind_signature = gmp_powm($blinded_message, $d, $n);
+$m = gmp_powm($blind_signature, $e, $n);
+if (gmp_cmp($m, $blinded_message) !== 0)
+  error('Blind signature failed');
+$answer = array('registration' => $publication, 'blind_signature' => base64_encode(gmp_export($blind_signature, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)));
 die(json_encode($answer));
 ?>
