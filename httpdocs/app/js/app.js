@@ -1159,22 +1159,18 @@ function showMenu() {
           `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
           'Vote?', async function() {
             // prepare the vote aimed at blind signature
-            const numberBytes = int64ToUint8Array(1); // FIXME: to be incremented for subsequent votes to the same referendum
-            const publishedBytes = int64ToUint8Array(proposal.deadline);
             const referendumBytes = base64ToByteArray(proposal.signature);
+            const numberBytes = int64ToUint8Array(1); // FIXME: to be incremented for subsequent votes to the same referendum
             const ballotBytes = new Uint8Array(32);
             crypto.getRandomValues(ballotBytes);
             const answerBytes = new TextEncoder().encode(answer);
-            const l = numberBytes.length + publishedBytes.length + referendumBytes.length + ballotBytes.length +
-                      answerBytes.length;
+            const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
             const voteBytes = new Uint8Array(l);
             let p = 0;
-            voteBytes.set(numberBytes);
-            p += numberBytes.length;
-            voteBytes.set(publishedBytes, p);
-            p += publishedBytes.length;
-            voteBytes.set(referendumBytes, p);
+            voteBytes.set(referendumBytes);
             p += referendumBytes.length;
+            voteBytes.set(numberBytes, p);
+            p += numberBytes.length;
             voteBytes.set(ballotBytes, p);
             p += ballotBytes.length;
             voteBytes.set(answerBytes, p);
