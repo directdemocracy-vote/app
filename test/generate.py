@@ -135,7 +135,16 @@ def generate_proposals():
         with open(proposal_filename, 'r', encoding='utf8') as file:
             proposal = json.load(file)
             if 'area_name' in proposal:
-                proposal['area'] = requests.get('https://judge.directdemocracy.vote/api/publish_area.php?' + proposal['area_name']).json()['signature']
+                answer = requests.get('https://judge.directdemocracy.vote/api/publish_area.php?' + proposal['area_name'])
+                try:
+                    j = answer.json()
+                except ValueError:
+                    print(': ' + answer.text)
+                    quit()
+                if 'error' in j:
+                    print(': ' + j['error'])
+                    quit()
+                proposal['area'] = j['signature']
                 del proposal['area_name']
             if proposal['published'] == '':
                 proposal['published'] = int(time.time())
@@ -145,7 +154,7 @@ def generate_proposals():
                 proposal['deadline'] = datetime.datetime.fromisoformat(proposal['deadline']).timestamp()
             answer = requests.post('https://judge.directdemocracy.vote/api/publish_proposal.php', json=proposal).json()
             if 'error' in answer:
-                print(': error: ' + answer['error'])
+                print(': ' + answer['error'])
             else:
                 print('.')
 
