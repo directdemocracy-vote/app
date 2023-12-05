@@ -1,7 +1,6 @@
 <?php
 require_once('database.php');
 
-print("hello world\n");
 $query = "SELECT * FROM participation WHERE published >= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 while ($row = $result->fetch_assoc()) {
@@ -15,6 +14,7 @@ while ($row = $result->fetch_assoc()) {
     'referendum' => $row['referendum'],
     'encryptedVote' => $row['encryptedVote']
   );
+  print("found $row[id]\n");
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
@@ -29,4 +29,5 @@ while ($row = $result->fetch_assoc()) {
   $mysqli->query("DELETE FROM participation WHERE id=$row[id]");
 }
 $result->free();
+print("done\n");
 ?>
