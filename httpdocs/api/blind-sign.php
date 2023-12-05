@@ -20,8 +20,8 @@ function blind_sign($blinded_msg, $n, $e, $d) {
 }
 
 function blind_verify($n, $e, $msg, $signature) {
-  $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)
-  $signature_bytes = gmp_export($signature, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)
+  $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+  $signature_bytes = gmp_export($signature, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strlen($n_bytes) !== strlen($signature_bytes))
     die("mismatch length for n and signature");
   return false;
