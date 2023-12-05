@@ -18,7 +18,7 @@ $query = "SELECT "
         ."UNIX_TIMESTAMP(published) AS published, "
         ."REPLACE(REPLACE(TO_BASE64(appSignature), '\\n', ''), '=', '') AS appSignature, "
         ."REPLACE(REPLACE(TO_BASE64(referendum), '\\n', ''), '=', '') AS referendum, "
-        ."REPLACE(TO_BASE64(encryptedVote), '\\n', '') AS encryptedVote, "
+        ."REPLACE(TO_BASE64(encryptedVote), '\\n', '') AS encryptedVote "
         ."FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 $list = '';
