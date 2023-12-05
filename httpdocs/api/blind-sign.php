@@ -31,12 +31,12 @@ function blind_verify($n, $e, $msg, $signature) {
     die("failed to verify (1)");
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
-  $m = gmp_powm($n, $e, $s);
+  $m = gmp_powm($s, $e, $n);
   $modBits = strlen($n_bytes) * 8;
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strcmp(bin2hex($em), $test_encoded_msg) !== 0)
-    die("wrong encoded message em<br>".bin2hex($em)."<br>$test_encoded_msg");
+    die("wrong encoded message em<br><pre>".bin2hex($em)."</pre><br><pre>$test_encoded_msg</pre>");
   if (strlen($em) !== $emLen)
     die("emLen mismatch: ".strlen($em)." !== $emLen");
   $mHash = hash('sha384', hex2bin($msg));
