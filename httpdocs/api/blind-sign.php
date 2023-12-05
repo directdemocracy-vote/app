@@ -21,6 +21,31 @@ function blind_sign($blinded_msg, $n, $e, $d) {
   return $blind_sig;
 }
 
+function _emsa_pss_verify($m, $em, $emBits) {
+  $emLen = ($emBits + 1) >> 3; // ie. ceil($emBits / 8);
+  $sLen = $this->sLen !== null ? $this->sLen : $this->hLen;
+  $mHash = $this->hash->hash($m);
+  if ($emLen < $this->hLen + $sLen + 2)
+    return false;
+  if ($em[strlen($em) - 1] != chr(0xBC))
+    return false;
+  $maskedDB = substr($em, 0, -$this->hLen - 1);
+  $h = substr($em, -$this->hLen - 1, $this->hLen);
+  $temp = chr(0xFF << ($emBits & 7));
+  if ((~$maskedDB[0] & $temp) != $temp)
+    return false;
+  $dbMask = $this->_mgf1($h, $emLen - $this->hLen - 1);
+  $db = $maskedDB ^ $dbMask;
+  $db[0] = ~chr(0xFF << ($emBits & 7)) & $db[0];
+  $temp = $emLen - $this->hLen - $sLen - 2;
+  if (substr($db, 0, $temp) != str_repeat(chr(0), $temp) || ord($db[$temp]) != 1)
+    return false;
+  $salt = substr($db, $temp + 1); // should be $sLen long
+  $m2 = "\0\0\0\0\0\0\0\0" . $mHash . $salt;
+  $h2 = hash('sha384', $m2);
+  return strcmp($h, $h2) === 0;
+}
+
 function blind_verify($n, $e, $msg, $signature) {
   global $test_encoded_msg;
   $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
