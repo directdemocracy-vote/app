@@ -1,9 +1,20 @@
 <?php
 require_once('database.php');
 
+function error($message) {
+  if ($message[0] != '{')
+    $message = '"'.$message.'"';
+  die("{\"error\":$message}");
+}
+
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: content-type");
+
 $notary = 'https://notary.directdemocracy.vote';
 $query = "SELECT * FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
+$list = '';
 while ($row = $result->fetch_assoc()) {
   $participation = array(
     'schema' => "https://directdemocracy.vote/json-schema/$row[version]/participation.schema.json",
@@ -15,7 +26,7 @@ while ($row = $result->fetch_assoc()) {
     'referendum' => $row['referendum'],
     'encryptedVote' => $row['encryptedVote']
   );
-  print("publishing $row[id]...\n");
+  $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
@@ -25,11 +36,12 @@ while ($row = $result->fetch_assoc()) {
   $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
   $json = json_decode($response);
   if (json_last_error() !== JSON_ERROR_NONE)
-    die($response);
+    error($response);
   if (isset($json->error))
-    die($json->error);
+    error($json->error);
   $mysqli->query("DELETE FROM participation WHERE id=$row[id]");
 }
 $result->free();
-print("done\n");
+$list = substr($list, 0, -2);
+print("{\"published\": \"$list\"}");
 ?>
