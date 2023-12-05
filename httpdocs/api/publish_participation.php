@@ -43,7 +43,6 @@ while ($row = $result->fetch_assoc()) {
                                    'ignore_errors' => true,
                                    'header' => "Content-Type: application/json\r\n"
                                               ."Accept: application/json\r\n"));
-  die("{\"url\":\"$notary/api/publish.php\"}");
   $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
   $json = json_decode($response);
   if (json_last_error() !== JSON_ERROR_NONE)
