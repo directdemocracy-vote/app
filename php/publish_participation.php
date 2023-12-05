@@ -1,7 +1,7 @@
 <?php
 require_once('database.php');
 
-$query = "SELECT * FROM participation WHERE published >= NOW()";
+$query = "SELECT * FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 while ($row = $result->fetch_assoc()) {
   $participation = array(
