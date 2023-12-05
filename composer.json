@@ -1,7 +1,6 @@
 {
   "require": {
     "google/apiclient": "^2.15.0",
-    "zenstruck/jwt": "^1.0",
     "ramsey/uuid": "^3.6"
   },
   "scripts": {
