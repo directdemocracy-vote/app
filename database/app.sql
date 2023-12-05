@@ -16,8 +16,8 @@ CREATE TABLE `participation` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE `participation`
-  ADD PRIMARY KEY (`id`);
-  ADD KEY `referendum` (`referendum`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `key` (`key`,`referendum`) USING HASH;
 
 ALTER TABLE `participation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
