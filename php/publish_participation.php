@@ -1,6 +1,7 @@
 <?php
 require_once('database.php');
 
+$notary = 'https://notary.directdemocracy.vote';
 $query = "SELECT * FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 while ($row = $result->fetch_assoc()) {
