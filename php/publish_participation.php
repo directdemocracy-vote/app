@@ -19,8 +19,8 @@ while ($row = $result->fetch_assoc()) {
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
-                                   'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36\r\n"
-                                              ."Content-Type: application/json\r\n"
+                                   'user_agent' => "DirectDemocracy/$row[version]",
+                                   'header' => "Content-Type: application/json\r\n"
                                               ."Accept: application/json\r\n"));
   $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
   $json = json_decode($response);
