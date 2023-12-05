@@ -37,8 +37,7 @@ while ($row = $result->fetch_assoc()) {
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-  if (json_last_error() !== JSON_ERROR_NONE)
-    error("json encode error");
+  error(json_last_error_msg());
   die($data);
   $data = "{\"test\":1}";
   $options = array('http' => array('method' => 'POST',
