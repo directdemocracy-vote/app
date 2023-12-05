@@ -36,9 +36,9 @@ while ($row = $result->fetch_assoc()) {
     'encryptedVote' => $row['encryptedVote']
   );
   $list .= $row['id'].', ';
-  $data = json_decode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-  die($data);
-  $data = json_encode("{\"test\":1}");
+  $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+  # die($data);
+  $data = "{\"test\":1}";
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
                                    'ignore_errors' => true,
