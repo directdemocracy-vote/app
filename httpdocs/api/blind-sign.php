@@ -31,7 +31,7 @@ function blind_verify($n, $e, $msg, $signature) {
     die("failed to verify (1)");
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
-  $m = gmp_powm($s, $e, $n);
+  $m = gmp_powm($n, $e, $s);
   $modBits = strlen($n_bytes) * 8;
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
