@@ -50,5 +50,5 @@ while ($row = $result->fetch_assoc()) {
 }
 $result->free();
 $list = substr($list, 0, -2);
-print("{\"published\": \"$list\"}");
+die("{\"published\": \"$list\"}");
 ?>
