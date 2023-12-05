@@ -80,9 +80,6 @@ if ($os === 'Android') {
   $tokenRequest->setIntegrityToken($token);
   $result = $service->v1->decodeIntegrityToken('vote.directdemocracy.app', $tokenRequest);        
   $verdict = $result->tokenPayloadExternal;
-  $file = fopen('../../verdict.json', 'w') or error('Unable to open verdict file!');
-  fwrite($file, json_encode($verdict, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-  fclose($file);
   $nonce = str_replace(array('_', '-', '='), array('/', '+', ''), $verdict->requestDetails->nonce);
   if ($nonce !== $publication->signature)
     error("Wrong nonce: $nonce  !==  $publication->signature");
