@@ -22,6 +22,7 @@ function blind_sign($blinded_msg, $n, $e, $d) {
 }
 
 function blind_verify($n, $e, $msg, $signature) {
+  global $test_encoded_msg;
   $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strlen($n_bytes) !== strlen($signature) / 2)
     die("mismatch length for n and signature");
