@@ -39,12 +39,12 @@ function blind_verify($n, $e, $msg, $signature) {
     die("wrong encoded message em<br><pre>".bin2hex($em)."</pre><br><pre>$test_encoded_msg</pre>");
   if (strlen($em) !== $emLen)
     die("emLen mismatch: ".strlen($em)." !== $emLen");
+  if ($em[$emLen - 1] != 0xbc)
+    die("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1])."<br>\n".bin2hex($em));
   $mHash = hash('sha384', hex2bin($msg));
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
     die("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
-  if ($em[$emLen - 1] != 0xbc)
-    die("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1])."<br>\n".bin2hex($em));
   return false;
 }
 
