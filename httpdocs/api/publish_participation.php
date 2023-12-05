@@ -35,8 +35,6 @@ while ($row = $result->fetch_assoc()) {
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-  # error(json_last_error_msg());
-  die($data);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
                                    'ignore_errors' => true,
@@ -48,7 +46,6 @@ while ($row = $result->fetch_assoc()) {
     error($response);
   if (isset($json->error))
     error($json->error);
-  error($response);
   $mysqli->query("DELETE FROM participation WHERE id=$row[id]");
 }
 $result->free();
