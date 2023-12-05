@@ -10,16 +10,6 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: content-type");
 
 $notary = 'https://notary.directdemocracy.vote';
-/*
-$data = json_encode("{\"test\":1}");
-$options = array('http' => array('method' => 'POST',
-                                 'content' => $data,
-                                 'ignore_errors' => true,
-                                 'header' => "Content-Type: application/json\r\n"
-                                            ."Accept: application/json\r\n"));
-$response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
-die("{\"result\":\"$response\"}");
-*/
 
 $query = "SELECT "
         ."version, "
