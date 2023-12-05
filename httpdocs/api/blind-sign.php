@@ -36,7 +36,7 @@ function blind_verify($n, $e, $msg, $signature) {
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strcmp(bin2hex($em), $test_encoded_msg) !== 0)
-    die("wrong encoded message em<br>".bin2hex($em)."<br>$test_encoded_msh");
+    die("wrong encoded message em<br>".bin2hex($em)."<br>$test_encoded_msg");
   if (strlen($em) !== $emLen)
     die("emLen mismatch: ".strlen($em)." !== $emLen");
   $mHash = hash('sha384', hex2bin($msg));
