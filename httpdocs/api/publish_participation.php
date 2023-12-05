@@ -15,7 +15,6 @@ $data = json_encode("{\"test\":1}");
 $options = array('http' => array('method' => 'POST',
                                  'content' => $data,
                                  'ignore_errors' => true,
-                                 'user_agent' => "DirectDemocracy/$row[version]",
                                  'header' => "Content-Type: application/json\r\n"
                                             ."Accept: application/json\r\n"));
 $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
