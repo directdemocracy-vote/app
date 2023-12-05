@@ -11,8 +11,7 @@ header("Access-Control-Allow-Headers: content-type");
 
 $notary = 'https://notary.directdemocracy.vote';
 
-$query = "SELECT "
-        ."version, "
+$query = "SELECT id, version, "
         ."REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, "
         ."REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature, "
         ."UNIX_TIMESTAMP(published) AS published, "
