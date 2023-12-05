@@ -34,7 +34,7 @@ function blind_verify($n, $e, $msg, $signature) {
   $emLen = ceil(($modBits - 1) / 8);
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strlen($em) !== $emLen)
-    die('emLen mismatch');
+    die("emLen mismatch: ".strlen($em)." !== $emLen");
   return false;
 }
 
