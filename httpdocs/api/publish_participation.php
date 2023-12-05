@@ -35,7 +35,6 @@ while ($row = $result->fetch_assoc()) {
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-  die($data);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
                                    'ignore_errors' => true,
