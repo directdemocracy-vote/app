@@ -10,6 +10,10 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: content-type");
 
 $notary = 'https://notary.directdemocracy.vote';
+
+$reponse = file_get_contents("$notary/api/publication.php?fingerprint=308927");
+die(response);
+
 $query = "SELECT * FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 $list = '';
