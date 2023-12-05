@@ -21,7 +21,15 @@ $response = file_get_contents("$notary/api/publish.php", false, stream_context_c
 die("{\"result\":\"$response\"}");
 */
 
-$query = "SELECT * FROM participation WHERE published <= NOW()";
+$query = "SELECT "
+        ."version, "
+        ."REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, "
+        ."REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature, "
+        ."UNIX_TIMESTAMP(published) AS published, "
+        ."REPLACE(REPLACE(TO_BASE64(appSignature), '\\n', ''), '=', '') AS appSignature, "
+        ."REPLACE(REPLACE(TO_BASE64(referendum), '\\n', ''), '=', '') AS referendum, "
+        ."REPLACE(TO_BASE64(encryptedVote), '\\n', '')) AS encryptedVote, "
+        ."FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 $list = '';
 while ($row = $result->fetch_assoc()) {
