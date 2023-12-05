@@ -10,7 +10,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: content-type");
 
 $notary = 'https://notary.directdemocracy.vote';
-
+/*
 $data = json_encode("{\"test\":1}");
 $options = array('http' => array('method' => 'POST',
                                  'content' => $data,
@@ -19,6 +19,7 @@ $options = array('http' => array('method' => 'POST',
                                             ."Accept: application/json\r\n"));
 $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
 die("{\"result\":\"$response\"}");
+*/
 
 $query = "SELECT * FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
@@ -36,10 +37,10 @@ while ($row = $result->fetch_assoc()) {
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+  $data = json_encode("{\"test\":1}");
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
                                    'ignore_errors' => true,
-                                   'user_agent' => "DirectDemocracy/$row[version]",
                                    'header' => "Content-Type: application/json\r\n"
                                               ."Accept: application/json\r\n"));
   die("{\"url\":\"$notary/api/publish.php\"}");
