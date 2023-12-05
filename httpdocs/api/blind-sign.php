@@ -19,15 +19,26 @@ function blind_sign($blinded_msg, $n, $e, $d) {
   return $blind_sig;
 }
 
+function blind_verify($n, $e, $msg, $signature) {
+  $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)
+  $signature_bytes = gmp_export($signature, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST)
+  if (strlen($n_bytes) !== strlen($signature_bytes))
+    die("mismatch length for n and signature");
+  return false;
+}
+
 $n = gmp_init("0x$test_n");
 $e = gmp_init("0x$test_e");
 $d = gmp_init("0x$test_d");
 $blinded_msg = gmp_init("0x$test_blinded_msg");
 $blind_sig = gmp_init("0x$test_blind_sig");
 
-if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) === 0)
-  die("Success");
-else
-  die("Failure");
+if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) !== 0)
+  die("Failed to sign");
+
+if (!blind_verify($n, $e, msg, $blind_sig))
+  die("Failed to verify");
+
+die("Success");
 
 ?>
