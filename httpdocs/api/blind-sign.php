@@ -40,7 +40,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if ($emLen < strlen($mHash) + $sLen + 2)
     die("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
   if ($em[$emLen - 1] != 0xbc)
-    die("inconsistent rightmost octet");
+    die("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1]));
   return false;
 }
 
