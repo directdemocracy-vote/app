@@ -2,7 +2,7 @@
 require_once('../../php/database.php');
 
 function error($message) {
-  die("{\"error\":$message}");
+  die("{\"error\":\"$message\"}");
 }
 
 header("Content-Type: application/json");
@@ -28,6 +28,7 @@ while ($row = $result->fetch_assoc()) {
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
+                                   'ignore_errors' => true,
                                    'user_agent' => "DirectDemocracy/$row[version]",
                                    'header' => "Content-Type: application/json\r\n"
                                               ."Accept: application/json\r\n"));
@@ -37,6 +38,7 @@ while ($row = $result->fetch_assoc()) {
     error($response);
   if (isset($json->error))
     error($json->error);
+  error($response);
   $mysqli->query("DELETE FROM participation WHERE id=$row[id]");
 }
 $result->free();
