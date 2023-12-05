@@ -30,7 +30,11 @@ function blind_verify($n, $e, $msg, $signature) {
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
   $m = gmp_powm($s, $e, $n);
-  
+  $modBits = strlen($n_bytes) * 8;
+  $emLen = ceil(($modBits - 1) / 8);
+  $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+  if (strlen($em) !== $emLen)
+    die('emLen mismatch');
   return false;
 }
 
