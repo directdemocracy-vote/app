@@ -23,7 +23,7 @@ function blind_sign($blinded_msg, $n, $e, $d) {
 
 function _emsa_pss_verify($m, $em, $emBits) {
   $emLen = ($emBits + 1) >> 3; // ie. ceil($emBits / 8);
-  $sLen = $this->sLen !== null ? $this->sLen : $this->hLen;
+  $sLen = 48;
   $mHash = $this->hash->hash($m);
   if ($emLen < $this->hLen + $sLen + 2)
     return false;
