@@ -152,7 +152,12 @@ $version = intval(explode('/', $publication->schema)[4]);
 $query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, referendum, encryptedVote) "
         ."VALUES($version, FROM_BASE64('$publication->key=='), FROM_BASE64('$publication->signature=='), FROM_UNIXTIME($publication->published), "
         ."FROM_BASE64('$publication->appKey=='), FROM_BASE64('$publication->appSignature=='), "
-        ."FROM_BASE64('$publication->referendum=='), FROM_BASE64('$publication->encryptedVote'))";
+        ."FROM_BASE64('$publication->referendum=='), FROM_BASE64('$publication->encryptedVote')) "
+        ."ON DUPLICATE KEY UPDATE "
+        ."`version`=$version, "
+        ."signature=FROM_BASE64('$publication->signature=='), "
+        ."appSignature=FROM_BASE64('$publication->appSignature=='), "
+        ."encryptedVote=FROM_BASE64('$publication->encryptedVote');"
 $mysqli->query($query) or error($mysqli->error);
 $mysqli->close();
 
