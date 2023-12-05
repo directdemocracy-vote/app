@@ -1,5 +1,4 @@
 <?php
-die(__DIR__);
 require_once(__DIR__.'/../../php/database.php');
 
 function error($message) {
