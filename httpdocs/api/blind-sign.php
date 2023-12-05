@@ -25,6 +25,11 @@ function blind_verify($n, $e, $msg, $signature) {
   if (strlen($n_bytes) !== strlen($signature) / 2)
     die("mismatch length for n and signature");
   $s = gmp_init("0x$signature");
+  if (gmp_cmp($s, 0) <= 0)
+    die("failed to verify (1)");
+  if (gmp_cmp($s, $n) > 0)
+    die("failed to verify (2)");
+  $m = gmp_powm($s, $e, $n);
   
   return false;
 }
