@@ -1185,10 +1185,12 @@ function showMenu() {
             // prepare the vote aimed at blind signature
             const ballotBytes = new Uint8Array(32);
             crypto.getRandomValues(ballotBytes);
+            const randomNumber = new Uint8Array(1);
+            crypto.getRandomValues(randomNumber);
             vote = {
               schema: '',
               referendum: proposal.signature,
-              number: 1, // FIXME: to be incremented for subsequent votes to the same referendum
+              number: randomNumber[0], // FIXME: to be incremented for subsequent votes to the same referendum
               ballot: btoa(String.fromCharCode.apply(null, ballotBytes)),
               answer: answer
             };
