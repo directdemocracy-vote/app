@@ -19,9 +19,12 @@ while ($row = $result->fetch_assoc()) {
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
+                                   'ignore_errors' => true,
                                    'header' => "Content-Type: application/json\r\n" .
                                                "Accept: application/json\r\n"));
   $response = file_get_contents("$notary/api/publish.php", false, stream_context_create($options));
+  print($response);
+  print($http_response_header);
   $json = json_decode($response);
   if (json_last_error() !== JSON_ERROR_NONE)
     die($response);
