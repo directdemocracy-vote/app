@@ -36,7 +36,7 @@ $blind_sig = gmp_init("0x$test_blind_sig");
 if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) !== 0)
   die("Failed to sign");
 
-if (!blind_verify($n, $e, msg, $blind_sig))
+if (!blind_verify($n, $e, $msg, $blind_sig))
   die("Failed to verify");
 
 die("Success");
