@@ -15,7 +15,7 @@ while ($row = $result->fetch_assoc()) {
     'referendum' => $row['referendum'],
     'encryptedVote' => $row['encryptedVote']
   );
-  print("found $row[id]\n");
+  print("publishing $row[id]...\n");
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
   $options = array('http' => array('method' => 'POST',
                                    'content' => $data,
