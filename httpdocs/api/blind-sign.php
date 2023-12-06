@@ -48,7 +48,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if (strlen($em) !== $emLen)
     return "emLen mismatch: ".strlen($em)." !== $emLen";
   $mHash = hash('sha384', hex2bin($msg));
-  $hLen = strlen(mHash);
+  $hLen = strlen($mHash);
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
     print("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
