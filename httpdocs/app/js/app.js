@@ -129,7 +129,7 @@ function int64ToUint8Array(int64) {
   const byteArray = new Uint8Array(8);
   for (let i = 0; i < byteArray.length; i++) {
     const byte = int64 & 0xff;
-    byteArray[i] = byte;
+    byteArray[7 - i] = byte;
     int64 = (int64 - byte) / 256;
   }
   return byteArray;
@@ -301,9 +301,8 @@ async function publish(publication, signature, type) {
             const binaryAppKey = await importKey(appKey);
             const blindSignature = base64ToByteArray(answer['blind_signature']);
             const signature = await rsaUnblind(binaryAppKey, voteBytes, blindSignature, blindInv);
-            vote.appSignature = signature;
+            vote.appSignature = btoa(String.fromCharCode.apply(null, signature)).slice(0, -2);
             vote.appKey = appKey;
-
             fetch(`${station}/api/vote.php`, {
               method: 'POST',
               headers: {
@@ -1188,7 +1187,6 @@ function showMenu() {
             const randomNumber = new Uint8Array(1);
             crypto.getRandomValues(randomNumber);
             vote = {
-              schema: '',
               referendum: proposal.signature,
               number: randomNumber[0], // FIXME: to be incremented for subsequent votes to the same referendum
               ballot: btoa(String.fromCharCode.apply(null, ballotBytes)),
