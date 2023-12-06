@@ -47,13 +47,6 @@ function blind_verify($n, $e, $msg, $signature) {
   $m = gmp_powm($s, $e, $n);
   $modBits = strlen($n_bytes) * 8;
   $emLen = intval(ceil(($modBits - 1) / 8));
-  print('<pre>');
-  print('s = '.gmp2hex($s)."\n");
-  print('e = '.gmp2hex($e)."\n");
-  print('n = '.gmp2hex($n)."\n");
-  print('m = '.gmp2hex($m)."\n");
-  print("modBits = $modBits\n");
-  print("emLen = $emLen\n");
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strcmp($em, hex2bin($test_encoded_msg)) !== 0)
     return "wrong encoded message";
@@ -63,23 +56,20 @@ function blind_verify($n, $e, $msg, $signature) {
   $hLen = strlen($mHash);
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
-    print("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
+    return "inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2";
   if (ord($em[$emLen - 1]) !== 0xbc)
     return "inconsistent rightmost octet";
   $maskedDB = substr($em, 0, $emLen - $hLen - 1);
   $H = substr($em, $emLen - $hLen - 1, $hLen);
-  print("maskedDB.length = ".strlen($maskedDB)." = $emLen - $hLen - 1\n");
   $mask = (0xff00 >> (8 * $emLen - $modBits + 1) & 0xff);
   if ((ord($maskedDB[0]) & $mask) != 0)
     return "zero bit test failed";
   $dbMask = MGF1($H, $emLen - $hLen - 1);
-  print("dbMask = ".bin2hex($dbMask)."\n");
   $db = '';
   $max = $emLen - $hLen - 1;
   for($i = 0; $i < $max; $i++)
     $db .= $maskedDB[$i] ^ $dbMask[$i];
   $db[0] = chr(ord($db[0]) & 0x7f);
-  print("db = ".bin2hex($db)."\n");
   $leftmost = $emLen - $hLen - 48 - 2;
   for($i = 0; $i < $leftmost; $i++)
     if (ord($db[$i]) !== 0)
@@ -89,12 +79,10 @@ function blind_verify($n, $e, $msg, $signature) {
   $mp = str_repeat(chr(0), 8);
   $mp .= $mHash;
   $mp .= substr($db, -48);
-  print('mp = '.bin2hex($mp)."\n");
   $hp = hash('sha384', $mp, true);
   if ($hp !== $H)
     return "inconsistent";
-  print('</pre>');
-  return "yes";
+  return "";
 }
 
 $n = gmp_init("0x$test_n");
