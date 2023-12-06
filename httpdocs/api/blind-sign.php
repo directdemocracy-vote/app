@@ -26,6 +26,18 @@ function gmp2hex($n) {
   return bin2hex(gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST));
 }
 
+function MGF1($mgfSeed, $maskLen) {
+  $max = ceil($maskLen / 48);
+  $output = '';
+  for($counter = 0; $counter <= $max; $counter++) {
+    $c = chr(($counter >> 24) & 0xff).chr(($counter >> 16) & 0xff).chr(($counter >> 8) & 0xff).chr($counter & 0xff);
+    $mgfSeedAndC = $mgfSeed.$c;
+    $hash = hex2bin(hash('sha384', $mgfSeedAndC));
+    $output .= $hash;
+  }
+  return substr($output, 0, $maskLen);
+}
+
 function blind_verify($n, $e, $msg, $signature) {
   global $test_encoded_msg;
   $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
@@ -58,10 +70,12 @@ function blind_verify($n, $e, $msg, $signature) {
   $H = substr($em, $emLen - $hLen - 1, $hLen);
   print("maskedDB.length = ".strlen($maskedDB)." = $emLen - $hLen - 1\n");
   $mask = (0xff00 >> (8 * $emLen - $modBits + 1) & 0xff);
-  $r = ord($maskedDB[0]) & $mask;
-  print("mask = $mask ".ord($maskedDB[0])."  $r\n");
   if ((ord($maskedDB[0]) & $mask) != 0)
     return "zero bit test failed";
+  
+  $dbMask = MGF1($H, $emLen - $hLen - 1);
+  print("dbMask = ".bin2hex($dbMask));
+  
   print('</pre>');
   return "";
 }
