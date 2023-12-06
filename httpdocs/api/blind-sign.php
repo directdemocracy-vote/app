@@ -15,15 +15,9 @@ $test_encoded_msg = '2be01c5669eb676cb3f0002eb636427d61568f3f0579da5b998279a7eb3
 function blind_sign($blinded_msg, $n, $e, $d) {
   $blind_sig = gmp_powm($blinded_msg, $d, $n);
   $m = gmp_powm($blind_sig, $e, $n);
-  if (gmp_cmp($m, $blinded_msg) !== 0) {
-    print("Signing failure<br>\n");
-    return 0;
-  }
+  if (gmp_cmp($m, $blinded_msg) !== 0)
+    return false;
   return $blind_sig;
-}
-
-function gmp2hex($n) {
-  return bin2hex(gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST));
 }
 
 function MGF1($mgfSeed, $maskLen) {
