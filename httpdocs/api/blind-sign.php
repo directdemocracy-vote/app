@@ -54,7 +54,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if ($emLen < strlen($mHash) + $sLen + 2)
     print("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
   print('</pre>');
-  return false;
+  return "";
 }
 
 $n = gmp_init("0x$test_n");
@@ -67,7 +67,7 @@ if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) !== 0)
   die("Failed to sign");
 
 $error = blind_verify($n, $e, $test_prep_msg, $test_sig);
-if ($error !== '')
+if ($error !== "")
   die("Failed to verify: $error");
 
 die("Success");
