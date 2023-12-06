@@ -19,7 +19,7 @@ $d = gmp_init("0x$test_d");
 $blinded_msg = gmp_init("0x$test_blinded_msg");
 $blind_sig = gmp_init("0x$test_blind_sig");
 
-if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) !== false)
+if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) === false)
   die("Failed to sign");
 
 $error = blind_verify($n, $e, $test_prep_msg, $test_sig);
