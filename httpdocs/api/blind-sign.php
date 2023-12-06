@@ -48,7 +48,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if (strlen($em) !== $emLen)
     return "emLen mismatch: ".strlen($em)." !== $emLen";
   if (ord($em[$emLen - 1]) !== 0xbc)
-    print("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1])."<br>\n".bin2hex($em));
+    return "inconsistent rightmost octet";
   $mHash = hash('sha384', hex2bin($msg));
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
@@ -66,8 +66,9 @@ $blind_sig = gmp_init("0x$test_blind_sig");
 if (gmp_cmp(blind_sign($blinded_msg, $n, $e, $d), $blind_sig) !== 0)
   die("Failed to sign");
 
-if (!blind_verify($n, $e, $test_prep_msg, $test_sig))
-  die("Failed to verify");
+$error = blind_verify($n, $e, $test_prep_msg, $test_sig);
+if ($error !== '')
+  die("Failed to verify: $error");
 
 die("Success");
 
