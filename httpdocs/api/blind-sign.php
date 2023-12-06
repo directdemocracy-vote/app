@@ -21,6 +21,10 @@ function blind_sign($blinded_msg, $n, $e, $d) {
   return $blind_sig;
 }
 
+function gmp2hex($n) {
+  return bin2hex(gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSM_FIRST));
+}
+
 function blind_verify($n, $e, $msg, $signature) {
   global $test_encoded_msg;
   $n_bytes = gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
@@ -32,6 +36,10 @@ function blind_verify($n, $e, $msg, $signature) {
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
   $m = gmp_powm($s, $e, $n);
+  print('s = '.gmp2hex($s));
+  print('e = '.gmp2hex($e));
+  print('n = '.gmp2hex($n));
+  print('m = '.gmp2hex($m));  
   $modBits = strlen($n_bytes) * 8;
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
