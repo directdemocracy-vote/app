@@ -22,7 +22,7 @@ function blind_sign($blinded_msg, $n, $e, $d) {
 }
 
 function gmp2hex($n) {
-  return bin2hex(gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSM_FIRST));
+  return bin2hex(gmp_export($n, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST));
 }
 
 function blind_verify($n, $e, $msg, $signature) {
