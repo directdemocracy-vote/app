@@ -36,6 +36,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
   $m = gmp_powm($s, $e, $n);
+  print('<pre>');
   print('s = '.gmp2hex($s));
   print('e = '.gmp2hex($e));
   print('n = '.gmp2hex($n));
@@ -44,15 +45,16 @@ function blind_verify($n, $e, $msg, $signature) {
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strcmp($em, hex2bin($test_encoded_msg)) !== 0)
-    die("wrong encoded message em<br><pre>".bin2hex($em)."</pre><br><pre>$test_encoded_msg</pre>");
+    print("wrong encoded message:\n".bin2hex($em)."\n$test_encoded_msg</pre>");
   if (strlen($em) !== $emLen)
-    die("emLen mismatch: ".strlen($em)." !== $emLen");
+    print("emLen mismatch: ".strlen($em)." !== $emLen");
   if ($em[$emLen - 1] != 0xbc)
-    die("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1])."<br>\n".bin2hex($em));
+    print("inconsistent rightmost octet: ".bin2hex($em[$emLen - 1])."<br>\n".bin2hex($em));
   $mHash = hash('sha384', hex2bin($msg));
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
-    die("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
+    print("inconsistent: $emLen < ".strlen($mHash)." + $sLen + 2");
+  print('</pre>');
   return false;
 }
 
