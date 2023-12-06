@@ -36,14 +36,17 @@ function blind_verify($n, $e, $msg, $signature) {
   if (gmp_cmp($s, $n) > 0)
     die("failed to verify (2)");
   $m = gmp_powm($s, $e, $n);
+  $modBits = strlen($n_bytes) * 8;
+  $emLen = intval(ceil(($modBits - 1) / 8));
   print('<pre>');
   print('s = '.gmp2hex($s)."\n");
   print('e = '.gmp2hex($e)."\n");
   print('n = '.gmp2hex($n)."\n");
-  print('m = '.gmp2hex($m)."\n");  
-  $modBits = strlen($n_bytes) * 8;
-  $emLen = intval(ceil(($modBits - 1) / 8));
+  print('m = '.gmp2hex($m)."\n");
+  print("modBits = $modBits\n");
+  print("emLen = $emLen\n");
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+  print("em = ".gmp2hex($em)."\n");
   if (strcmp($em, hex2bin($test_encoded_msg)) !== 0)
     print("wrong encoded message:\n".bin2hex($em)."\n$test_encoded_msg");
   if (strlen($em) !== $emLen)
