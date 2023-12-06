@@ -60,7 +60,7 @@ function blind_verify($n, $e, $msg, $signature) {
   $mask = (0xff00 >> (8 * $emLen - $modBits + 1) & 0xff);
   $r = ord($maskedDB[0]) & $mask;
   print("mask = $mask ".ord($maskedDB[0])."  $r\n");
-  if ($r != 0)
+  if (ord($maskedDB[0]) & $mask != 0)
     return "zero bit test failed";
   print('</pre>');
   return "";
