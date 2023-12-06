@@ -32,7 +32,7 @@ function MGF1($mgfSeed, $maskLen) {
   for($counter = 0; $counter <= $max; $counter++) {
     $c = chr(($counter >> 24) & 0xff).chr(($counter >> 16) & 0xff).chr(($counter >> 8) & 0xff).chr($counter & 0xff);
     $mgfSeedAndC = $mgfSeed.$c;
-    $hash = hex2bin(hash('sha384', $mgfSeedAndC));
+    $hash = hash('sha384', $mgfSeedAndC, true);
     $output .= $hash;
   }
   return substr($output, 0, $maskLen);
@@ -59,7 +59,7 @@ function blind_verify($n, $e, $msg, $signature) {
     return "wrong encoded message";
   if (strlen($em) !== $emLen)
     return "emLen mismatch: ".strlen($em)." !== $emLen";
-  $mHash = hex2bin(hash('sha384', hex2bin($msg)));
+  $mHash = hash('sha384', hex2bin($msg), true);
   $hLen = strlen($mHash);
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
@@ -90,6 +90,9 @@ function blind_verify($n, $e, $msg, $signature) {
   $mp .= $mHash;
   $mp .= substr($db, -48);
   print('mp = '.bin2hex($mp)."\n");
+  $hp = hash('sha384', $mp, true);
+  if ($hp !== $H)
+    return "inconsistent";
   print('</pre>');
   return "";
 }
