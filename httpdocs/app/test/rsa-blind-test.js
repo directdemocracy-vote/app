@@ -9,6 +9,7 @@ import {
   bigIntToUint8Array,
   hexToBase64u,
   emsaPssEncode,
+  emsaPssVerify,
   MGF1,
   bytesToBigInt
 } from '../js/rsa-blind.js';
@@ -253,8 +254,6 @@ import {
     const zInt = (mInt * xInt) % nInt;
     const blindedMsgData = bigIntToUint8Array(zInt, emBitLen / 8);
     const blindedMsgComputed = Array.from(blindedMsgData, i => i.toString(16).padStart(2, '0')).join('');
-    console.log('Computed: ' + blindedMsgComputed);
-    console.log('Expected: ' + blindedMsg);
     assert(blindedMsg === blindedMsgComputed, 'failed to produce correct blindedMsg');
   });
 
@@ -270,5 +269,19 @@ import {
     assert(publicKey, 'failed to create public key from exponent and modulus');
     const verify = await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 48 }, publicKey, signature, msgData);
     assert(verify, 'failed to verify blind signature');
+  });
+
+  await test('verify (test vector from RFC 9474)', async function() {
+    const nInt = BigInt(`0x${n}`);
+    const eInt = BigInt(`0x${e}`);
+    const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+    const sInt = BigInt(`0x${sig}`);
+    const mInt = bigIntModularExponentiation(sInt, eInt, nInt);
+    const EM = bigIntToUint8Array(mInt, 512);
+    const EMHex = Array.from(EM, i => i.toString(16).padStart(2, '0')).join('');
+    assert(EMHex === encodedMsg, 'failed to compute encoded message');
+    const modBits = 4 * n.length;
+    const result = await emsaPssVerify(msgData, EM, modBits - 1);
+    assert(result === 'consistent', 'invalid signature');
   });
 })();

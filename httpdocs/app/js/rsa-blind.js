@@ -172,6 +172,39 @@ export async function emsaPssEncode(message, emBitLen, salt) {
   return encodedMessage;
 }
 
+export async function emsaPssVerify(M, EM, emBits) {
+  const mHash = new Uint8Array(await crypto.subtle.digest('SHA-384', M));
+  if (EM.length < mHash.length + 48 + 2)
+    return 'inconsistent';
+  if (EM[EM.length - 1] !== 0xbc)
+    return 'inconsistent';
+  const maskedDB = EM.slice(0, EM.length - mHash.length - 1);
+  const H = EM.slice(EM.length - mHash.length - 1, EM.length - 1);
+  const mask = (0xff00 >> (8 * EM.length - emBits) & 0xff);
+  if (maskedDB[0] & mask)
+    return 'inconsitent';
+  const dbMask = await MGF1(H, EM.length - mHash.length - 1);
+  const db = new Uint8Array(dbMask.length);
+  for (let i = 0; i < db.length; i++)
+    db[i] = maskedDB[i] ^ dbMask[i];
+  db[0] &= 0x7f;
+  const leftmost = EM.length - mHash.length - 48 - 2;
+  for (let i = 0; i < leftmost; i++) {
+    if (db[i])
+      return 'inconsistent';
+  }
+  if (db[leftmost] !== 1)
+    return 'inconsistent';
+  const mp = new Uint8Array(8 + mHash.length + 48);
+  mp.set(new Uint8Array(8).fill(0));
+  mp.set(mHash, 8);
+  mp.set(db.slice(-48), 8 + mHash.length);
+  const hp = new Uint8Array(await crypto.subtle.digest('SHA-384', mp));
+  if (!H.every((value, index) => value === hp[index]))
+    return 'inconsistent';
+  return 'consistent';
+}
+
 /**
    * prepare a message to be blind signed by the owner of a RSA public key.
    * Note: the message should already be prepared and include the random part (see RFC 9474).
