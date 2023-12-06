@@ -80,6 +80,13 @@ function blind_verify($n, $e, $msg, $signature) {
     $db .= $maskedDB[$i] ^ $dbMask[$i];
   $db[0] = chr(ord($db[0]) & 0x7f);
   print("db = ".bin2hex($db)."\n");
+  $leftmost = $emLen - $hLen - 48 - 2;
+  for($i = 0; $i < $leftmost; $i++)
+    if (ord($db[$i]) !== 0)
+      return "zero bytes test failed";
+  if (ord($db[$leftmost]) !== 1)
+    return "one byte test failed";
+  
   print('</pre>');
   return "";
 }
