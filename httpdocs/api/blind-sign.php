@@ -86,7 +86,10 @@ function blind_verify($n, $e, $msg, $signature) {
       return "zero bytes test failed";
   if (ord($db[$leftmost]) !== 1)
     return "one byte test failed";
-  
+  $mp = str_repeat(chr(0), 8);
+  $mp .= $mHash;
+  $mp .= substr($db, -48);
+  print('mp = '.bin2hex($mp)."\n");
   print('</pre>');
   return "";
 }
