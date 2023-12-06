@@ -94,7 +94,7 @@ function blind_verify($n, $e, $msg, $signature) {
   if ($hp !== $H)
     return "inconsistent";
   print('</pre>');
-  return "";
+  return "yes";
 }
 
 $n = gmp_init("0x$test_n");
