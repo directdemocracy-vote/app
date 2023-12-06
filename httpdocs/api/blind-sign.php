@@ -72,10 +72,14 @@ function blind_verify($n, $e, $msg, $signature) {
   $mask = (0xff00 >> (8 * $emLen - $modBits + 1) & 0xff);
   if ((ord($maskedDB[0]) & $mask) != 0)
     return "zero bit test failed";
-  
   $dbMask = MGF1($H, $emLen - $hLen - 1);
   print("dbMask = ".bin2hex($dbMask));
-  
+  $db = '';
+  $max = $emLen - $hLen - 1;
+  for($i = 0; $i < $max; $i++)
+    $db .= $maskedDB[$i] ^ $dbMask[$i];
+  $db[0] = chr(ord($db[0]) & 0x7f);
+  print("db = ".bin2hex($db));
   print('</pre>');
   return "";
 }
