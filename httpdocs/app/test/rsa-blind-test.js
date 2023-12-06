@@ -67,7 +67,7 @@ import {
     '2139f2797c5ed8b65473ac2f83c52b87f8cf8754ac2f55f5e41e105df1d079a647fb' +
     '1aa591526295667f37db1129752d024eb03bfe506a43665072118423351ef9b86633' +
     '76f9fc073141e1e7bc';
-  const blindSig = BigInt('0x3f4a79eacd4445fca628a310d41e12fcd813c4d43aa4ef2b81226953248d6d00adfee6b79cb88bfa1f99270369fd' +
+  const blindSig = '3f4a79eacd4445fca628a310d41e12fcd813c4d43aa4ef2b81226953248d6d00adfee6b79cb88bfa1f99270369fd' +
     '063c023e5ed546719b0b2d143dd1bca46b0e0e615fe5c63d95c5a6b873b8b50bc52487354e69c3dfbf416e7aca18d5842c89b676efdd38087008fa5' +
     'a810161fcdec26f20ccf2f1e6ab0f9d2bb93e051cb9e86a9b28c5bb62fd5f5391379f887c0f706a08bcc3b9e7506aaf02485d688198f5e22eefdf83' +
     '7b2dd919320b17482c5cc54271b4ccb41d267629b3f844fd63750b01f5276c79e33718bb561a152acb2eb36d8be75bce05c9d1b94eb609106f38226' +
@@ -75,7 +75,7 @@ import {
     '635834357edd2ce6f105eea854ac126ccfa3de2aac5607565a4e5efaac5eed491c335f6fc97e6eb7e9cea3e12de38dfb315220c0a3f84536abb2fdd' +
     '722813e083feda010391ac3d8fd1cd9212b5d94e634e69ebcc800c4d5c4c1091c64afc37acf563c7fc0a6e4c082bc55544f50a7971f3fb97d5853d7' +
     '2c3af34ffd5ce123998be5360d1059820c66a81e1ee6d9c1803b5b62af6bc877526df255b6d1d835d8c840bebbcd6cc0ee910f17da37caf8488afbc' +
-    '08397a1941fcc79e76a5888a95b3d5405e13f737bea5c78d716a48eb9dc0aec8de39c4b45c6914ad4a8185969f70b1adf46');
+    '08397a1941fcc79e76a5888a95b3d5405e13f737bea5c78d716a48eb9dc0aec8de39c4b45c6914ad4a8185969f70b1adf46';
   const sig = '191e941c57510e22d29afad257de5ca436d2316221fe870c7cb75205a6c071c2735aed0bc24c37f3d5bd960ab97a829a50' +
     '8f966bbaed7a82645e65eadaf24ab5e6d9421392c5b15b7f9b640d34fec512846a3100b80f75ef51064602118c1a77d28d938f6efc22041d60159a5' +
     '18d3de7c4d840c9c68109672d743d299d8d2577ef60c19ab463c716b3fa75fa56f5735349d414a44df12bf0dd44aa3e10822a651ed4cb0eb6f47c9b' +
@@ -261,7 +261,8 @@ import {
     const sigData = Uint8Array.from(sig.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     const msgData = Uint8Array.from(preparedMsg.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
     assert(sigData.length === 512, 'unexpected input size: expecting 512, got ' + sigData.length);
-    const s = (blindSig * inv) % BigInt(`0x${n}`);
+    const bs = BigInt(`0x${blindSig}`);
+    const s = (bs * inv) % BigInt(`0x${n}`);
     const signature = bigIntToUint8Array(s, 512);
     const keyData = { kty: 'RSA', e: hexToBase64u(e), n: hexToBase64u(n), alg: 'PS384', ext: true };
     const algorithm = { name: 'RSA-PSS', hash: { name: 'SHA-384' } };
