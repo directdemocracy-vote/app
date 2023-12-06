@@ -56,8 +56,8 @@ function blind_verify($n, $e, $msg, $signature) {
     return "inconsistent rightmost octet";
   $maskedDB = substr($em, 0, $emLen - $hLen - 1);
   $H = substr($em, $emLen - $hLen - 1, $hLen);
-  print("maskedDB.length = ".strlen($maskedDB)." = $emLen - $hLen - 1");
-  $shift = 8 * $emLen - $modBits - 1;
+  print("maskedDB.length = ".strlen($maskedDB)." = $emLen - $hLen - 1\n");
+  $shift = 8 * $emLen - ($modBits - 1);
   print("shift = $shift\n");
   $mask = (0xff00 >> (8 * $emLen - $modBits - 1) & 0xff);
   if (ord(maskedDB[0]) & $mask != 0)
