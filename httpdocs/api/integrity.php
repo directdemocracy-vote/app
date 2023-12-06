@@ -154,7 +154,7 @@ $query = "INSERT INTO participation(`version`, `key`, signature, published, appK
         ."`version`=$version, "
         ."signature=FROM_BASE64('$publication->signature=='), "
         ."appSignature=FROM_BASE64('$publication->appSignature=='), "
-        ."encryptedVote=FROM_BASE64('$publication->encryptedVote');"
+        ."encryptedVote=FROM_BASE64('$publication->encryptedVote')";
 $mysqli->query($query) or error($mysqli->error);
 $mysqli->close();
 
