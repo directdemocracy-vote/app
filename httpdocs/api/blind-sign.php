@@ -58,8 +58,9 @@ function blind_verify($n, $e, $msg, $signature) {
   $H = substr($em, $emLen - $hLen - 1, $hLen);
   print("maskedDB.length = ".strlen($maskedDB)." = $emLen - $hLen - 1\n");
   $mask = (0xff00 >> (8 * $emLen - $modBits + 1) & 0xff);
-  print("mask = $mask ".ord($maskedDB[0])."  ".(ord($maskedDB[0] & $mask))."\n");
-  if (ord($maskedDB[0] & $mask) != 0)
+  $r = ord($maskedDB[0]) & $mask;
+  print("mask = $mask ".ord($maskedDB[0])."  $r\n");
+  if ($r != 0)
     return "zero bit test failed";
   print('</pre>');
   return "";
