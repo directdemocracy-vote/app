@@ -47,7 +47,7 @@ function blind_verify($n, $e, $msg, $signature) {
     return "wrong encoded message";
   if (strlen($em) !== $emLen)
     return "emLen mismatch: ".strlen($em)." !== $emLen";
-  $mHash = hash('sha384', hex2bin($msg));
+  $mHash = hex2bin(hash('sha384', hex2bin($msg)));
   $hLen = strlen($mHash);
   $sLen = 48;
   if ($emLen < strlen($mHash) + $sLen + 2)
