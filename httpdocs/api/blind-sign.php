@@ -37,15 +37,15 @@ function blind_verify($n, $e, $msg, $signature) {
     die("failed to verify (2)");
   $m = gmp_powm($s, $e, $n);
   print('<pre>');
-  print('s = '.gmp2hex($s));
-  print('e = '.gmp2hex($e));
-  print('n = '.gmp2hex($n));
-  print('m = '.gmp2hex($m));  
+  print('s = '.gmp2hex($s)."\n");
+  print('e = '.gmp2hex($e)."\n");
+  print('n = '.gmp2hex($n)."\n");
+  print('m = '.gmp2hex($m)."\n");  
   $modBits = strlen($n_bytes) * 8;
   $emLen = intval(ceil(($modBits - 1) / 8));
   $em = gmp_export($m, 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
   if (strcmp($em, hex2bin($test_encoded_msg)) !== 0)
-    print("wrong encoded message:\n".bin2hex($em)."\n$test_encoded_msg</pre>");
+    print("wrong encoded message:\n".bin2hex($em)."\n$test_encoded_msg");
   if (strlen($em) !== $emLen)
     print("emLen mismatch: ".strlen($em)." !== $emLen");
   if ($em[$emLen - 1] != 0xbc)
