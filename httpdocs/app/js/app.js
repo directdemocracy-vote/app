@@ -266,14 +266,15 @@ async function publish(publication, signature, type) {
           app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
         else {
           if (type === 'citizen card') {
+            app.dialog.close(); // preloader
             updateCitizenCard();
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
           } else if (type === 'endorsement') {
+            app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
             hide('endorse-citizen');
             show('endorse-page');
-            hide('endorse-button-preloader');
             enable('endorse-confirm');
             enable('endorse-cancel-confirm');
             for (let i in endorsements) { // remove if already in the endorsements list
@@ -285,12 +286,14 @@ async function publish(publication, signature, type) {
             endorsements.push(endorsed);
             updateEndorsements();
           } else if (type === 'petition signature') {
+            app.dialog.close(); // preloader
             app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
             petitionButton.textContent = 'Signed';
-            petitionProposal.done = true;
+            petitionProposal.signed = true;
             localStorage.setItem(`petitions`, JSON.stringify(petitions));
             disable(petitionButton);
           } else if (type === 'revocation') {
+            app.dialog.close(); // preloader
             app.dialog.alert(
               `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
               'Revocation success');
@@ -315,12 +318,13 @@ async function publish(publication, signature, type) {
               body: JSON.stringify(vote)
             }).then(response => response.json())
               .then(async answer => {
+                app.dialog.close(); // preloader
                 if (answer.hasOwnProperty('error'))
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
                   app.dialog.alert(`You successfully voted to this referendum`, 'Voted!');
                   referendumButton.textContent = 'Re-vote';
-                  referendumProposal.done = true;
+                  enable(referendumButton);
                   localStorage.setItem(`referemdums`, JSON.stringify(referendums));
                 }
               });
@@ -590,11 +594,11 @@ function showMenu() {
   // registering
   document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
-    let text = document.getElementById('register-button-text');
+    const button = document.getElementById('register-button');
     const registration = 'registration';
-    text.innerHTML = translator.translate(registration);
-    text.setAttribute('data-i18n', registration);
-    show('register-button-preloader');
+    button.textContent = translator.translate(registration);
+    button.setAttribute('data-i18n', registration);
+    app.dialog.preloader('Registering...');
     citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
     citizen.key = localStorage.getItem('publicKey');
     citizen.published = Math.trunc(new Date().getTime() / 1000);
@@ -803,7 +807,7 @@ function showMenu() {
   });
 
   document.getElementById('endorse-confirm').addEventListener('click', function(event) {
-    show('endorse-button-preloader');
+    app.dialog.preloader('Endorsing...');
     disable(event.currentTarget);
     disable('endorse-cancel-confirm');
     endorsementToPublish = {
@@ -973,7 +977,7 @@ function showMenu() {
               if (p.id !== undefined) {
                 app.dialog.alert(`${title}You already have this ${type}.`);
                 app.accordion.open(document.getElementById(`${type}-${p.id}`));
-              } else { // already there, insert at position 0 and reset the missing fields
+              } else { // already there, insert at position 0 and restore the missing fields
                 p.id = 0;
                 let i = 0;
                 for (let p2 of proposals)
@@ -986,21 +990,19 @@ function showMenu() {
                 p.participation = proposal.participation;
                 p.published = proposal.published;
                 p.judge = proposal.judge;
-                if (proposal.answers !== '')
-                  p.answers = proposal.answers;
-                if (proposal.question !== '')
-                  p.question = proposal.question;
                 if (proposal.website !== '')
                   p.website = proposal.website;
+                if (proposal.secret) {
+                  p.question = proposal.question;
+                  p.answers = proposal.answers;
+                }
                 addProposal(p, type, true);
-                localStorage.setItem(`${type}s`, JSON.stringify(proposals));
               }
               already = true;
               break;
             }
           }
-          if (!already) {
-            // move proposals id by one
+          if (!already) { // move proposals id by one
             let i = 1;
             proposals.forEach(function(p) {
               let e = document.getElementById(`${type}-${p.id}`);
@@ -1012,20 +1014,21 @@ function showMenu() {
             delete proposal.inside;
             if (proposal.question === '')
               delete proposal.question;
-            if (proposal.answers === '')
+            if (proposal.answer === '')
               delete proposal.answers;
             if (proposal.website === '')
               delete proposal.website;
-            // preprend new proposal at id 0
-            proposal.id = 0;
-            proposal.done = false;
-            proposal.number = 0;
-            proposal.ballot = null;
-            proposal.answer = null;
+            if (proposal.secret) {
+              proposal.number = 0;
+              proposal.ballot = null;
+              proposal.answer = null;
+            } else
+              proposal.signed = false;
+            proposal.id = 0; // preprend new proposal at id 0
             proposals.unshift(proposal);
             addProposal(proposal, type, true);
-            localStorage.setItem(`${type}s`, JSON.stringify(proposals));
           }
+          localStorage.setItem(`${type}s`, JSON.stringify(proposals));
         }
         enable(`scan-${type}`);
         enable(`enter-${type}`);
@@ -1119,7 +1122,7 @@ function showMenu() {
         label.appendChild(i);
         label.appendChild(document.createTextNode(answer));
         input.addEventListener('change', function(event) {
-          if (proposal.done || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+          if ((proposal.secret === false && proposal.signed) || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
             disable(button);
           else
             enable(button);
@@ -1159,13 +1162,15 @@ function showMenu() {
     grid.appendChild(button);
     button.classList.add('button', 'button-fill');
     if (type === 'petition') {
-      button.textContent = proposal.done ? 'Signed' : 'Sign';
-      if (proposal.done || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+      button.textContent = proposal.signed ? 'Signed' : 'Sign';
+      if (proposal.signed || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
         disable(button);
       button.addEventListener('click', function() {
         app.dialog.confirm(
           'Your name and signature will be published to show publicly your support to this petition.',
           'Sign Petition?', function() {
+            disable(button);
+            app.dialog.preloader('Signing...');
             petitionSignature = {
               schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
               key: citizen.key,
@@ -1181,8 +1186,9 @@ function showMenu() {
           });
       });
     } else { // referendum
-      button.textContent = proposal.done ? 'Re-Vote' : 'Vote';
-      disable(button);
+      button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
+      if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+        disable(button);
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(
@@ -1190,6 +1196,8 @@ function showMenu() {
           'You will be able to change your vote until the deadline of the referendum.',
           'Vote?', async function() {
             // prepare the vote aimed at blind signature
+            disable(button);
+            app.dialog.preloader('Voting...');
             let ballotBytes;
             if (proposal.ballot === null) {
               ballotBytes = new Uint8Array(32);
@@ -1238,6 +1246,7 @@ function showMenu() {
               encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
             };
             referendumProposal = proposal;
+            referendumButton = button;
             Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
           });
       });
@@ -1252,14 +1261,14 @@ function showMenu() {
         `This ${type} will be removed from your list, but you can fetch it again if needed.`,
         `Remove ${uppercaseType}?`, function() {
           document.getElementById(`${type}s`).removeChild(item);
-          if (!proposal.done) { // actually remove it
+          if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
             const index = proposals.indexOf(proposal);
             proposals.splice(index, 1);
             let i = 0;
             proposals.forEach(function(p) {
               p.id = i++;
             });
-          } else { // remove useless fields, keep only done, number and signature
+          } else { // remove useless fields, keep only signature, signed, number, ballot and answer
             delete proposal.id; // hidden
             delete proposal.published;
             delete proposal.participants;
@@ -1498,7 +1507,7 @@ function updateProposals(proposals) {
     if (proposal.judge === judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
-        if (iAmEndorsedByJudge && !proposal.done)
+        if (iAmEndorsedByJudge && ((!proposal.secret && !proposal.signed) || proposal.secret))
           enable(button);
         else
           disable(button);
