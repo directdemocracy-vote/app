@@ -290,7 +290,7 @@ async function publish(publication, signature, type) {
             app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
             petitionButton.textContent = 'Signed';
             petitionProposal.signed = true;
-            localStorage.setItem(`petitions`, JSON.stringify(petitions));
+            localStorage.setItem('petitions', JSON.stringify(petitions));
             disable(petitionButton);
           } else if (type === 'revocation') {
             app.dialog.close(); // preloader
@@ -325,7 +325,7 @@ async function publish(publication, signature, type) {
                   app.dialog.alert(`You successfully voted to this referendum`, 'Voted!');
                   referendumButton.textContent = 'Re-vote';
                   enable(referendumButton);
-                  localStorage.setItem(`referemdums`, JSON.stringify(referendums));
+                  localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
           }
