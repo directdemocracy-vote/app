@@ -70,6 +70,8 @@ let voteBytes = null;
 let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
+let referendumButton = null;
+let referendumProposal = null;
 let revocationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
@@ -316,8 +318,10 @@ async function publish(publication, signature, type) {
                 if (answer.hasOwnProperty('error'))
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
-                  console.log('Vote was casted');
-                  console.log('It should be taken into account after some time');
+                  app.dialog.alert(`You successfully voted to this referendum`, 'Voted!');
+                  referendumButton.textContent = 'Re-vote';
+                  referendumProposal.done = true;
+                  localStorage.setItem(`referemdums`, JSON.stringify(referendums));
                 }
               });
           }
@@ -1015,6 +1019,9 @@ function showMenu() {
             // preprend new proposal at id 0
             proposal.id = 0;
             proposal.done = false;
+            proposal.number = 0;
+            proposal.ballot = null;
+            proposal.answer = null;
             proposals.unshift(proposal);
             addProposal(proposal, type, true);
             localStorage.setItem(`${type}s`, JSON.stringify(proposals));
@@ -1174,22 +1181,31 @@ function showMenu() {
           });
       });
     } else { // referendum
-      button.textContent = proposal.done ? 'Voted' : 'Vote';
+      button.textContent = proposal.done ? 'Re-Vote' : 'Vote';
       disable(button);
       button.addEventListener('click', function(event) {
         const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
         app.dialog.confirm(
-          `You are about to vote "${answer}" to this referendum. This cannot be changed after you cast your vote.`,
+          `You are about to vote "${answer}" to this referendum. ` +
+          'You will be able to change your vote until the deadline of the referendum.',
           'Vote?', async function() {
             // prepare the vote aimed at blind signature
-            const ballotBytes = new Uint8Array(32);
-            crypto.getRandomValues(ballotBytes);
+            let ballotBytes;
+            if (proposal.ballot === null) {
+              ballotBytes = new Uint8Array(32);
+              crypto.getRandomValues(ballotBytes);
+              proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
+            } else
+              ballotBytes = base64ToByteArray(proposal.ballot);
+
             const randomNumber = new Uint8Array(1);
             crypto.getRandomValues(randomNumber);
+            proposal.number += randomNumber[0];
+            proposal.answer = answer;
             vote = {
               referendum: proposal.signature,
-              number: randomNumber[0], // FIXME: to be incremented for subsequent votes to the same referendum
-              ballot: btoa(String.fromCharCode.apply(null, ballotBytes)),
+              number: proposal.number,
+              ballot: proposal.ballot,
               answer: answer
             };
             const referendumBytes = base64ToByteArray(vote.referendum);
@@ -1221,6 +1237,7 @@ function showMenu() {
               referendum: proposal.signature,
               encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
             };
+            referendumProposal = proposal;
             Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
           });
       });
@@ -1242,7 +1259,7 @@ function showMenu() {
             proposals.forEach(function(p) {
               p.id = i++;
             });
-          } else { // remove useless fields, keep only done and signature
+          } else { // remove useless fields, keep only done, number and signature
             delete proposal.id; // hidden
             delete proposal.published;
             delete proposal.participants;
