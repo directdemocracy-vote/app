@@ -1013,8 +1013,10 @@ function showMenu() {
             let i = 1;
             proposals.forEach(function(p) {
               let e = document.getElementById(`${type}-${p.id}`);
-              p.id = i++;
-              e.setAttribute('id', p.id);
+              if (e) {
+                p.id = i++;
+                e.setAttribute('id', p.id);
+              }
             });
             delete proposal.schema;
             delete proposal.key;
@@ -1114,20 +1116,32 @@ function showMenu() {
       p.textContent = proposal.question;
       block.appendChild(p);
       for (let answer of proposal.answers) {
-        let label = document.createElement('label');
+        const label = document.createElement('label');
+        label.classList.add('checkbox', 'display-flex', 'align-items-center', 'margin-bottom-half');
         block.appendChild(label);
-        label.classList.add('radio', 'display-flex', 'margin-bottom-half');
-        let input = document.createElement('input');
+        const input = document.createElement('input');
         label.appendChild(input);
-        input.setAttribute('type', 'radio');
+        input.setAttribute('type', 'checkbox');
         input.setAttribute('name', `answer-${proposal.id}`);
         input.setAttribute('value', answer);
-        let i = document.createElement('i');
-        i.classList.add('icon-radio', 'margin-right-half');
+        const i = document.createElement('i');
+        i.classList.add('margin-right-half', 'icon-checkbox');
         label.appendChild(i);
-        label.appendChild(document.createTextNode(answer));
+        const div = document.createElement('div');
+        label.appendChild(div);
+        div.appendChild(document.createTextNode(answer));
         input.addEventListener('change', function(event) {
-          if ((proposal.secret === false && proposal.signed) || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+          if (event.currentTarget.checked) {
+            const block = event.currentTarget.parentNode.parentNode;
+            const inputs = block.querySelectorAll('input');
+            for (let i = 0; i < inputs.length; i++) {
+              if (inputs[i] === event.currentTarget)
+                continue;
+              if (inputs[i].checked)
+                inputs[i].checked = false;
+            }
+          }
+          if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
             disable(button);
           else
             enable(button);
@@ -1148,7 +1162,7 @@ function showMenu() {
     p = document.createElement('p');
     block.appendChild(p);
     b = document.createElement('b');
-    b.textContent = 'Judge:';
+    b.textContent = 'Judge: ';
     p.appendChild(b);
     a = document.createElement('a');
     a.classList.add('link', 'external');
@@ -1195,65 +1209,67 @@ function showMenu() {
       if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
         disable(button);
       button.addEventListener('click', function(event) {
-        const answer = document.querySelector(`input[name="answer-${proposal.id}"]:checked`).value;
-        app.dialog.confirm(
-          `You are about to vote "${answer}" to this referendum. ` +
-          'You will be able to change your vote until the deadline of the referendum.',
-          'Vote?', async function() {
-            // prepare the vote aimed at blind signature
-            disable(button);
-            app.dialog.preloader('Voting...');
-            let ballotBytes;
-            if (proposal.ballot === null) {
-              ballotBytes = new Uint8Array(32);
-              crypto.getRandomValues(ballotBytes);
-              proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
-            } else
-              ballotBytes = base64ToByteArray(proposal.ballot);
+        const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
+        const answer = checked ? checked.value : '';
+        const text = (checked ? `You are about to vote "${answer}" to this referendum. `
+          : 'You are about to abstain to vote to this referendum. ' +
+          'Your vote will be counted as an abstention in the results. ') +
+        'You will be able to change your vote until the deadline of the referendum.';
+        app.dialog.confirm(text, 'Vote?', async function() {
+          // prepare the vote aimed at blind signature
+          disable(button);
+          app.dialog.preloader('Voting...');
+          let ballotBytes;
+          if (proposal.ballot === null) {
+            ballotBytes = new Uint8Array(32);
+            crypto.getRandomValues(ballotBytes);
+            proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
+          } else
+            ballotBytes = base64ToByteArray(proposal.ballot);
 
-            const randomNumber = new Uint8Array(1);
-            crypto.getRandomValues(randomNumber);
-            proposal.number += randomNumber[0];
-            proposal.answer = answer;
-            vote = {
-              referendum: proposal.signature,
-              number: proposal.number,
-              ballot: proposal.ballot,
-              answer: answer
-            };
-            const referendumBytes = base64ToByteArray(vote.referendum);
-            const numberBytes = int64ToUint8Array(vote.number);
-            const answerBytes = new TextEncoder().encode(vote.answer);
-            const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
-            voteBytes = new Uint8Array(l);
-            let p = 0;
-            voteBytes.set(referendumBytes);
-            p += referendumBytes.length;
-            voteBytes.set(numberBytes, p);
-            p += numberBytes.length;
-            voteBytes.set(ballotBytes, p);
-            p += ballotBytes.length;
-            voteBytes.set(answerBytes, p);
-            p += answer.length;
-            if (voteBytes.length !== p)
-              console.error('vote length is wrong');
-            const binaryAppKey = await importKey(appKey);
-            const blind = await rsaBlind(binaryAppKey, voteBytes);
-            blindInv = blind.inv;
-            participationToPublish = {
-              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
-              key: citizen.key,
-              signature: '',
-              published: proposal.deadline,
-              appKey: appKey,
-              appSignature: '',
-              referendum: proposal.signature,
-              encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
-            };
-            referendumProposal = proposal;
-            referendumButton = button;
-            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
-          });
+          const randomNumber = new Uint8Array(1);
+          crypto.getRandomValues(randomNumber);
+          proposal.number += randomNumber[0];
+          proposal.answer = answer;
+          vote = {
+            referendum: proposal.signature,
+            number: proposal.number,
+            ballot: proposal.ballot,
+            answer: answer
+          };
+          const referendumBytes = base64ToByteArray(vote.referendum);
+          const numberBytes = int64ToUint8Array(vote.number);
+          const answerBytes = new TextEncoder().encode(vote.answer);
+          const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
+          voteBytes = new Uint8Array(l);
+          let p = 0;
+          voteBytes.set(referendumBytes);
+          p += referendumBytes.length;
+          voteBytes.set(numberBytes, p);
+          p += numberBytes.length;
+          voteBytes.set(ballotBytes, p);
+          p += ballotBytes.length;
+          voteBytes.set(answerBytes, p);
+          p += answer.length;
+          if (voteBytes.length !== p)
+            console.error('vote length is wrong');
+          const binaryAppKey = await importKey(appKey);
+          const blind = await rsaBlind(binaryAppKey, voteBytes);
+          blindInv = blind.inv;
+          participationToPublish = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: proposal.deadline,
+            appKey: appKey,
+            appSignature: '',
+            referendum: proposal.signature,
+            encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
+          };
+          referendumProposal = proposal;
+          referendumButton = button;
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
+        });
       });
     }
     let trashButton = document.createElement('button');
