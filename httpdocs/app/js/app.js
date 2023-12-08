@@ -1054,8 +1054,10 @@ function showMenu() {
     };
     if (proposal.question)
       p['question'] = proposal.question;
-    if (proposal.answers)
+    if (proposal.answers) {
       p['answers'] = proposal.answers;
+      p['answers'].pop(); // remove the last one which is empty (abstention)
+    }
     p['secret'] = proposal.secret;
     p['deadline'] = proposal.deadline;
     if (p.website)
