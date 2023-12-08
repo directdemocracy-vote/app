@@ -1160,7 +1160,7 @@ function showMenu() {
     block.appendChild(p);
     const deadline = new Date(proposal.deadline * 1000).toLocaleString();
     const outdated = (proposal.deadline * 1000 < new Date().getTime());
-    p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="font-color:red"' : ''}>${deadline}</span>`;
+    p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
     let grid = document.createElement('div');
     block.appendChild(grid);
     grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
