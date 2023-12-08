@@ -847,10 +847,13 @@ function showMenu() {
   });
   referendumSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-referendum').value = (event.clipboardData || window.clipboardData).getData('text');
+    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('referendum');
   });
-
+  referendumSearch.addEventListener('input', function(event) {
+    if (event.currentTarget.value.length === 40)
+      searchProposal('referendum');
+  });
   let petitionSearch = document.getElementById('enter-petition');
   petitionSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
@@ -858,8 +861,12 @@ function showMenu() {
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    document.getElementById('enter-petition').value = (event.clipboardData || window.clipboardData).getData('text');
+    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
     searchProposal('petition');
+  });
+  petitionSearch.addEventListener('input', function(event) {
+    if (event.currentTarget.value.length === 40)
+      searchProposal('petition');
   });
 
   function updateEndorseConfirm(event) {
@@ -883,14 +890,11 @@ function showMenu() {
   }
 
   function searchProposal(type) {
-    disable(`scan-${type}`);
-    disable(`enter-${type}`);
     let value = document.getElementById(`enter-${type}`).value;
-    if (value.length === 40)
+    if (value.length === 40) {
+      disable(`scan-${type}`);
+      disable(`enter-${type}`);
       getProposal(value, type);
-    else {
-      enable(`scan-${type}`);
-      enable(`enter-${type}`);
     }
   }
 
@@ -934,13 +938,16 @@ function showMenu() {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
       .then((response) => response.json())
       .then(async function(proposal) {
+        enable(`scan-${type}`);
+        enable(`enter-${type}`);
         if (proposal.error) {
-          console.error(`Proposal error: ${proposal.error}`);
+          app.dialog.alert(proposal.error, 'Proposal search error');
           return;
         }
-        const signatureIsLegit = await verifyProposalSignature(proposal);
-        if (!signatureIsLegit)
+        if (!await verifyProposalSignature(proposal)) {
+          console.error('Wrong signature for proposal');
           return;
+        }
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
         const deadline = new Date(proposal.deadline * 1000).toLocaleString();
         const title = `<b>${proposal.title}</b><br><br>`;
@@ -1030,8 +1037,6 @@ function showMenu() {
           }
           localStorage.setItem(`${type}s`, JSON.stringify(proposals));
         }
-        enable(`scan-${type}`);
-        enable(`enter-${type}`);
       });
   }
 
