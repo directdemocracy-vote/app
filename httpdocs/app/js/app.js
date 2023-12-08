@@ -1118,9 +1118,11 @@ function showMenu() {
       p.textContent = proposal.question;
       block.appendChild(p);
       for (let answer of proposal.answers) {
+        const d = document.createElement('div');
+        block.appendChild(d);
         const label = document.createElement('label');
+        d.appendChild(label);
         label.classList.add('checkbox', 'no-ripple', 'display-inline-flex', 'align-items-center', 'margin-bottom-half');
-        block.appendChild(label);
         const input = document.createElement('input');
         label.appendChild(input);
         input.setAttribute('type', 'checkbox');
