@@ -1119,7 +1119,7 @@ function showMenu() {
       block.appendChild(p);
       for (let answer of proposal.answers) {
         const label = document.createElement('label');
-        label.classList.add('checkbox', 'display-flex', 'align-items-center', 'margin-bottom-half');
+        label.classList.add('checkbox', 'no-ripple', 'display-flex', 'align-items-center', 'margin-bottom-half');
         block.appendChild(label);
         const input = document.createElement('input');
         label.appendChild(input);
