@@ -2,6 +2,7 @@
 
 import Translator from './translator.js';
 import {rsaBlind, rsaUnblind} from './rsa-blind.js';
+import {pointInPolygons} from './point-in-polygons.js';
 
 const TESTING = false;
 
@@ -935,7 +936,7 @@ function showMenu() {
   }
 
   async function getProposal(fingerprint, type) {
-    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&latitude=${citizen.latitude}&longitude=${citizen.longitude}`)
+    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
       .then((response) => response.json())
       .then(async function(proposal) {
         enable(`scan-${type}`);
@@ -944,10 +945,8 @@ function showMenu() {
           app.dialog.alert(proposal.error, 'Proposal search error');
           return;
         }
-        if (!await verifyProposalSignature(proposal)) {
-          console.error('Wrong signature for proposal');
+        if (!await verifyProposalSignature(proposal))
           return;
-        }
         const outdated = (proposal.deadline * 1000 < new Date().getTime());
         const deadline = new Date(proposal.deadline * 1000).toLocaleString();
         const title = `<b>${proposal.title}</b><br><br>`;
@@ -961,12 +960,12 @@ function showMenu() {
             `${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`,
             'Not a referendum'
           );
-        } else if (!proposal.inside) {
+        } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
           const message = (type === 'petition')
-            ? `You are not inside the area of this petition (which is <i>${proposal.areas[0].split('=')[1]}</i>). ` +
-            'Therefore you cannot sign it.'
-            : `You are not inside the area of this referendum (which is <i>${proposal.areas[0].split('=')[1]}</i>). ` +
-            'Therefore you cannot vote.';
+            ? `You are not inside the area of this petition (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
+              'Therefore you cannot sign it.'
+            : `You are not inside the area of this referendum (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
+              'Therefore you cannot vote.';
           app.dialog.alert(`${title}${message}`, 'Wrong area');
         } else if (outdated) {
           const message = (type === 'petition')
@@ -991,7 +990,7 @@ function showMenu() {
                   p2.id = i++;
                 p.title = proposal.title;
                 p.description = proposal.description;
-                p.areas = proposal.areas;
+                p.areaName = proposal.areaName;
                 p.deadline = proposal.deadline;
                 p.corpus = proposal.corpus;
                 p.participation = proposal.participation;
@@ -1043,25 +1042,29 @@ function showMenu() {
   }
 
   async function verifyProposalSignature(proposal) {
+    if (proposal.schema !== `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/proposal.schema.json`) {
+      app.dialog.alert('This document is not a valid proposal.', 'Wrong proposal');
+      return false;
+    }
     let p = {
-      'schema': proposal.schema,
-      'key': proposal.key,
-      'signature': '',
-      'published': proposal.published,
-      'area': proposal.area,
-      'title': proposal.title,
-      'description': proposal.description
+      schema: proposal.schema,
+      key: proposal.key,
+      signature: '',
+      published: proposal.published,
+      area: proposal.area,
+      title: proposal.title,
+      description: proposal.description
     };
     if (proposal.question)
-      p['question'] = proposal.question;
+      p.question = proposal.question;
     if (proposal.answers) {
-      p['answers'] = proposal.answers;
-      p['answers'].pop(); // remove the last one which is empty (abstention)
+      p.answers = proposal.answers;
+      p.answers.pop(); // remove the last one which is empty (abstention)
     }
-    p['secret'] = proposal.secret;
-    p['deadline'] = proposal.deadline;
-    if (p.website)
-      p['website'] = proposal.website;
+    p.secret = proposal.secret;
+    p.deadline = proposal.deadline;
+    if (proposal.website)
+      p.website = proposal.website;
 
     const publicKey = await importKey(proposal.key);
     if (!publicKey)
@@ -1071,6 +1074,24 @@ function showMenu() {
     const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
     if (!verify) {
       app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
+      return false;
+    }
+    let a = {
+      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/area.schema.json`,
+      key: proposal.areaKey,
+      signature: '',
+      published: proposal.areaPublished,
+      name: proposal.areaName,
+      polygons: proposal.areaPolygons
+    };
+    const areaPublicKey = await importKey(proposal.areaKey);
+    if (!areaPublicKey)
+      console.error('Failed to import public key for area');
+    const areaBytes = base64ToByteArray(proposal.area);
+    const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
+    const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
+    if (!areaVerify) {
+      app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
       return false;
     }
     return true;
@@ -1152,7 +1173,7 @@ function showMenu() {
         });
       }
     }
-    let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areas.join('&')}&polygon_geojson=1`;
+    let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areaName.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
     let b = document.createElement('b');
     b.textContent = 'Area:';
@@ -1161,7 +1182,7 @@ function showMenu() {
     a.classList.add('link', 'external');
     a.setAttribute('href', url);
     a.setAttribute('target', '_blank');
-    a.textContent = proposal.areas[0].split('=')[1];
+    a.textContent = proposal.areaName[0].split('=')[1];
     p.appendChild(a);
     p = document.createElement('p');
     block.appendChild(p);
@@ -1299,7 +1320,7 @@ function showMenu() {
             delete proposal.participants;
             delete proposal.title;
             delete proposal.description;
-            delete proposal.areas;
+            delete proposal.areaName;
             delete proposal.area;
             delete proposal.deadline;
             delete proposal.corpus;
