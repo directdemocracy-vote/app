@@ -71,6 +71,7 @@ let voteBytes = null;
 let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
+let referendumProposal = null;
 let referendumButton = null;
 let revocationToPublish = null;
 let endorseMap = null;
@@ -322,9 +323,10 @@ async function publish(publication, signature, type) {
                 if (answer.hasOwnProperty('error'))
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
-                  app.dialog.alert(`You successfully voted to this referendum`, 'Voted!');
+                  app.dialog.alert(`You successfully voted to the referendum entitled "${referendumProposal.title}"`, 'Voted!');
                   referendumButton.textContent = 'Re-vote';
-                  enable(referendumButton);
+                  if (referendumProposal.deadline * 1000 < new Date().getTime())
+                    enable(referendumButton);
                   localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
@@ -1165,7 +1167,7 @@ function showMenu() {
         div.appendChild(document.createTextNode(answer));
         input.addEventListener('change', function(event) {
           if (event.currentTarget.checked) {
-            const block = event.currentTarget.parentNode.parentNode;
+            const block = event.currentTarget.parentNode.parentNode.parentNode;
             const inputs = block.querySelectorAll('input');
             for (let i = 0; i < inputs.length; i++) {
               if (inputs[i] === event.currentTarget)
@@ -1245,6 +1247,7 @@ function showMenu() {
       button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
       if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
         disable(button);
+      console.log('outdated = ' + outdated);
       button.addEventListener('click', function(event) {
         const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
         const answer = checked ? checked.value : '';
@@ -1256,14 +1259,9 @@ function showMenu() {
           // prepare the vote aimed at blind signature
           disable(button);
           app.dialog.preloader('Voting...');
-          try {
-            const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
-            if (greenLight === false) {
-              enable(button);
-              return;
-            }
-          } catch (error) {
-            console.log(error);
+          const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
+          if (greenLight === false) {
+            enable(button);
             return;
           }
           let ballotBytes;
@@ -1314,6 +1312,7 @@ function showMenu() {
             encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
           };
           referendumButton = button;
+          referendumProposal = proposal;
           Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
         });
       });
