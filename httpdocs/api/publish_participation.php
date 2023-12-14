@@ -49,6 +49,8 @@ while ($row = $result->fetch_assoc()) {
   $mysqli->query("DELETE FROM participation WHERE id=$row[id]");
 }
 $result->free();
+if ($list === '')
+  die();
 $list = substr($list, 0, -2);
 die("{\"published\": \"$list\"}");
 ?>
