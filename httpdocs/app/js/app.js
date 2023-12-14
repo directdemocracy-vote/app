@@ -72,7 +72,6 @@ let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
 let referendumButton = null;
-let referendumProposal = null;
 let revocationToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
@@ -511,8 +510,8 @@ function showMenu() {
             registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
             fetch('https://nominatim.openstreetmap.org/reverse.php' +
               `?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
-              .then((response) => response.json())
-              .then((answer) => {
+              .then(response => response.json())
+              .then(answer => {
                 registerMarker.setPopupContent(
                   `${answer.display_name}<br><br><center style="color:#999">` +
                   `(${citizen.latitude}, ${citizen.longitude})</center>`
@@ -541,8 +540,8 @@ function showMenu() {
           if (navigator.geolocation)
             navigator.geolocation.getCurrentPosition(getGeolocationPosition);
           fetch(`https://ipinfo.io/loc`)
-            .then((response) => response.text())
-            .then((answer) => {
+            .then(response => response.text())
+            .then(answer => {
               if (geolocation)
                 return;
               const coords = answer.split(',');
@@ -688,8 +687,8 @@ function showMenu() {
     const signature = btoa(binarySignature).slice(0, -2);
     // get endorsee from fingerprint
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
-      .then((response) => response.text())
-      .then(async function(answer) {
+      .then(response => response.text())
+      .then(async answer => {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
@@ -762,8 +761,8 @@ function showMenu() {
           return false;
         });
         fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-          .then((response) => response.json())
-          .then((answer) => {
+          .then(response => response.json())
+          .then(answer => {
             const address = answer.display_name;
             endorseMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
           });
@@ -937,12 +936,18 @@ function showMenu() {
 
   async function getProposal(fingerprint, type) {
     fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
-      .then((response) => response.json())
-      .then(async function(proposal) {
+      .then(response => response.json())
+      .then(async proposal => {
         enable(`scan-${type}`);
         enable(`enter-${type}`);
         if (proposal.error) {
           app.dialog.alert(proposal.error, 'Proposal search error');
+          return;
+        }
+        const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
+        const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+        if (fingerprint !== sha1) {
+          app.dialog.alert('Fingerprint mismatch.', 'Proposal search error');
           return;
         }
         if (!await verifyProposalSignature(proposal))
@@ -988,6 +993,7 @@ function showMenu() {
                 let i = 0;
                 for (let p2 of proposals)
                   p2.id = i++;
+                p.key = proposal.key;
                 p.title = proposal.title;
                 p.description = proposal.description;
                 p.areaName = proposal.areaName;
@@ -1018,8 +1024,10 @@ function showMenu() {
               }
             });
             delete proposal.schema;
-            delete proposal.key;
-            delete proposal.inside;
+            delete proposal.area;
+            delete proposal.areaKey;
+            delete proposal.areaPolygons;
+            delete proposal.areaPublished;
             if (proposal.question === '')
               delete proposal.question;
             if (proposal.answer === '')
@@ -1212,9 +1220,13 @@ function showMenu() {
       button.addEventListener('click', function() {
         app.dialog.confirm(
           'Your name and signature will be published to show publicly your support to this petition.',
-          'Sign Petition?', function() {
+          'Sign Petition?', async function() {
             disable(button);
             app.dialog.preloader('Signing...');
+            if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'petition') === false) {
+              enable(button);
+              return;
+            }
             petitionSignature = {
               schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
               key: citizen.key,
@@ -1244,6 +1256,16 @@ function showMenu() {
           // prepare the vote aimed at blind signature
           disable(button);
           app.dialog.preloader('Voting...');
+          try {
+            const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
+            if (greenLight === false) {
+              enable(button);
+              return;
+            }
+          } catch (error) {
+            console.log(error);
+            return;
+          }
           let ballotBytes;
           if (proposal.ballot === null) {
             ballotBytes = new Uint8Array(32);
@@ -1291,7 +1313,6 @@ function showMenu() {
             referendum: proposal.signature,
             encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
           };
-          referendumProposal = proposal;
           referendumButton = button;
           Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
         });
@@ -1316,6 +1337,7 @@ function showMenu() {
             });
           } else { // remove useless fields, keep only signature, signed, number, ballot and answer
             delete proposal.id; // hidden
+            delete proposal.key;
             delete proposal.published;
             delete proposal.participants;
             delete proposal.title;
@@ -1417,7 +1439,7 @@ function showMenu() {
               },
               format: 'jpeg',
               quality: 0.95
-            }).then(function(result) {
+            }).then(result => {
               document.getElementById('register-picture').setAttribute('src', result);
               citizen.picture = result;
               croppie.destroy();
@@ -1488,8 +1510,8 @@ function downloadCitizen() {
     },
     body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
   })
-    .then((response) => response.json())
-    .then((answer) => {
+    .then(response => response.json())
+    .then(answer => {
       if (answer.error)
         app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
       else {
@@ -1514,37 +1536,79 @@ function downloadCitizen() {
     });
 }
 
+function updateReputation(reputationValue, endorsed) {
+  let reputation = document.getElementById('citizen-reputation');
+  let badge = document.getElementById('endorsed-badge');
+  const span = document.createElement('span');
+  const color = endorsed ? 'blue' : 'red';
+  span.setAttribute('style', `font-weight:bold;color:${color}`);
+  span.textContent = reputationValue;
+  reputation.innerHTML = '';
+  reputation.appendChild(span);
+  badge.classList.remove(`color-red`);
+  badge.classList.remove(`color-blue`);
+  badge.classList.add(`color-${color}`);
+  updateProposals(petitions);
+  updateProposals(referendums);
+}
+
 function getReputationFromJudge() {
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`)
-    .then((response) => response.json())
-    .then((answer) => {
-      let reputation = document.getElementById('citizen-reputation');
-      let badge = document.getElementById('endorsed-badge');
-      const span = document.createElement('span');
+    .then(response => response.json())
+    .then(answer => {
       if (answer.error) {
-        span.setAttribute('style', 'font-weight:bold;color:red');
-        span.textContent = answer.error;
-        reputation.innerHTML = '';
-        reputation.appendChild(span);
-        badge.classList.remove('color-blue');
-        badge.classList.add('color-red');
+        app.dialog.alert(answer.error, 'Could not get reputation from judge.');
+        updateReputation('N/A', false);
+        iAmEndorsedByJudge = false;
       } else {
         iAmEndorsedByJudge = answer.endorsed;
-        const color = answer.endorsed ? 'blue' : 'red';
-        span.setAttribute('style', `font-weight:bold;color:${color}`);
-        span.textContent = answer.reputation;
-        reputation.innerHTML = '';
-        reputation.appendChild(span);
-        badge.classList.remove('color-red');
-        badge.classList.remove('color-blue');
-        badge.classList.add('color-' + color);
-        updateProposals(petitions);
-        updateProposals(referendums);
+        updateReputation(answer.reputation, answer.endorsed);
       }
     })
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
+      updateReputation('N/A', false);
+      iAmEndorsedByJudge = false;
     });
+}
+
+async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, type) {
+  const randomBytes = new Uint8Array(20);
+  crypto.getRandomValues(randomBytes);
+  challenge = btoa(String.fromCharCode.apply(null, randomBytes));
+  const url = `${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}&challenge=${encodeURIComponent(challenge)}`;
+  const response = await fetch(url);
+  const answer = await response.json();
+  if (answer.error) {
+    if (judgeUrl === judge) {
+      iAmEndorsedByJudge = false;
+      updateReputation('N/A', false);
+    }
+    app.dialog.alert(answer.error, 'Could not get reputation from judge');
+    return false;
+  }
+  const publicKey = await importKey(judgeKey);
+  let signature = base64ToByteArray(answer.signature);
+  let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, randomBytes);
+  if (!verify) {
+    app.dialog.alert('Failed to verify judge challenge.', 'Bad response from judge');
+    return false;
+  }
+  if (judgeUrl === judge) {
+    iAmEndorsedByJudge = answer.endorsement;
+    updateReputation(answer.reputation, answer.endorsement);
+  }
+  if (answer.timestamp >= proposalDeadline) {
+    app.dialog.alert(`The deadline of the ${type} has passed.`, 'Deadline passed');
+    return false;
+  }
+  if (answer.endorsed !== true) {
+    const reputation = Number(answer.reputation);
+    app.dialog.alert(`You are not endorsed by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
+      'Not endorsed');
+    return false;
+  }
+  return true;
 }
 
 function updateProposals(proposals) {
