@@ -227,18 +227,6 @@ app.on('pageBeforeRemove', function(page) {
 
 app.views.create('.view-main', { iosDynamicNavbar: false });
 
-addEventListener('online', () => {
-  console.log('online');
-  if (localStorage.getItem('registered') && localStorage.getItem('publicKey')) {
-    downloadCitizen();
-    getReputationFromJudge();
-  }
-});
-
-addEventListener('offline', () => {
-  console.log('offline');
-});
-
 // Wait for Cordova to be initialized.
 document.addEventListener('deviceready', onDeviceReady, false);
 
@@ -1247,7 +1235,6 @@ function showMenu() {
       button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
       if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
         disable(button);
-      console.log('outdated = ' + outdated);
       button.addEventListener('click', function(event) {
         const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
         const answer = checked ? checked.value : '';
@@ -1616,7 +1603,9 @@ function updateProposals(proposals) {
     if (proposal.judge === judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
-        if (iAmEndorsedByJudge && ((!proposal.secret && !proposal.signed) || proposal.secret))
+        if (iAmEndorsedByJudge &&
+            proposal.deadline * 1000 > new Date().getTime() &&
+            ((!proposal.secret && !proposal.signed) || proposal.secret))
           enable(button);
         else
           disable(button);
