@@ -1110,7 +1110,7 @@ function showMenu() {
     let title = document.createElement('div');
     inner.appendChild(title);
     title.classList.add('item-title');
-    title.textContent = proposal.title;
+    title.textContent = proposal.areaName[0].split('=')[1] + ' (' + (proposal.id + 1) + ')';
     let content = document.createElement('div');
     item.appendChild(content);
     content.classList.add('accordion-item-content');
@@ -1173,8 +1173,9 @@ function showMenu() {
     }
     let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areaName.join('&')}&polygon_geojson=1`;
     p = document.createElement('p');
+    block.appendChild(p);
     let b = document.createElement('b');
-    b.textContent = 'Area:';
+    b.textContent = 'Area: ';
     p.appendChild(b);
     a = document.createElement('a');
     a.classList.add('link', 'external');
