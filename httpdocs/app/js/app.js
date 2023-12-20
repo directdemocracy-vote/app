@@ -63,7 +63,7 @@ if (!station) {
 let iAmEndorsedByJudge = false;
 let endorsed = null;
 let endorsementToPublish = null;
-let endorsementToRevoke = null;
+let endorsementToReport = null;
 let petitionSignature = null;
 let participationToPublish = null;
 let vote = null;
@@ -73,7 +73,7 @@ let petitionButton = null;
 let petitionProposal = null;
 let referendumProposal = null;
 let referendumButton = null;
-let revocationToPublish = null;
+let reportToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
 let petitions = [];
@@ -281,15 +281,14 @@ async function publish(publication, signature, type) {
             petitionProposal.signed = true;
             localStorage.setItem('petitions', JSON.stringify(petitions));
             disable(petitionButton);
-          } else if (type === 'revocation') {
+          } else if (type === 'report') {
             app.dialog.close(); // preloader
             app.dialog.alert(
-              `You successfully revoked ${endorsementToRevoke.givenNames} ${endorsementToRevoke.familyName}`,
-              'Revocation success');
-            endorsements.splice(endorsements.indexOf(endorsementToRevoke), 1); // remove it from list
-            endorsementToRevoke.revoke = true;
-            endorsementToRevoke.published = revocationToPublish.published; // set the recovation date
-            endorsements.push(endorsementToRevoke); // add it at the end of the list
+              `You successfully reported ${endorsementToReport.givenNames} ${endorsementToReport.familyName}`,
+              'Report success');
+            endorsements.splice(endorsements.indexOf(endorsementToReport), 1); // remove it from list
+            endorsementToReport.published = reportToPublish.published; // set the recovation date
+            endorsements.push(endorsementToReport); // add it at the end of the list
             updateEndorsements();
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
@@ -345,8 +344,8 @@ function publishPetitionSignature(signature) {
   publish(petitionSignature, signature, 'petition signature');
 }
 
-function publishRevocation(signature) {
-  publish(revocationToPublish, signature, 'revocation');
+function publishReport(signature) {
+  publish(reportToPublish, signature, 'report');
 }
 
 function publishParticipation(signature) {
@@ -405,8 +404,8 @@ function showMenu() {
     downloadCitizen();
   }
 
-  document.getElementById('revoke').addEventListener('click', function() {
-    function revokeCard() {
+  document.getElementById('update').addEventListener('click', function() {
+    function updateCard() {
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
@@ -419,14 +418,14 @@ function showMenu() {
       Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
         localStorage.setItem('publicKey', publicKey.slice(44, -6));
         showPage('register');
-        console.log('revoked card');
+        console.log('reported card');
       }, keystoreFailure);
     }
     const text = '<p class="text-align-left">' +
-    'If you revoke your citizen card, you will have to create a new one and get endorsements to be able to vote and sign. ' +
-    'Do you really want to revoke your citizen card?</p><p>Please type <b>I understand</b> here:</p>';
+    'If you update your citizen card, you will have to get new endorsements to be able to vote and sign. ' +
+    'Do you really want to update your citizen card?</p><p>Please type <b>I understand</b> here:</p>';
     app.dialog.create({
-      title: 'Revoke Citizen Card',
+      title: 'Update Citizen Card',
       text,
       content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
       buttons: [{
@@ -440,7 +439,7 @@ function showMenu() {
       destroyOnClose: true,
       onClick: function(dialog, index) {
         if (index === 1) // OK
-          revokeCard();
+          updateCard();
       },
       on: {
         open: function(d) {
@@ -456,7 +455,7 @@ function showMenu() {
           input.addEventListener('change', function(event) {
             if (event.target.value === 'I understand') {
               d.close();
-              revokeCard();
+              updateCard();
             }
           });
         }
@@ -801,13 +800,14 @@ function showMenu() {
     disable(event.currentTarget);
     disable('endorse-cancel-confirm');
     endorsementToPublish = {
-      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
+      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
       appKey: appKey,
       appSignature: '',
-      endorsedSignature: endorsed.signature
+      type: 'endorse',
+      publication: endorsed.signature
     };
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
@@ -1219,13 +1219,14 @@ function showMenu() {
               return;
             }
             petitionSignature = {
-              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
               key: citizen.key,
               signature: '',
               published: Math.trunc(new Date().getTime() / 1000),
               appKey: appKey,
               appSignature: '',
-              endorsedSignature: proposal.signature
+              type: 'sign',
+              publication: proposal.signature
             };
             petitionButton = button;
             petitionProposal = proposal;
@@ -1626,13 +1627,8 @@ function updateCitizenEndorsements() {
     badge.innerHTML = '0';
     return;
   }
-  let revokeCount = 0;
-  citizenEndorsements.forEach(function(endorsement) {
-    if (endorsement.revoke)
-      revokeCount++;
-  });
   list.innerHTML = '';
-  let endorsementCount = citizenEndorsements.length - revokeCount;
+  let endorsementCount = citizenEndorsements.length;
   badge.textContent = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
   newElement(
@@ -1656,12 +1652,8 @@ function updateCitizenEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked you on: ' : 'Endorsed you on: ') + t);
+    let message = newElement(div, 'div', 'item-subtitle', 'Endorsed you on: ' + t);
     message.style.fontSize = '82.353%';
-    if (endorsement.revoke) {
-      message.style.fontWeight = 'bold';
-      message.style.color = 'red';
-    }
   });
 }
 
@@ -1684,81 +1676,78 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle', (endorsement.revoke ? 'Revoked : ' : 'Endorsed: ') + t);
+    let message = newElement(div, 'div', 'item-subtitle', 'Endorsed: ' + t);
     message.style.fontSize = '82.353%';
-    if (endorsement.revoke) {
-      message.style.color = 'red';
-      count++;
-    } else {
-      let d = newElement(div, 'div', 'item-label text-align-right');
-      a = newElement(d, 'a', 'link', 'Revoke');
-      a.href = '#';
-      a.style.fontWeight = 'bold';
-      a.style.textTransform = 'uppercase';
-      a.addEventListener('click', function() {
-        function revoke() {
-          disable(a);
-          message.style.color = 'red';
-          message.textContent = 'Revoking, please wait...';
-          revocationToPublish = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/endorsement.schema.json`,
-            key: citizen.key,
-            signature: '',
-            published: Math.trunc(new Date().getTime() / 1000),
-            appKey: appKey,
-            appSignature: '',
-            revoke: true,
-            endorsedSignature: endorsement.signature
-          };
-          endorsementToRevoke = endorsement;
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(revocationToPublish), publishRevocation, keystoreFailure);
-        }
-        const text = '<p class="text-align-left">' +
-          'You should revoke only a citizen who has moved or changed her citizen card. ' +
-          'This might affect their ability to vote. Do you really want to revoke this citizen?' +
+    let d = newElement(div, 'div', 'item-label text-align-right');
+    a = newElement(d, 'a', 'link', 'Report');
+    a.href = '#';
+    a.style.fontWeight = 'bold';
+    a.style.textTransform = 'uppercase';
+    a.addEventListener('click', function() {
+      function report() {
+        disable(a);
+        message.style.color = 'red';
+        message.textContent = 'Reporting, please wait...';
+        reportToPublish = {
+          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
+          key: citizen.key,
+          signature: '',
+          published: Math.trunc(new Date().getTime() / 1000),
+          appKey: appKey,
+          appSignature: '',
+          type: 'report',
+          publication: endorsement.signature
+        };
+        endorsementToReport = endorsement;
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(reportToPublish), publishReport, keystoreFailure);
+      }
+      const text = '<p class="text-align-left">' +
+          'You should report only a citizen who has died, or has erroneous information on their citizen card, ' +
+          'for example because they moved, got married and changed their name or ' +
+          "have an ID picture that doesn't ressemble them any more. " +
+          'This might affect their ability to vote. Do you really want to report this citizen?' +
           `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
           'Please type <b>I understand</b> here:' +
           '</p>';
-        app.dialog.create({
-          title: 'Revoke Citizen',
-          text,
-          content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
-          buttons: [{
-            text: app.params.dialog.buttonCancel,
-            keyCodes: app.keyboardActions ? [27] : null
-          },
-          {
-            text: app.params.dialog.buttonOk,
-            bold: true,
-            keyCodes: app.keyboardActions ? [13] : null
-          }],
-          destroyOnClose: true,
-          onClick: function(dialog, index) {
-            if (index === 1) // OK
-              revoke();
-          },
-          on: {
-            open: function(d) {
-              let input = d.$el.find('.dialog-input')[0];
-              let okButton = d.$el.find('.dialog-button')[1];
-              disable(okButton);
-              input.addEventListener('input', function(event) {
-                if (event.target.value === 'I understand')
-                  enable(okButton);
-                else
-                  disable(okButton);
-              });
-              input.addEventListener('change', function(event) {
-                if (event.target.value === 'I understand') {
-                  d.close();
-                  revoke();
-                }
-              });
-            }
+      app.dialog.create({
+        title: 'Report Citizen',
+        text,
+        content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
+        buttons: [{
+          text: app.params.dialog.buttonCancel,
+          keyCodes: app.keyboardActions ? [27] : null
+        },
+        {
+          text: app.params.dialog.buttonOk,
+          bold: true,
+          keyCodes: app.keyboardActions ? [13] : null
+        }],
+        destroyOnClose: true,
+        onClick: function(dialog, index) {
+          if (index === 1) // OK
+            report();
+        },
+        on: {
+          open: function(d) {
+            let input = d.$el.find('.dialog-input')[0];
+            let okButton = d.$el.find('.dialog-button')[1];
+            disable(okButton);
+            input.addEventListener('input', function(event) {
+              if (event.target.value === 'I understand')
+                enable(okButton);
+              else
+                disable(okButton);
+            });
+            input.addEventListener('change', function(event) {
+              if (event.target.value === 'I understand') {
+                d.close();
+                report();
+              }
+            });
           }
-        }).open();
-      });
-    }
+        }
+      }).open();
+    });
   });
   let badge = document.getElementById('endorse-badge');
   badge.textContent = count;
