@@ -101,13 +101,14 @@ def generate_endorsements(folder=None):
                     with open(endorsed_file, 'r', encoding='utf8') as file:
                         endorsed = json.load(file)
                     endorsement = {}
-                    endorsement['schema'] = 'https://directdemocracy.vote/json-schema/2/endorsement.schema.json'
+                    endorsement['schema'] = 'https://directdemocracy.vote/json-schema/2/commitment.schema.json'
                     endorsement['key'] = citizen['key']
                     endorsement['signature'] = ''
                     endorsement['published'] = int(time.time())
                     endorsement['appKey'] = public_key(app_key)
                     endorsement['appSignature'] = ''
-                    endorsement['endorsedSignature'] = endorsed['signature']
+                    endorsement['type'] = 'endorse'
+                    endorsement['publication'] = endorsed['signature']
                     message = json.dumps(endorsement, ensure_ascii=False, separators=(',', ':')).encode('utf8')
                     h = SHA256.new(message)
                     key_file = os.path.join('key', citizen_name + '.pem')
