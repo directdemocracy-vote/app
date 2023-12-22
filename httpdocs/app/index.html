@@ -117,6 +117,34 @@
         </div>
         <swiper-container class="tabs" id='swiper-container' allow-touch-move='false' speed='0'>
           <swiper-slide class="tab tab-active page-content" id="tab-card">
+            <div id="citizen-page" class="display-none">
+              <div class="block" style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
+                      <div class="item-inner">
+                        <div class="item-title item-label">Enter Your Citizen Card</div>
+                        <div class="item-input-wrap">
+                          <input id="enter-citizen" type="text" size="40" maxlength="40"
+                            placeholder="Paste your citizen card reference here">
+                          <span class="input-clear-button"></span>
+                        </div>
+                        <div class="item-input-info">
+                          Search your citizen card <a id="search-citizen" class="link external"
+                            target="_blank">online</a>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button id="scan-citizen" class="button" style="width:5%">
+                  <i class="icon f7-icons">viewfinder</i>
+                </button>
+              </div>
+              <div class="block">
+                <button class="button button-fill color-red" id="cancel-citizen" data-i18n="cancel"></button>
+              </div>
+            </div>
             <div id="register-page" class="display-none">
               <div class="block-title margin-top" id="tab-card-title" data-i18n="become-citizen"></div>
               <div class="list">
@@ -187,6 +215,8 @@
                   </li>
                   <li class="block">
                     <button class="button button-fill disabled" id="register-button" data-i18n="register"></button>
+                    <button class="button button-fill color-red margin-top" id="cancel-register-button"
+                      data-i18n="cancel"></button>
                   </li>
                 </ul>
               </div>
@@ -402,8 +432,11 @@
                 </div>
               </div>
             </div>
-            <div class="block">
-              <button id="update" class="button button-fill color-red">Update my citizen card</button>
+            <div class="block-title margin-top">Danger Zone</div>
+            <div class="block block-strong block-outline inset">
+              <button id="update" class="button button-fill color-red margin-bottom">Update Citizen Card</button>
+              <button id="export" class="button button-fill color-red margin-bottom">Export Citizen Card</button>
+              <button id="delete" class="button button-fill color-red">Delete Citizen Card</button>
             </div>
           </swiper-slide>
         </swiper-container>

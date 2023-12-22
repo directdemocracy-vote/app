@@ -78,6 +78,9 @@ let endorseMap = null;
 let endorseMarker = null;
 let petitions = [];
 let referendums = [];
+let updating = false;
+let currentLatitude = 46.517493; // Lausanne
+let currentLongitude = 6.629111;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -157,7 +160,6 @@ async function importKey(key) {
     true,
     ['verify']
   );
-
   return publicKey;
 }
 
@@ -166,7 +168,6 @@ function base64ToByteArray(base64) {
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++)
     bytes[i] = binaryString.charCodeAt(i);
-
   return bytes;
 }
 
@@ -189,7 +190,6 @@ function setupLanguagePicker() {
         '</div></div></div>';
     }
   });
-
   languagePicker.on('change', function(picker, value) {
     for (let key in translator.languages) {
       if (translator.languages[key] === value[0]) {
@@ -259,6 +259,7 @@ async function publish(publication, signature, type) {
             updateCitizenCard();
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
+            enableDangerButtons();
           } else if (type === 'endorsement') {
             app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
@@ -370,17 +371,6 @@ async function signChallenge(signature) {
 function onDeviceReady() {
   directDemocracyVersion += ` (${device.platform})`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
-  const successCreateKey = function(publicKey) {
-    localStorage.setItem('publicKey', publicKey.slice(44, -6));
-    showMenu();
-  };
-  if (!localStorage.getItem('publicKey'))
-    Keystore.createKeyPair(PRIVATE_KEY_ALIAS, successCreateKey, keystoreFailure);
-  else
-    showMenu();
-}
-
-function showMenu() {
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
     notary = sanitizeWebservice(event.target.value);
@@ -396,36 +386,74 @@ function showMenu() {
     station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
-
-  if (!localStorage.getItem('registered'))
-    showPage('register');
-  else {
-    showPage('splash');
-    downloadCitizen();
+  function welcome() {
+    let dialog = app.dialog.create({
+      title: 'Welcome to directdemocracy!',
+      text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
+      buttons: [{
+        text: 'No',
+        onClick: function() {
+          function importCitizen() {
+            console.log('import citizen: scanning the export QR core...');
+          }
+          function lost() {
+            disableDangerButtons();
+            showPage('citizen');
+          }
+          let dialog = app.dialog.create({
+            title: 'Import Citizen Card',
+            text: 'It is recommended to import your citizen card from the phone containing it. ' +
+                  'Do you have this phone on hand?',
+            buttons: [{
+              text: 'Yes',
+              onClick: function() {
+                app.dialog.confirm('On the phone containing your citizen card, ' +
+                  'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
+                  'following the instructions. Press OK to scan the export QR code.',
+                'Import Citizen Card', importCitizen, welcome);
+              }
+            }, {
+              text: 'No',
+              onClick: function() {
+                app.dialog.confirm('If you lost access to your citizen card, ' +
+                  'you will have to search your current citizen card from a notary database ' +
+                  'and scan its QR code (or copy/paste its reference). ' +
+                  'Then, you will have to get endorsed again by your neighbors.',
+                'Lost Citizen Card', lost, welcome);
+              }
+            }, {
+              text: 'Cancel',
+              onClick: welcome
+            }]
+          });
+          dialog.open();
+        }
+      }, {
+        text: 'Yes',
+        onClick: function() {
+          app.dialog.confirm('The first step to become a citizen of directdemocracy is to create your citizen card.',
+            'Become a Citizen', function() {
+              showPage('register');
+              disableDangerButtons();
+            }, welcome);
+        }
+      }]
+    });
+    dialog.open();
   }
+  showPage('splash');
+  if (!localStorage.getItem('registered'))
+    welcome();
+  else
+    downloadCitizen();
 
-  document.getElementById('update').addEventListener('click', function() {
-    function updateCard() {
-      localStorage.removeItem('registered');
-      localStorage.removeItem('citizenFingerprint');
-      localStorage.removeItem('publicKey');
-      localStorage.removeItem('referendums');
-      localStorage.removeItem('petitions');
-      endorsements = [];
-      citizenEndorsements = [];
-      updateEndorsements();
-      updateCitizenEndorsements();
-      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-        localStorage.setItem('publicKey', publicKey.slice(44, -6));
-        showPage('register');
-        console.log('reported card');
-      }, keystoreFailure);
-    }
-    const text = '<p class="text-align-left">' +
-    'If you update your citizen card, you will have to get new endorsements to be able to vote and sign. ' +
-    'Do you really want to update your citizen card?</p><p>Please type <b>I understand</b> here:</p>';
+  function iUnderstandDialog(message, title, callback) {
+    const iUnderstand = 'I understand';
+    const iUnderstandBold = `<b>${iUnderstand}</b>`;
+    const pleaseType = `Please type ${iUnderstandBold} here:`;
+    const text = `<p class="text-align-left">${message}</p><p>${pleaseType}</p>`;
     app.dialog.create({
-      title: 'Update Citizen Card',
+      title,
       text,
       content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
       buttons: [{
@@ -439,7 +467,7 @@ function showMenu() {
       destroyOnClose: true,
       onClick: function(dialog, index) {
         if (index === 1) // OK
-          updateCard();
+          callback();
       },
       on: {
         open: function(d) {
@@ -447,21 +475,87 @@ function showMenu() {
           let okButton = d.$el.find('.dialog-button')[1];
           disable(okButton);
           input.addEventListener('input', function(event) {
-            if (event.target.value === 'I understand')
+            if (event.target.value === iUnderstand)
               enable(okButton);
             else
               disable(okButton);
           });
           input.addEventListener('change', function(event) {
-            if (event.target.value === 'I understand') {
+            if (event.target.value === iUnderstand) {
               d.close();
-              updateCard();
+              callback();
             }
           });
         }
       }
     }).open();
+  }
+
+  document.getElementById('update').addEventListener('click', function(event) {
+    function updateCard() {
+      updating = true;
+      const button = document.getElementById('register-button');
+      button.textContent = 'Update';
+      disable(button);
+      document.getElementById('register-given-names').value = citizen.givenNames;
+      document.getElementById('register-family-name').value = citizen.familyName;
+      document.getElementById('register-picture').src = citizen.picture;
+      document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+      document.getElementById('register-adult').checked = true;
+      document.getElementById('register-confirm').checked = false;
+      showPage('register');
+      disableDangerButtons();
+    }
+    if (endorsements.length > 0 || citizenEndorsements.length > 0) {
+      iUnderstandDialog('If you update your citizen card, you will loose your endorsements ' +
+        'and have to get endorsed again to be able to vote and sign. Do you really want to update your citizen card?',
+      'Update Citizen Card?', updateCard);
+    } else
+      updateCard();
   });
+
+  document.getElementById('export').addEventListener('click', function(event) {
+    function exportCard() {
+      console.log('export card');
+    }
+    app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
+      'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
+      'On this other phone, follow the instructions of the initial setup dialog to import your citizen card. ' +
+      'Press OK to display the export QR code.',
+    'Export Citizen Card?', exportCard);
+  });
+
+  document.getElementById('delete').addEventListener('click', function(event) {
+    function deleteCard() {
+      // FIXME: publish a report commitment with the `deleted` comment
+      localStorage.removeItem('registered');
+      localStorage.removeItem('citizenFingerprint');
+      localStorage.removeItem('publicKey');
+      localStorage.removeItem('referendums');
+      localStorage.removeItem('petitions');
+      endorsements = [];
+      citizenEndorsements = [];
+      updateEndorsements();
+      updateCitizenEndorsements();
+      document.getElementById('register-given-names').value = '';
+      document.getElementById('register-family-name').value = '';
+      document.getElementById('register-picture').src = 'images/default-picture.png';
+      document.getElementById('register-location').value = '';
+      document.getElementById('register-adult').checked = false;
+      document.getElementById('register-confirm').checked = false;
+      showPage('splash');
+      welcome();
+    }
+    if (endorsements.length > 0 || citizenEndorsements.length > 0) {
+      iUnderstandDialog('If you delete your citizen card, you will loose your endorsements ' +
+        'and have to get endorsed again to be able to vote and sign. Do you really want to delete your citizen card?',
+      'Delete Citizen Card?', deleteCard);
+    } else {
+      app.dialog.confirm('Are you sure want to delete your citizen card? There is no way back!',
+        'Delete Citizen Card?', deleteCard);
+    }
+  });
+
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
   document.getElementById('register-family-name').addEventListener('input', validateRegistration);
 
@@ -496,29 +590,29 @@ function showMenu() {
           let geolocation = false;
 
           function updateLocation() {
-            registerMarker.setPopupContent(citizen.latitude + ', ' + citizen.longitude).openPopup();
+            registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
             fetch('https://nominatim.openstreetmap.org/reverse.php' +
-              `?format=json&lat=${citizen.latitude}&lon=${citizen.longitude}&zoom=20`)
+              `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`)
               .then(response => response.json())
               .then(answer => {
                 registerMarker.setPopupContent(
                   `${answer.display_name}<br><br><center style="color:#999">` +
-                  `(${citizen.latitude}, ${citizen.longitude})</center>`
+                  `(${currentLatitude}, ${currentLongitude})</center>`
                 ).openPopup();
               })
               .catch((error) => {
-                console.error(`Could not fetch address at ${citizen.latitude}, ${citizen.longitude}.`);
+                console.error(`Could not fetch address at ${currentLatitude}, ${currentLongitude}.`);
                 console.error(error);
               });
           }
 
           function getGeolocationPosition(position) {
             geolocation = true;
-            citizen.latitude = roundGeo(position.coords.latitude);
-            citizen.longitude = roundGeo(position.coords.longitude);
-            registerMap.setView([citizen.latitude, citizen.longitude], 12);
+            currentLatitude = roundGeo(position.coords.latitude);
+            currentLongitude = roundGeo(position.coords.longitude);
+            registerMap.setView([currentLatitude, currentLongitude], 12);
             setTimeout(function() {
-              registerMarker.setLatLng([citizen.latitude, citizen.longitude]);
+              registerMarker.setLatLng([currentLatitude, currentLongitude]);
               updateLocation();
             }, 500);
           }
@@ -533,15 +627,22 @@ function showMenu() {
             .then(answer => {
               if (geolocation)
                 return;
-              const coords = answer.split(',');
-              getGeolocationPosition({ coords: { latitude: coords[0], longitude: coords[1] } });
+              if (answer.startsWith('{')) {
+                const json = JSON.parse(answer);
+                console.log('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
+              } else {
+                const coords = answer.split(',');
+                currentLatitude = parseFloat(coords[0]);
+                currentLongitude = parseFloat(coords[1]);
+              }
+              getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
             })
             .catch((error) => {
               console.error(`Could not fetch latitude and longitude from https://ipinfo.io/loc.`);
               console.error(error);
-              getGeolocationPosition({ coords: { latitude: 46.517493, longitude: 6.629111 } }); // default to Lausanne
+              getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
             });
-          let registerMap = L.map('register-map').setView([citizen.latitude, citizen.longitude], 2);
+          let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
           }).addTo(registerMap);
@@ -550,8 +651,8 @@ function showMenu() {
               this.invalidateSize();
             }, 0);
           });
-          let registerMarker = L.marker([citizen.latitude, citizen.longitude]).addTo(registerMap)
-            .bindPopup(citizen.latitude + ',' + citizen.longitude);
+          let registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
+            .bindPopup(currentLatitude + ',' + currentLongitude);
           let e = document.getElementById('register-map');
           const rect = e.getBoundingClientRect();
           const h = screen.height - rect.top;
@@ -561,14 +662,14 @@ function showMenu() {
             return false;
           });
           registerMap.on('click', function onMapClick(e) {
-            citizen.latitude = roundGeo(e.latlng.lat);
-            citizen.longitude = roundGeo(e.latlng.lng);
-            registerMarker.setLatLng([citizen.latitude, citizen.longitude]);
+            currentLatitude = roundGeo(e.latlng.lat);
+            currentLongitude = roundGeo(e.latlng.lng);
+            registerMarker.setLatLng([currentLatitude, currentLongitude]);
             updateLocation();
           });
         },
         close: function() {
-          document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+          document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
           enable('register-location-button');
           validateRegistration();
         }
@@ -584,21 +685,54 @@ function showMenu() {
   document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
     const button = document.getElementById('register-button');
-    const registration = 'registration';
-    button.textContent = translator.translate(registration);
-    button.setAttribute('data-i18n', registration);
-    app.dialog.preloader('Registering...');
-    citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
-    citizen.key = localStorage.getItem('publicKey');
-    citizen.published = Math.trunc(new Date().getTime() / 1000);
-    citizen.givenNames = document.getElementById('register-given-names').value.trim();
-    citizen.familyName = document.getElementById('register-family-name').value.trim();
-    citizen.signature = '';
-    citizen.appKey = appKey;
-    citizen.appSignature = '';
-    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
-
+    const action = updating ? 'updating' : 'registering';
+    button.textContent = translator.translate(action);
+    button.setAttribute('data-i18n', action);
+    app.dialog.preloader(button.textContent);
+    if (updating) {
+      localStorage.removeItem('registered');
+      localStorage.removeItem('citizenFingerprint');
+      localStorage.removeItem('publicKey');
+      localStorage.removeItem('referendums');
+      localStorage.removeItem('petitions');
+      endorsements = [];
+      citizenEndorsements = [];
+      updateEndorsements();
+      updateCitizenEndorsements();
+    }
+    Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+      citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
+      citizen.key = publicKey.slice(44, -6);
+      citizen.published = Math.trunc(new Date().getTime() / 1000);
+      citizen.givenNames = document.getElementById('register-given-names').value.trim();
+      citizen.familyName = document.getElementById('register-family-name').value.trim();
+      citizen.picture = document.getElementById('register-picture').src;
+      citizen.latitude = currentLatitude;
+      citizen.longitude = currentLongitude;
+      citizen.appKey = appKey;
+      citizen.appSignature = '';
+      if (updating) {
+        citizen.previous = citizen.signature;
+        enableDangerButtons();
+        updating = false;
+      } else if (citizen.hasOwnProperty('previous'))
+        delete citizen.previous;
+      citizen.signature = '';
+      localStorage.setItem('publicKey', citizen.key);
+      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+    }, keystoreFailure);
     return false;
+  });
+
+  document.getElementById('cancel-register-button').addEventListener('click', function(event) {
+    if (updating) {
+      showPage('card');
+      enableDangerButtons();
+      updating = false;
+    } else {
+      showPage('splash');
+      welcome();
+    }
   });
 
   function stopScanner(page) {
@@ -812,12 +946,21 @@ function showMenu() {
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
   });
 
+  document.getElementById('scan-citizen').addEventListener('click', function() {
+    hide('citizen-page');
+    disable('scan-citizen');
+    disable('enter-citizen');
+    scan(function(error, contents) {
+      scanQRCode(error, contents, 'citizen');
+    });
+  });
+
   document.getElementById('scan-referendum').addEventListener('click', function() {
     hide('referendum-page');
     disable('scan-referendum');
     disable('enter-referendum');
     scan(function(error, contents) {
-      scanProposal(error, contents, 'referendum');
+      scanQRCode(error, contents, 'referendum');
     });
   });
 
@@ -826,37 +969,58 @@ function showMenu() {
     disable('scan-petition');
     disable('enter-petition');
     scan(function(error, contents) {
-      scanProposal(error, contents, 'petition');
+      scanQRCode(error, contents, 'petition');
     });
+  });
+
+  document.getElementById('cancel-citizen').addEventListener('click', function() {
+    enableDangerButtons();
+    showPage('splash');
+    welcome();
+  });
+
+  let citizenSearch = document.getElementById('enter-citizen');
+  citizenSearch.addEventListener('keyup', function(event) {
+    if (event.key === 'Enter')
+      searchFingerprint('citizen');
+  });
+  citizenSearch.addEventListener('paste', function(event) {
+    event.preventDefault();
+    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
+    searchFingerprint('citizen');
+  });
+  citizenSearch.addEventListener('input', function(event) {
+    if (event.currentTarget.value.length === 40)
+      searchFingerprint('citizen');
   });
 
   let referendumSearch = document.getElementById('enter-referendum');
   referendumSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
-      searchProposal('referendum');
+      searchFingerprint('referendum');
   });
   referendumSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
-    searchProposal('referendum');
+    searchFingerprint('referendum');
   });
   referendumSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
-      searchProposal('referendum');
+      searchFingerprint('referendum');
   });
   let petitionSearch = document.getElementById('enter-petition');
   petitionSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
-      searchProposal('petition');
+      searchFingerprint('petition');
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
-    searchProposal('petition');
+    searchFingerprint('petition');
   });
   petitionSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
-      searchProposal('petition');
+      searchFingerprint('petition');
   });
 
   function updateEndorseConfirm(event) {
@@ -879,12 +1043,15 @@ function showMenu() {
     updateProposalLink();
   }
 
-  function searchProposal(type) {
+  function searchFingerprint(type) {
     let value = document.getElementById(`enter-${type}`).value;
     if (value.length === 40) {
       disable(`scan-${type}`);
       disable(`enter-${type}`);
-      getProposal(value, type);
+      if (type === 'citizen')
+        getCitizen(value);
+      else
+        getProposal(value, type);
     }
   }
 
@@ -904,7 +1071,7 @@ function showMenu() {
       addProposal(petition, 'petition', false);
   });
 
-  function scanProposal(error, contents, type) {
+  function scanQRCode(error, contents, type) {
     stopScanner('home');
     show(`${type}-page`);
     enable(`scan-${type}`);
@@ -921,7 +1088,64 @@ function showMenu() {
       const b = binaryContents[i];
       fingerprint += hex[b >> 4] + hex[b & 15];
     }
-    getProposal(fingerprint, type);
+    if (type === 'citizen')
+      getCitizen(fingerprint);
+    else
+      getProposal(fingerprint, type);
+  }
+
+  async function getCitizen(fingerprint) {
+    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+      .then(response => response.json())
+      .then(async publication => {
+        enable('scan-citizen');
+        enable('enter-citizen');
+        if (publication.error) {
+          app.dialog.alert(publication.error, 'Citizen search error');
+          return;
+        }
+        const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
+        const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+        if (fingerprint !== sha1) {
+          app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
+          return;
+        }
+        const signature = publication.signature;
+        const appSignature = publication.appSignature;
+        publication.appSignature = '';
+        publication.signature = '';
+        let publicKey = await importKey(publication.key);
+        let buffer = new TextEncoder().encode(JSON.stringify(publication));
+        let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
+        if (!verify) {
+          app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
+          return;
+        }
+        publication.signature = signature;
+        publicKey = await importKey(publication.appKey);
+        buffer = new TextEncoder().encode(signature);
+        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(appSignature), buffer);
+        if (!verify) {
+          app.dialog.alert('Failed to verify app signature', 'Citizen search error');
+          return;
+        }
+        app.dialog.preloader('Registering...');
+        Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+          citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
+          citizen.key = publicKey.slice(44, -6);
+          citizen.published = Math.trunc(new Date().getTime() / 1000);
+          citizen.givenNames = publication.givenNames;
+          citizen.familyName = publication.familyName;
+          citizen.picture = publication.picture;
+          citizen.latitude = publication.latitude;
+          citizen.longitude = publication.longitude;
+          citizen.signature = '';
+          citizen.appKey = appKey;
+          citizen.appSignature = '';
+          localStorage.setItem('publicKey', citizen.key);
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+        });
+      });
   }
 
   async function getProposal(fingerprint, type) {
@@ -1350,19 +1574,32 @@ function showMenu() {
 
   function validateRegistration() {
     disable('register-button');
-    if (document.getElementById('register-given-names').value.trim() === '')
+    const givenNames = document.getElementById('register-given-names').value.trim();
+    if (givenNames === '')
       return;
-    if (document.getElementById('register-family-name').value.trim() === '')
+    const familyName = document.getElementById('register-family-name').value.trim();
+    if (familyName === '')
       return;
-    if (document.getElementById('register-picture').src === 'images/default-picture.png')
+    const picture = document.getElementById('register-picture').src;
+    if (picture === 'images/default-picture.png')
       return;
-    if (document.getElementById('register-location').value === '')
+    const location = document.getElementById('register-location').value;
+    if (location === '')
       return;
     if (!document.getElementById('register-adult').checked)
       return;
     if (!document.getElementById('register-confirm').checked)
       return;
-
+    const coords = location.split(', ');
+    const latitude = parseFloat(coords[0]);
+    const longitude = parseFloat(coords[1]);
+    if (updating && // test for change
+        givenNames === citizen.givenNames &&
+        familyName === citizen.familyName &&
+        picture === citizen.picture &&
+        latitude === citizen.latitude &&
+        longitude === citizen.longitude)
+      return;
     enable('register-button');
   }
 
@@ -1429,7 +1666,6 @@ function showMenu() {
               quality: 0.95
             }).then(result => {
               document.getElementById('register-picture').setAttribute('src', result);
-              citizen.picture = result;
               croppie.destroy();
               croppie = null;
               validateRegistration();
@@ -1463,6 +1699,8 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
+  document.getElementById('search-citizen').setAttribute('href',
+    `${notary}?tab=citizens&me=true`);
   document.getElementById('search-petition').setAttribute('href',
     `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   document.getElementById('search-referendum').setAttribute('href',
@@ -1760,7 +1998,7 @@ function updateEndorsements() {
 // 3. the card page once registered citizen data is available
 // 4. the video scan page to get endorsed
 function showPage(page) {
-  const pages = ['splash', 'register', 'card'];
+  const pages = ['splash', 'register', 'citizen', 'card'];
   if (!pages.includes(page)) {
     console.error(`Page '${page}' not found`);
     return;
@@ -1778,6 +2016,7 @@ function showPage(page) {
     else
       disable(tabbar);
   });
+  document.getElementById('swiper-container').swiper.slideTo(0, 0, false);
 }
 
 function removeClass(item, className) {
@@ -1821,4 +2060,16 @@ function newElement(parent, type, classes, textContent) {
   if (typeof textContent !== 'undefined')
     element.textContent = textContent;
   return element;
+}
+
+function disableDangerButtons() {
+  disable('update');
+  disable('export');
+  disable('delete');
+}
+
+function enableDangerButtons() {
+  enable('update');
+  enable('export');
+  enable('delete');
 }
