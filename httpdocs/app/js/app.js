@@ -527,7 +527,7 @@ function onDeviceReady() {
 
   document.getElementById('delete').addEventListener('click', function(event) {
     function deleteCard() {
-      // FIXME: publish a report commitment with the `deleted` comment
+      // FIXME: publish a report certificate with the `deleted` comment
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
@@ -934,7 +934,7 @@ function onDeviceReady() {
     disable(event.currentTarget);
     disable('endorse-cancel-confirm');
     endorsementToPublish = {
-      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
+      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
       key: citizen.key,
       signature: '',
       published: Math.trunc(new Date().getTime() / 1000),
@@ -1443,7 +1443,7 @@ function onDeviceReady() {
               return;
             }
             petitionSignature = {
-              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
+              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
               key: citizen.key,
               signature: '',
               published: Math.trunc(new Date().getTime() / 1000),
@@ -1927,7 +1927,7 @@ function updateEndorsements() {
         message.style.color = 'red';
         message.textContent = 'Reporting, please wait...';
         reportToPublish = {
-          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/commitment.schema.json`,
+          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
           key: citizen.key,
           signature: '',
           published: Math.trunc(new Date().getTime() / 1000),
