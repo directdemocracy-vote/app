@@ -284,11 +284,31 @@ async function publish(publication, signature, type) {
             disable(petitionButton);
           } else if (type === 'report') {
             const comment = certificateToPublish.comment;
-            if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
+            if (comment === 'deleted') {
+              app.dialog.close(); // preloader
+              app.dialog.alert('You successfully deleted your citizen card.', 'Delete Success');
+              localStorage.removeItem('registered');
+              localStorage.removeItem('citizenFingerprint');
+              localStorage.removeItem('publicKey');
+              localStorage.removeItem('referendums');
+              localStorage.removeItem('petitions');
+              endorsements = [];
+              citizenEndorsements = [];
+              updateEndorsements();
+              updateCitizenEndorsements();
+              document.getElementById('register-given-names').value = '';
+              document.getElementById('register-family-name').value = '';
+              document.getElementById('register-picture').src = 'images/default-picture.png';
+              document.getElementById('register-location').value = '';
+              document.getElementById('register-adult').checked = false;
+              document.getElementById('register-confirm').checked = false;
+              showPage('splash');
+              welcome();
+            } else if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
               app.dialog.close(); // preloader
               app.dialog.alert(
                 `You successfully reported ${endorsementToReport.givenNames} ${endorsementToReport.familyName}`,
-                'Report success');
+                'Report Success');
               endorsements.splice(endorsements.indexOf(endorsementToReport), 1); // remove it from list
               endorsementToReport.published = certificateToPublish.published; // set the recovation date
               endorsements.push(endorsementToReport); // add it at the end of the list
@@ -384,6 +404,62 @@ async function signChallenge(signature) {
   show('qrcode');
 }
 
+function welcome() {
+  let dialog = app.dialog.create({
+    title: 'Welcome to directdemocracy!',
+    text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
+    buttons: [{
+      text: 'No',
+      onClick: function() {
+        function importCitizen() {
+          console.log('import citizen: scanning the export QR core...');
+        }
+        function lost() {
+          disableDangerButtons();
+          showPage('citizen');
+        }
+        let dialog = app.dialog.create({
+          title: 'Import Citizen Card',
+          text: 'It is recommended to import your citizen card from the phone containing it. ' +
+                'Do you have this phone on hand?',
+          buttons: [{
+            text: 'Yes',
+            onClick: function() {
+              app.dialog.confirm('On the phone containing your citizen card, ' +
+                'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
+                'following the instructions. Press OK to scan the export QR code.',
+              'Import Citizen Card', importCitizen, welcome);
+            }
+          }, {
+            text: 'No',
+            onClick: function() {
+              app.dialog.confirm('If you lost access to your citizen card, ' +
+                'you will have to search your current citizen card from a notary database ' +
+                'and scan its QR code (or copy/paste its reference). ' +
+                'Then, you will have to get endorsed again by your neighbors.',
+              'Lost Citizen Card', lost, welcome);
+            }
+          }, {
+            text: 'Cancel',
+            onClick: welcome
+          }]
+        });
+        dialog.open();
+      }
+    }, {
+      text: 'Yes',
+      onClick: function() {
+        app.dialog.confirm('The first step to become a citizen of directdemocracy is to create your citizen card.',
+          'Become a Citizen', function() {
+            showPage('register');
+            disableDangerButtons();
+          }, welcome);
+      }
+    }]
+  });
+  dialog.open();
+}
+
 function onDeviceReady() {
   directDemocracyVersion += ` (${device.platform})`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
@@ -402,61 +478,6 @@ function onDeviceReady() {
     station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
-  function welcome() {
-    let dialog = app.dialog.create({
-      title: 'Welcome to directdemocracy!',
-      text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
-      buttons: [{
-        text: 'No',
-        onClick: function() {
-          function importCitizen() {
-            console.log('import citizen: scanning the export QR core...');
-          }
-          function lost() {
-            disableDangerButtons();
-            showPage('citizen');
-          }
-          let dialog = app.dialog.create({
-            title: 'Import Citizen Card',
-            text: 'It is recommended to import your citizen card from the phone containing it. ' +
-                  'Do you have this phone on hand?',
-            buttons: [{
-              text: 'Yes',
-              onClick: function() {
-                app.dialog.confirm('On the phone containing your citizen card, ' +
-                  'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
-                  'following the instructions. Press OK to scan the export QR code.',
-                'Import Citizen Card', importCitizen, welcome);
-              }
-            }, {
-              text: 'No',
-              onClick: function() {
-                app.dialog.confirm('If you lost access to your citizen card, ' +
-                  'you will have to search your current citizen card from a notary database ' +
-                  'and scan its QR code (or copy/paste its reference). ' +
-                  'Then, you will have to get endorsed again by your neighbors.',
-                'Lost Citizen Card', lost, welcome);
-              }
-            }, {
-              text: 'Cancel',
-              onClick: welcome
-            }]
-          });
-          dialog.open();
-        }
-      }, {
-        text: 'Yes',
-        onClick: function() {
-          app.dialog.confirm('The first step to become a citizen of directdemocracy is to create your citizen card.',
-            'Become a Citizen', function() {
-              showPage('register');
-              disableDangerButtons();
-            }, welcome);
-        }
-      }]
-    });
-    dialog.open();
-  }
   showPage('splash');
   if (!localStorage.getItem('registered'))
     welcome();
@@ -524,9 +545,10 @@ function onDeviceReady() {
       disableDangerButtons();
     }
     if (endorsements.length > 0) {
-      iUnderstandDialog('If you update your citizen card, your current referendum and petition lists will be emptied ' +
-        "so you won't be able to change any vote that you already cast. " +
+      iUnderstandDialog('Updating your citizen card is needed only if you move or need to change your name (got married?). ' +
+        "Your referendum and petition lists will be emptied so you won't be able to change any vote that you already cast. " +
         'Also, you will loose your endorsements and have to get endorsed again to be able to vote and sign again. ' +
+        'Note that your updated citizen card should still refer to you and not to someone else. ' +
         'Do you really want to update your citizen card?',
       'Update Citizen Card?', updateCard);
     } else
@@ -546,33 +568,24 @@ function onDeviceReady() {
 
   document.getElementById('delete').addEventListener('click', function(event) {
     function deleteCard() {
+      certificateToPublish = {
+        schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+        key: citizen.key,
+        signature: '',
+        published: Math.trunc(new Date().getTime() / 1000),
+        appKey: appKey,
+        appSignature: '',
+        type: 'report',
+        publication: citizen.signature,
+        comment: 'deleted'
+      };
+      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
       // FIXME: publish a report certificate with the `deleted` comment
-      localStorage.removeItem('registered');
-      localStorage.removeItem('citizenFingerprint');
-      localStorage.removeItem('publicKey');
-      localStorage.removeItem('referendums');
-      localStorage.removeItem('petitions');
-      endorsements = [];
-      citizenEndorsements = [];
-      updateEndorsements();
-      updateCitizenEndorsements();
-      document.getElementById('register-given-names').value = '';
-      document.getElementById('register-family-name').value = '';
-      document.getElementById('register-picture').src = 'images/default-picture.png';
-      document.getElementById('register-location').value = '';
-      document.getElementById('register-adult').checked = false;
-      document.getElementById('register-confirm').checked = false;
-      showPage('splash');
-      welcome();
     }
-    if (endorsements.length > 0 || citizenEndorsements.length > 0) {
-      iUnderstandDialog('If you delete your citizen card, you will loose your endorsements ' +
-        'and have to get endorsed again to be able to vote and sign. Do you really want to delete your citizen card?',
-      'Delete Citizen Card?', deleteCard);
-    } else {
-      app.dialog.confirm('Are you sure want to delete your citizen card? There is no way back!',
-        'Delete Citizen Card?', deleteCard);
-    }
+    app.dialog.confirm("You should not delete your citizen card unless you don't want to be a citizen any more. " +
+      'If possible, you should rather update it or transfer it to another phone. ' +
+      'Are you sure want to delete your citizen card? There is no way back!',
+    'Delete Citizen Card?', deleteCard);
   });
 
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
