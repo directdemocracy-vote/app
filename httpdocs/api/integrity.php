@@ -155,7 +155,7 @@ if (isset($publication->schema)) { # this is a publication
   $mysqli->query($query) or die($mysqli->error);
   $id = $mysqli->insert_id;
   $mysqli->close();
-  die('{"id":$id}');
+  die("{\"id\":$id}");
 }
 # from here we have a participation publication
 # we need to store it in the database and publish it only after the referendum deadline
