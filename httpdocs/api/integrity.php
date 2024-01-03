@@ -142,33 +142,20 @@ if (isset($publication->schema)) { # this is a publication
     $context  = stream_context_create($options);
     die(file_get_contents("$notary/api/publish.php", false, $context));
   }
-} else { # this is a challenge request
+} else { # this is a challenge upload
   require_once '../../php/database.php';
   $mysqli->query("DELETE FROM challenge WHERE published < (NOW() - INTERVAL 10 MINUTE)") or die($mysqli->error);
-  if (!isset($publication->id)) { # we are uploading a new key/signature from the source phone
-    if (!isset($publication->key))
-      error('missing challenge key');
-    if (!isset($publication->signature))
-      error('missing challenge signature');
-    $key = $publication->key;
-    $signature = $publication->signature;
-    $query = "INSERT INTO challenge(`key`, signature) VALUES(FROM_BASE64('$key=='), FROM_BASE64('$signature==')";
-    $mysqli->query($query) or die($mysqli->error);
-    $id = $mysqli->insert_id;
-    $answer = '{"id":$id}';
-  } else {
-    $id = intval($publication->id);
-    $query = "SELECT `key`, signature FROM challenge WHERE id=$id";
-    $r = $mysqli->query($query) or die($mysqli->error);
-    $challenge = $r->fetch_assoc();
-    $r->free();
-    if ($challenge)
-      $answer = '{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}';
-    else
-      error('challenge not found');
-  }
+  if (!isset($publication->key))
+    error('missing challenge key');
+  if (!isset($publication->signature))
+    error('missing challenge signature');
+  $key = $publication->key;
+  $signature = $publication->signature;
+  $query = "INSERT INTO challenge(`key`, signature) VALUES(FROM_BASE64('$key=='), FROM_BASE64('$signature==')";
+  $mysqli->query($query) or die($mysqli->error);
+  $id = $mysqli->insert_id;
   $mysqli->close();
-  die($answer);
+  die('{"id":$id}');
 }
 # from here we have a participation publication
 # we need to store it in the database and publish it only after the referendum deadline
