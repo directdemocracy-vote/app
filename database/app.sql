@@ -22,4 +22,18 @@ ALTER TABLE `participation`
 ALTER TABLE `participation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+CREATE TABLE `challenge` (
+  `id` int(11) NOT NULL,
+  `key` blob NOT NULL,
+  `signature` blob NOT NULL,
+  `published` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `challenge`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `signature` (`signature`) USING HASH;
+
+ALTER TABLE `challenge`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
 COMMIT;
