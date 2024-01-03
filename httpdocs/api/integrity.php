@@ -144,7 +144,7 @@ if (isset($publication->schema)) { # this is a publication
   }
 } else { # this is a challenge request
   require_once '../../php/database.php';
-  $mysqli->query("DELETE FROM challenge WHERE created < (NOW() - INTERVAL 10 MINUTE)") or die($mysqli->error);
+  $mysqli->query("DELETE FROM challenge WHERE published < (NOW() - INTERVAL 10 MINUTE)") or die($mysqli->error);
   if (!isset($publication->id)) { # we are uploading a new key/signature from the source phone
     if (!isset($publication->key))
       error('missing challenge key');
