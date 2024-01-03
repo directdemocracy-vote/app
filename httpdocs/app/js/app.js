@@ -568,6 +568,7 @@ function onDeviceReady() {
 
   document.getElementById('delete').addEventListener('click', function(event) {
     function deleteCard() {
+      app.dialog.preloader('Deleting...');
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
         key: citizen.key,
@@ -580,7 +581,6 @@ function onDeviceReady() {
         comment: 'deleted'
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-      // FIXME: publish a report certificate with the `deleted` comment
     }
     app.dialog.confirm("You should not delete your citizen card unless you don't want to be a citizen any more. " +
       'If possible, you should rather update it or transfer it to another phone. ' +
@@ -717,7 +717,7 @@ function onDeviceReady() {
   document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
     const button = document.getElementById('register-button');
-    const action = reportComment === 'updating' ? 'updating' : 'registering';
+    const action = reportComment === 'updated' ? 'updating' : 'registering';
     button.textContent = translator.translate(action);
     button.setAttribute('data-i18n', action);
     app.dialog.preloader(button.textContent);
@@ -751,7 +751,7 @@ function onDeviceReady() {
   });
 
   document.getElementById('cancel-register-button').addEventListener('click', function(event) {
-    if (previousSignature && reportComment === 'updating') {
+    if (previousSignature && reportComment === 'updated') {
       showPage('card');
       enableDangerButtons();
       reportComment = '';
@@ -1125,6 +1125,7 @@ function onDeviceReady() {
     fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
       .then(response => response.json())
       .then(async publication => {
+        document.getElementById('enter-citizen').value = '';
         enable('scan-citizen');
         enable('enter-citizen');
         if (publication.error) {
@@ -1622,7 +1623,7 @@ function onDeviceReady() {
     const coords = location.split(', ');
     const latitude = parseFloat(coords[0]);
     const longitude = parseFloat(coords[1]);
-    if (previousSignature && reportComment === 'updating' && // test for change
+    if (previousSignature && reportComment === 'updated' && // test for change
         givenNames === citizen.givenNames &&
         familyName === citizen.familyName &&
         picture === citizen.picture &&
