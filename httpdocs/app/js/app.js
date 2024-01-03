@@ -62,7 +62,7 @@ if (!station) {
 }
 let iAmEndorsedByJudge = false;
 let endorsed = null;
-let endorsementToPublish = null;
+let certificateToPublish = null;
 let endorsementToReport = null;
 let petitionSignature = null;
 let participationToPublish = null;
@@ -73,12 +73,12 @@ let petitionButton = null;
 let petitionProposal = null;
 let referendumProposal = null;
 let referendumButton = null;
-let reportToPublish = null;
 let endorseMap = null;
 let endorseMarker = null;
 let petitions = [];
 let referendums = [];
-let updating = false;
+let previousSignature = null;
+let reportComment = ''; // '', 'replaced', 'updated' or 'transferred'
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 
@@ -260,7 +260,7 @@ async function publish(publication, signature, type) {
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
             enableDangerButtons();
-          } else if (type === 'endorsement') {
+          } else if (type === 'endorse') {
             app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
             hide('endorse-citizen');
@@ -283,14 +283,17 @@ async function publish(publication, signature, type) {
             localStorage.setItem('petitions', JSON.stringify(petitions));
             disable(petitionButton);
           } else if (type === 'report') {
-            app.dialog.close(); // preloader
-            app.dialog.alert(
-              `You successfully reported ${endorsementToReport.givenNames} ${endorsementToReport.familyName}`,
-              'Report success');
-            endorsements.splice(endorsements.indexOf(endorsementToReport), 1); // remove it from list
-            endorsementToReport.published = reportToPublish.published; // set the recovation date
-            endorsements.push(endorsementToReport); // add it at the end of the list
-            updateEndorsements();
+            const comment = certificateToPublish.comment;
+            if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
+              app.dialog.close(); // preloader
+              app.dialog.alert(
+                `You successfully reported ${endorsementToReport.givenNames} ${endorsementToReport.familyName}`,
+                'Report success');
+              endorsements.splice(endorsements.indexOf(endorsementToReport), 1); // remove it from list
+              endorsementToReport.published = certificateToPublish.published; // set the recovation date
+              endorsements.push(endorsementToReport); // add it at the end of the list
+              updateEndorsements();
+            }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
             const blindSignature = base64ToByteArray(answer['blind_signature']);
@@ -318,9 +321,10 @@ async function publish(publication, signature, type) {
                   localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
-          }
+          } else
+            console.error('Unknown operation type: ' + type);
         }
-        if (type === 'endorsement')
+        if (type === 'endorse')
           enable('endorse-button');
       });
   }, function(message) { // integrity check failure
@@ -335,18 +339,30 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   publish(citizen, signature, 'citizen card');
+  if (previousSignature) {
+    certificateToPublish = {
+      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+      key: citizen.key,
+      signature: '',
+      published: Math.trunc(new Date().getTime() / 1000),
+      appKey: appKey,
+      appSignature: '',
+      type: 'report',
+      publication: previousSignature,
+      comment: reportComment
+    };
+    reportComment = '';
+    previousSignature = null;
+    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+  }
 }
 
-function publishEndorsement(signature) {
-  publish(endorsementToPublish, signature, 'endorsement');
+function publishCertificate(signature) {
+  publish(certificateToPublish, signature, certificateToPublish.type);
 }
 
 function publishPetitionSignature(signature) {
   publish(petitionSignature, signature, 'petition signature');
-}
-
-function publishReport(signature) {
-  publish(reportToPublish, signature, 'report');
 }
 
 function publishParticipation(signature) {
@@ -493,7 +509,8 @@ function onDeviceReady() {
 
   document.getElementById('update').addEventListener('click', function(event) {
     function updateCard() {
-      updating = true;
+      previousSignature = citizen.signature;
+      reportComment = 'updated';
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
@@ -506,9 +523,11 @@ function onDeviceReady() {
       showPage('register');
       disableDangerButtons();
     }
-    if (endorsements.length > 0 || citizenEndorsements.length > 0) {
-      iUnderstandDialog('If you update your citizen card, you will loose your endorsements ' +
-        'and have to get endorsed again to be able to vote and sign. Do you really want to update your citizen card?',
+    if (endorsements.length > 0) {
+      iUnderstandDialog('If you update your citizen card, your current referendum and petition lists will be emptied ' +
+        "so you won't be able to change any vote that you already cast. " +
+        'Also, you will loose your endorsements and have to get endorsed again to be able to vote and sign again. ' +
+        'Do you really want to update your citizen card?',
       'Update Citizen Card?', updateCard);
     } else
       updateCard();
@@ -685,11 +704,11 @@ function onDeviceReady() {
   document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
     const button = document.getElementById('register-button');
-    const action = updating ? 'updating' : 'registering';
+    const action = reportComment === 'updating' ? 'updating' : 'registering';
     button.textContent = translator.translate(action);
     button.setAttribute('data-i18n', action);
     app.dialog.preloader(button.textContent);
-    if (updating) {
+    if (action === 'updating') {
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
@@ -711,12 +730,6 @@ function onDeviceReady() {
       citizen.longitude = currentLongitude;
       citizen.appKey = appKey;
       citizen.appSignature = '';
-      if (updating) {
-        citizen.previous = citizen.signature;
-        enableDangerButtons();
-        updating = false;
-      } else if (citizen.hasOwnProperty('previous'))
-        delete citizen.previous;
       citizen.signature = '';
       localStorage.setItem('publicKey', citizen.key);
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
@@ -725,10 +738,11 @@ function onDeviceReady() {
   });
 
   document.getElementById('cancel-register-button').addEventListener('click', function(event) {
-    if (updating) {
+    if (previousSignature && reportComment === 'updating') {
       showPage('card');
       enableDangerButtons();
-      updating = false;
+      reportComment = '';
+      previousSignature = null;
     } else {
       showPage('splash');
       welcome();
@@ -933,7 +947,7 @@ function onDeviceReady() {
     app.dialog.preloader('Endorsing...');
     disable(event.currentTarget);
     disable('endorse-cancel-confirm');
-    endorsementToPublish = {
+    certificateToPublish = {
       schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
       key: citizen.key,
       signature: '',
@@ -943,7 +957,7 @@ function onDeviceReady() {
       type: 'endorse',
       publication: endorsed.signature
     };
-    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(endorsementToPublish), publishEndorsement, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
   });
 
   document.getElementById('scan-citizen').addEventListener('click', function() {
@@ -1122,6 +1136,8 @@ function onDeviceReady() {
           return;
         }
         publication.signature = signature;
+        previousSignature = signature;
+        reportComment = 'replaced';
         publicKey = await importKey(publication.appKey);
         buffer = new TextEncoder().encode(signature);
         verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(appSignature), buffer);
@@ -1593,7 +1609,7 @@ function onDeviceReady() {
     const coords = location.split(', ');
     const latitude = parseFloat(coords[0]);
     const longitude = parseFloat(coords[1]);
-    if (updating && // test for change
+    if (previousSignature && reportComment === 'updating' && // test for change
         givenNames === citizen.givenNames &&
         familyName === citizen.familyName &&
         picture === citizen.picture &&
@@ -1926,7 +1942,7 @@ function updateEndorsements() {
         disable(a);
         message.style.color = 'red';
         message.textContent = 'Reporting, please wait...';
-        reportToPublish = {
+        certificateToPublish = {
           schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
           key: citizen.key,
           signature: '',
@@ -1937,7 +1953,7 @@ function updateEndorsements() {
           publication: endorsement.signature
         };
         endorsementToReport = endorsement;
-        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(reportToPublish), publishReport, keystoreFailure);
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
       }
       const text = '<p class="text-align-left">' +
           'You should report only a citizen who has died, or has erroneous information on their citizen card, ' +
