@@ -151,7 +151,7 @@ if (isset($publication->schema)) { # this is a publication
     error('missing challenge signature');
   $key = $publication->key;
   $signature = $publication->signature;
-  $query = "INSERT INTO challenge(`key`, signature) VALUES(FROM_BASE64('$key=='), FROM_BASE64('$signature==')";
+  $query = "INSERT INTO challenge(`key`, signature) VALUES(FROM_BASE64('$key=='), FROM_BASE64('$signature=='))";
   $mysqli->query($query) or die($mysqli->error);
   $id = $mysqli->insert_id;
   $mysqli->close();
