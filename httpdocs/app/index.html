@@ -69,6 +69,96 @@
         <button id="qrcode-cancel" class="button button-fill color-red"
           style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
       </div>
+      <div id="review" class="page display-none">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div id="review-title" class="title"></div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="block display-flex margin-top-half margin-bottom-half">
+            <img id="review-picture" style="width:150px;height:200px">
+            <div class="margin-left">
+              <div data-i18n="given-names"></div>
+              <div style="font-size:120%"><b id="review-given-names"></b></div>
+              <div data-i18n="family-name"></div>
+              <div style="font-size:120%"><b id="review-family-name"></b></div>
+              <div data-i18n="latitude-longitude-header"></div>
+              <div><b id="review-coords"></b></div>
+              <div><span data-i18n="created"></span><b id="review-published"></b></div>
+              <div><span data-i18n="reputation"></span><span id="review-reputation">...</span></div>
+            </div>
+          </div>
+          <div id="review-map" style="width:100%;height:400px"></div>
+          <div class="block list margin-top-half">
+            <ul id="review-checklist">
+              <li id="review-standing-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-standing-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person standing in front of me.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-adult-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-adult-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person is an adult.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-former-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-former-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This is my former citizen card.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-picture-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-picture-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The ID picture is good.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-name-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-name-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The name is correct.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-coords-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-coords-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The address is correct.</div>
+                  </div>
+                </label>
+              </li>
+            </ul>
+            <div class="grid grid-cols-2 grid-gap margin-top-half">
+              <button class="button button-fill disabled" id="review-confirm"></button>
+              <button class="button button-fill color-red" id="review-cancel">Cancel</button>
+            </div>
+            <div id="review-warning" class="item-label display-flex justify-content-center margin-top-half"
+              style="width:100%">
+              Warning: wrongly endorsing a citizen may affect your reputation.
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="home" data-name="home" class="page">
         <div class="navbar">
           <div class="navbar-bg"></div>
@@ -88,7 +178,7 @@
         <div id='tabbar' class="toolbar tabbar tabbar-icons toolbar-bottom">
           <div class="toolbar-inner">
             <a href="#" class="tab-link tab-link-active" data-tab="#tab-card" id="tabbar-card">
-              <i class="icon f7-icons">person_fill<span id="endorsed-badge" class="badge"></span></i>
+              <i class="icon f7-icons">person_fill<span id="reputation-badge" class="badge"></span></i>
               <span class="tabbar-label" data-i18n="me"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-endorse" id="tabbar-endorse">
