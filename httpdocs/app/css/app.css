@@ -5,7 +5,7 @@ body {
 }
 
 .corner-ribbon {
-  z-index:500;
+  z-index: 500;
   position: fixed;
   top: 25px;
   left: -50px;
@@ -17,11 +17,12 @@ body {
   color: #f0f0f0;
   transform: rotate(-45deg);
   background: #e43;
-  box-shadow: 1px 2px 3px rgba(0,0,0,.3);
-  opacity: 0.85;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, .3);
+  opacity: 0.8;
   text-transform: uppercase;
   font-family: Verdana, Geneva, sans-serif;
 }
+
 .md .tabbar-label {
   overflow: visible;
 }

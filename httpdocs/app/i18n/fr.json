@@ -1,7 +1,7 @@
 {
   "beta": "Bêta",
-  "card": "Carte",
-  "endorse": "Assermenter",
+  "me": "Moi",
+  "citizens": "Citoyens",
   "vote": "Voter",
   "sign": "Signer",
   "settings": "Options",
@@ -42,16 +42,10 @@
   "key-forge-time": "Clé forgée en %1 secondes.",
   "created": "Création : ",
   "reputation": "Réputation : ",
-  "not-endorsed": "Pas encore assermenté",
-  "ask-others-to-endorse-you": "Demandez à d'autres citoyens de vous assermenter pour augmenter votre réputation.",
   "register": "S'inscrire",
   "cancel": "Annuler",
   "registering": "Inscription...",
   "updating": "Mise à jour...",
   "citizen-card-published": "Votre carte de citoyen vient d'être publiée.",
-  "congratulations": "Félicitations!",
-  "endorse-me": "Demander une assermentation",
-  "endorse-me-message": "À un voisin ou un ami",
-  "endorse-button": "Assermenter un citoyen",
-  "endorse-message": "Pressez ce bouton pour assermenter un citoyen"
+  "congratulations": "Félicitations!"
 }

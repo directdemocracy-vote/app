@@ -28,6 +28,7 @@ let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
 let challenge = '';
+let challengeBytes = null;
 let translator = new Translator('i18n');
 let citizen = {
   schema: '',
@@ -341,11 +342,18 @@ async function publish(publication, signature, type) {
                   localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
+          } else if (type === 'challenge') {
+            app.dialog.close(); // preloader
+            const code = 'app.directdemocracy.vote:' + answer['id'] + ':' + encodeBase128(challengeBytes);
+            console.log('code = ' + code);
+            const qr = new QRious({ value: code, level: 'L', size: 1024, padding: 0 });
+            document.getElementById('qrcode-image').src = qr.toDataURL();
+            document.getElementById('qrcode-message').textContent = 'Scan this code';
+            hide('home');
+            show('qrcode');
           } else
             console.error('Unknown operation type: ' + type);
         }
-        if (type === 'endorse')
-          enable('endorse-button');
       });
   }, function(message) { // integrity check failure
     console.error('Integrity check failure: ' + message);
@@ -389,19 +397,13 @@ function publishParticipation(signature) {
   publish(participationToPublish, signature, 'participation');
 }
 
-async function signChallenge(signature) {
-  const binaryString = citizenFingerprint + atob(signature);
-  if (binaryString.length !== 276) // citizenFingerprint + atob(signature) is 276 bytes long, e.g., 20 + 256
-    console.error('Unexpected binary string length: ' + binaryString.length);
-  const buffer = new Uint8Array(binaryString.length);
-  for (let i in buffer)
-    buffer[i] = binaryString.charCodeAt(i);
-  const code = encodeBase128(buffer); // code should a be 316 bytes long
-  const qr = new QRious({ value: code, level: 'L', size: 1024, padding: 0 });
-  document.getElementById('qrcode-image').src = qr.toDataURL();
-  document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
-  hide('home');
-  show('qrcode');
+function signChallenge(signature) {
+  const challengeToUpload = {
+    key: citizen.key,
+    signature: '',
+    appKey: appKey
+  };
+  publish(challengeToUpload, signature, 'challenge');
 }
 
 function welcome() {
@@ -413,10 +415,13 @@ function welcome() {
       onClick: function() {
         function importCitizen() {
           console.log('import citizen: scanning the export QR core...');
+          scan(function(error, contents) {
+            scanQRCode(error, contents, 'challenge');
+          });
         }
         function lost() {
           disableDangerButtons();
-          showPage('citizen');
+          showPage('me');
         }
         let dialog = app.dialog.create({
           title: 'Import Citizen Card',
@@ -427,7 +432,7 @@ function welcome() {
             onClick: function() {
               app.dialog.confirm('On the phone containing your citizen card, ' +
                 'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
-                'following the instructions. Press OK to scan the export QR code.',
+                'following the instructions. Then, press OK to scan the export QR code.',
               'Import Citizen Card', importCitizen, welcome);
             }
           }, {
@@ -458,6 +463,628 @@ function welcome() {
     }]
   });
   dialog.open();
+}
+
+async function getCitizen(fingerprint) {
+  fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+    .then(response => response.json())
+    .then(async publication => {
+      document.getElementById('enter-me').value = '';
+      enable('scan-me');
+      enable('enter-me');
+      if (publication.error) {
+        app.dialog.alert(publication.error, 'Citizen search error');
+        return;
+      }
+      const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
+      const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+      if (fingerprint !== sha1) {
+        app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
+        return;
+      }
+      const signature = publication.signature;
+      const appSignature = publication.appSignature;
+      publication.appSignature = '';
+      publication.signature = '';
+      let publicKey = await importKey(publication.key);
+      let buffer = new TextEncoder().encode(JSON.stringify(publication));
+      let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
+      if (!verify) {
+        app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
+        return;
+      }
+      publication.signature = signature;
+      previousSignature = signature;
+      reportComment = 'replaced';
+      publicKey = await importKey(publication.appKey);
+      buffer = new TextEncoder().encode(signature);
+      verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(appSignature), buffer);
+      if (!verify) {
+        app.dialog.alert('Failed to verify app signature', 'Citizen search error');
+        return;
+      }
+      app.dialog.preloader('Registering...');
+      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+        citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
+        citizen.key = publicKey.slice(44, -6);
+        citizen.published = Math.trunc(new Date().getTime() / 1000);
+        citizen.givenNames = publication.givenNames;
+        citizen.familyName = publication.familyName;
+        citizen.picture = publication.picture;
+        citizen.latitude = publication.latitude;
+        citizen.longitude = publication.longitude;
+        citizen.signature = '';
+        citizen.appKey = appKey;
+        citizen.appSignature = '';
+        localStorage.setItem('publicKey', citizen.key);
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+      });
+    });
+}
+
+function addProposal(proposal, type, open) {
+  let proposals = (type === 'petition') ? petitions : referendums;
+  let item = document.createElement('div');
+  document.getElementById(`${type}s`).prepend(item);
+  item.setAttribute('id', `${type}-${proposal.id}`);
+  item.classList.add('accordion-item');
+  let a = document.createElement('a');
+  item.appendChild(a);
+  a.classList.add('item-link', 'item-content', 'no-padding');
+  let inner = document.createElement('div');
+  a.appendChild(inner);
+  inner.classList.add('item-inner');
+  let title = document.createElement('div');
+  inner.appendChild(title);
+  title.classList.add('item-title');
+  title.textContent = proposal.areaName[0].split('=')[1] + ' (' + (proposal.id + 1) + ')';
+  let content = document.createElement('div');
+  item.appendChild(content);
+  content.classList.add('accordion-item-content');
+  let block = document.createElement('div');
+  content.appendChild(block);
+  block.classList.add('block', 'no-padding');
+  a = document.createElement('a');
+  block.appendChild(a);
+  a.setAttribute('href', `${notary}/proposal.html?signature=${encodeURIComponent(proposal.signature)}`);
+  a.setAttribute('target', '_blank');
+  a.style.fontSize = '120%';
+  a.style.fontWeight = 'bold';
+  a.classList.add('link', 'external');
+  a.textContent = proposal.title;
+  let p = document.createElement('p');
+  block.appendChild(p);
+  p.textContent = proposal.description;
+  p = document.createElement('p');
+  block.appendChild(p);
+  let button = document.createElement('button');
+  if (type === 'referendum') {
+    p = document.createElement('p');
+    p.style.fontWeight = 'bold';
+    p.textContent = proposal.question;
+    block.appendChild(p);
+    for (let answer of proposal.answers) {
+      const d = document.createElement('div');
+      block.appendChild(d);
+      const label = document.createElement('label');
+      d.appendChild(label);
+      label.classList.add('checkbox', 'no-ripple', 'display-inline-flex', 'align-items-center', 'margin-bottom-half');
+      const input = document.createElement('input');
+      label.appendChild(input);
+      input.setAttribute('type', 'checkbox');
+      input.setAttribute('name', `answer-${proposal.id}`);
+      input.setAttribute('value', answer);
+      const i = document.createElement('i');
+      i.classList.add('margin-right-half', 'icon-checkbox');
+      label.appendChild(i);
+      const div = document.createElement('div');
+      label.appendChild(div);
+      div.appendChild(document.createTextNode(answer));
+      input.addEventListener('change', function(event) {
+        if (event.currentTarget.checked) {
+          const block = event.currentTarget.parentNode.parentNode.parentNode;
+          const inputs = block.querySelectorAll('input');
+          for (let i = 0; i < inputs.length; i++) {
+            if (inputs[i] === event.currentTarget)
+              continue;
+            if (inputs[i].checked)
+              inputs[i].checked = false;
+          }
+        }
+        if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+          disable(button);
+        else
+          enable(button);
+      });
+    }
+  }
+  let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areaName.join('&')}&polygon_geojson=1`;
+  p = document.createElement('p');
+  block.appendChild(p);
+  let b = document.createElement('b');
+  b.textContent = 'Area: ';
+  p.appendChild(b);
+  a = document.createElement('a');
+  a.classList.add('link', 'external');
+  a.setAttribute('href', url);
+  a.setAttribute('target', '_blank');
+  a.textContent = proposal.areaName[0].split('=')[1];
+  p.appendChild(a);
+  p = document.createElement('p');
+  block.appendChild(p);
+  b = document.createElement('b');
+  b.textContent = 'Judge: ';
+  p.appendChild(b);
+  a = document.createElement('a');
+  a.classList.add('link', 'external');
+  a.setAttribute('href', proposal.judge);
+  a.setAttribute('target', '_blank');
+  a.textContent = proposal.judge;
+  p.appendChild(a);
+  p = document.createElement('p');
+  block.appendChild(p);
+  const deadline = new Date(proposal.deadline * 1000).toLocaleString();
+  const outdated = (proposal.deadline * 1000 < new Date().getTime());
+  p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
+  let grid = document.createElement('div');
+  block.appendChild(grid);
+  grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
+  grid.appendChild(button);
+  button.classList.add('button', 'button-fill');
+  if (type === 'petition') {
+    button.textContent = proposal.signed ? 'Signed' : 'Sign';
+    if (proposal.signed || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+      disable(button);
+    button.addEventListener('click', function() {
+      app.dialog.confirm(
+        'Your name and signature will be published to show publicly your support to this petition.',
+        'Sign Petition?', async function() {
+          disable(button);
+          app.dialog.preloader('Signing...');
+          if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'petition') === false) {
+            enable(button);
+            return;
+          }
+          petitionSignature = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: Math.trunc(new Date().getTime() / 1000),
+            appKey: appKey,
+            appSignature: '',
+            type: 'sign',
+            publication: proposal.signature
+          };
+          petitionButton = button;
+          petitionProposal = proposal;
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(petitionSignature), publishPetitionSignature, keystoreFailure);
+        });
+    });
+  } else { // referendum
+    button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
+    if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+      disable(button);
+    button.addEventListener('click', function(event) {
+      const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
+      const answer = checked ? checked.value : '';
+      const text = (checked ? `You are about to vote "${answer}" to this referendum. `
+        : 'You are about to abstain to vote to this referendum. ' +
+        'Your vote will be counted as an abstention in the results. ') +
+      'You will be able to change your vote until the deadline of the referendum.';
+      app.dialog.confirm(text, 'Vote?', async function() {
+        // prepare the vote aimed at blind signature
+        disable(button);
+        app.dialog.preloader('Voting...');
+        const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
+        if (greenLight === false) {
+          enable(button);
+          return;
+        }
+        let ballotBytes;
+        if (proposal.ballot === null) {
+          ballotBytes = new Uint8Array(32);
+          crypto.getRandomValues(ballotBytes);
+          proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
+        } else
+          ballotBytes = base64ToByteArray(proposal.ballot);
+
+        const randomNumber = new Uint8Array(1);
+        crypto.getRandomValues(randomNumber);
+        proposal.number += randomNumber[0];
+        proposal.answer = answer;
+        vote = {
+          referendum: proposal.signature,
+          number: proposal.number,
+          ballot: proposal.ballot,
+          answer: answer
+        };
+        const referendumBytes = base64ToByteArray(vote.referendum);
+        const numberBytes = int64ToUint8Array(vote.number);
+        const answerBytes = new TextEncoder().encode(vote.answer);
+        const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
+        voteBytes = new Uint8Array(l);
+        let p = 0;
+        voteBytes.set(referendumBytes);
+        p += referendumBytes.length;
+        voteBytes.set(numberBytes, p);
+        p += numberBytes.length;
+        voteBytes.set(ballotBytes, p);
+        p += ballotBytes.length;
+        voteBytes.set(answerBytes, p);
+        p += answer.length;
+        if (voteBytes.length !== p)
+          console.error('vote length is wrong');
+        const binaryAppKey = await importKey(appKey);
+        const blind = await rsaBlind(binaryAppKey, voteBytes);
+        blindInv = blind.inv;
+        participationToPublish = {
+          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
+          key: citizen.key,
+          signature: '',
+          published: proposal.deadline,
+          appKey: appKey,
+          appSignature: '',
+          referendum: proposal.signature,
+          encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
+        };
+        referendumButton = button;
+        referendumProposal = proposal;
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
+      });
+    });
+  }
+  let trashButton = document.createElement('button');
+  grid.appendChild(trashButton);
+  trashButton.classList.add('button', 'button-tonal');
+  trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
+  trashButton.addEventListener('click', function() {
+    const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
+    app.dialog.confirm(
+      `This ${type} will be removed from your list, but you can fetch it again if needed.`,
+      `Remove ${uppercaseType}?`, function() {
+        document.getElementById(`${type}s`).removeChild(item);
+        if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
+          const index = proposals.indexOf(proposal);
+          proposals.splice(index, 1);
+          let i = 0;
+          proposals.forEach(function(p) {
+            p.id = i++;
+          });
+        } else { // remove useless fields, keep only signature, signed, number, ballot and answer
+          delete proposal.id; // hidden
+          delete proposal.key;
+          delete proposal.published;
+          delete proposal.participants;
+          delete proposal.title;
+          delete proposal.description;
+          delete proposal.areaName;
+          delete proposal.area;
+          delete proposal.deadline;
+          delete proposal.corpus;
+          delete proposal.participation;
+          delete proposal.answers;
+          delete proposal.question;
+          delete proposal.judge;
+          delete proposal.secret;
+          delete proposal.website;
+        }
+        localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+      });
+  });
+  if (open)
+    app.accordion.open(item);
+}
+
+async function verifyProposalSignature(proposal) {
+  if (proposal.schema !== `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/proposal.schema.json`) {
+    app.dialog.alert('This document is not a valid proposal.', 'Wrong proposal');
+    return false;
+  }
+  let p = {
+    schema: proposal.schema,
+    key: proposal.key,
+    signature: '',
+    published: proposal.published,
+    area: proposal.area,
+    title: proposal.title,
+    description: proposal.description
+  };
+  if (proposal.question)
+    p.question = proposal.question;
+  if (proposal.answers) {
+    p.answers = proposal.answers;
+    p.answers.pop(); // remove the last one which is empty (abstention)
+  }
+  p.secret = proposal.secret;
+  p.deadline = proposal.deadline;
+  if (proposal.website)
+    p.website = proposal.website;
+
+  const publicKey = await importKey(proposal.key);
+  if (!publicKey)
+    console.error('Failed to import public key for proposal');
+  const bytes = base64ToByteArray(proposal.signature);
+  const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
+  const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
+  if (!verify) {
+    app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
+    return false;
+  }
+  let a = {
+    schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/area.schema.json`,
+    key: proposal.areaKey,
+    signature: '',
+    published: proposal.areaPublished,
+    name: proposal.areaName,
+    polygons: proposal.areaPolygons
+  };
+  const areaPublicKey = await importKey(proposal.areaKey);
+  if (!areaPublicKey)
+    console.error('Failed to import public key for area');
+  const areaBytes = base64ToByteArray(proposal.area);
+  const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
+  const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
+  if (!areaVerify) {
+    app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
+    return false;
+  }
+  return true;
+}
+
+async function getProposal(fingerprint, type) {
+  fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
+    .then(response => response.json())
+    .then(async proposal => {
+      enable(`scan-${type}`);
+      enable(`enter-${type}`);
+      if (proposal.error) {
+        app.dialog.alert(proposal.error, 'Proposal search error');
+        return;
+      }
+      const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
+      const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+      if (fingerprint !== sha1) {
+        app.dialog.alert('Fingerprint mismatch.', 'Proposal search error');
+        return;
+      }
+      if (!await verifyProposalSignature(proposal))
+        return;
+      const outdated = (proposal.deadline * 1000 < new Date().getTime());
+      const deadline = new Date(proposal.deadline * 1000).toLocaleString();
+      const title = `<b>${proposal.title}</b><br><br>`;
+      if (type === 'petition' && proposal.secret) {
+        app.dialog.alert(
+          `${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`,
+          'Not a petition'
+        );
+      } else if (type === 'referendum' && !proposal.secret) {
+        app.dialog.alert(
+          `${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`,
+          'Not a referendum'
+        );
+      } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
+        const message = (type === 'petition')
+          ? `You are not inside the area of this petition (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
+            'Therefore you cannot sign it.'
+          : `You are not inside the area of this referendum (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
+            'Therefore you cannot vote.';
+        app.dialog.alert(`${title}${message}`, 'Wrong area');
+      } else if (outdated) {
+        const message = (type === 'petition')
+          ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
+          : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
+        app.dialog.alert(`${title}${message}`, 'Deadline expired');
+      } else {
+        let already = false;
+        let proposals = (type === 'petition') ? petitions : referendums;
+        for (let p of proposals) {
+          const bytes = base64ToByteArray(p.signature);
+          const bytesArray = await crypto.subtle.digest('SHA-1', bytes);
+          const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+          if (sha1 === fingerprint) {
+            if (p.id !== undefined) {
+              app.dialog.alert(`${title}You already have this ${type}.`);
+              app.accordion.open(document.getElementById(`${type}-${p.id}`));
+            } else { // already there, insert at position 0 and restore the missing fields
+              p.id = 0;
+              let i = 0;
+              for (let p2 of proposals)
+                p2.id = i++;
+              p.key = proposal.key;
+              p.title = proposal.title;
+              p.description = proposal.description;
+              p.areaName = proposal.areaName;
+              p.deadline = proposal.deadline;
+              p.corpus = proposal.corpus;
+              p.participation = proposal.participation;
+              p.published = proposal.published;
+              p.judge = proposal.judge;
+              if (proposal.website !== '')
+                p.website = proposal.website;
+              if (proposal.secret) {
+                p.question = proposal.question;
+                p.answers = proposal.answers;
+              }
+              addProposal(p, type, true);
+            }
+            already = true;
+            break;
+          }
+        }
+        if (!already) { // move proposals id by one
+          let i = 1;
+          proposals.forEach(function(p) {
+            let e = document.getElementById(`${type}-${p.id}`);
+            if (e) {
+              p.id = i++;
+              e.setAttribute('id', p.id);
+            }
+          });
+          delete proposal.schema;
+          delete proposal.area;
+          delete proposal.areaKey;
+          delete proposal.areaPolygons;
+          delete proposal.areaPublished;
+          if (proposal.question === '')
+            delete proposal.question;
+          if (proposal.answer === '')
+            delete proposal.answers;
+          if (proposal.website === '')
+            delete proposal.website;
+          if (proposal.secret) {
+            proposal.number = 0;
+            proposal.ballot = null;
+            proposal.answer = null;
+          } else
+            proposal.signed = false;
+          proposal.id = 0; // preprend new proposal at id 0
+          proposals.unshift(proposal);
+          addProposal(proposal, type, true);
+        }
+        localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+      }
+    });
+}
+
+function stopScanner(page) {
+  hide('scanner');
+  show(page);
+  QRScanner.hide(function(status) {
+    QRScanner.destroy(function(status) {
+    });
+  });
+}
+
+function scan(callback) {
+  QRScanner.prepare(function(error, status) {
+    if (error)
+      console.error(error._message);
+    else {
+      QRScanner.show(function(status) {
+        hide('home');
+        show('scanner');
+        QRScanner.scan(callback);
+      });
+    }
+  });
+}
+
+function scanQRCode(error, contents, type) {
+  stopScanner('home');
+  show(`${type}-page`);
+  enable(`scan-${type}`);
+  enable(`enter-${type}`);
+  if (error) {
+    if (error.name !== 'SCAN_CANCELED')
+      alert(error._message);
+    return;
+  }
+  if (type === 'challenge') {
+    console.log('challenge contents = ' + contents);
+    const contentsArray = contents.split(':');
+    const appUrl = contentsArray[0]; // FIXME: check URL format
+    const challengeId = parseInt(contentsArray[1]);
+    challenge = contentsArray[2];
+    if (appUrl !== 'app.directdemocracy.vote') {
+      app.dialog.alert(`Importing a citizen card from app "{$appUrl}" is not supported by your app`, 'Unsupported App');
+      return;
+    }
+    fetch(`https:${appUrl}/api/challenge?id=${challengeId}`)
+      .then(response => response.json())
+      .then(async answer => {
+        if (answer.error) {
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error');
+          return;
+        }
+        const key = answer['key']; // FIXME: check key format
+        const signature = answer['signature']; // FIXME: check signature format
+        // verify
+        const publicKey = await importKey(key);
+        let bytes = base64ToByteArray(signature);
+        const challengeArrayBuffer = new TextEncoder().encode(encodeBase128(challengeBytes));
+        challenge = '';
+        let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
+        if (!verify) {
+          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+          return;
+        }
+        fetch(`${notary}/api/publication.php?key=` + encodeURIComponent(key))
+          .then(response => response.json())
+          .then(async other => {
+            console.log(other);
+            // verify citizen signature
+            const otherKey = await importKey(other.key);
+            let otherSignature = other.signature;
+            let otherAppSignature = other.appSignature;
+            other.appSignature = '';
+            other.signature = '';
+            bytes = base64ToByteArray(otherSignature);
+            let encoded = new TextEncoder().encode(JSON.stringify(other));
+            verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', otherKey, bytes, encoded);
+            if (!verify) {
+              app.dialog.alert('Cannot verify citizen signature on citizen card', 'Error verifying signature');
+              return;
+            }
+            // verify app signature
+            bytes = base64ToByteArray(otherAppSignature);
+            encoded = new TextEncoder().encode(otherSignature);
+            const binaryAppKey = await importKey(other.appKey);
+            verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', binaryAppKey, bytes, encoded);
+            if (!verify) {
+              app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
+              return;
+            }
+            // display citizen for user verification before endorsement or transfer
+            hide('endorse-page');
+            show('endorse-citizen');
+            document.getElementById('endorse-picture-check').checked = false;
+            document.getElementById('endorse-name-check').checked = false;
+            document.getElementById('endorse-adult-check').checked = false;
+            document.getElementById('endorse-coords-check').checked = false;
+            document.getElementById('endorse-picture').src = other.picture;
+            document.getElementById('endorse-family-name').textContent = other.familyName;
+            document.getElementById('endorse-given-names').textContent = other.givenNames;
+            const lat = other.latitude;
+            const lon = other.longitude;
+            document.getElementById('endorse-coords').textContent = lat + ', ' + lon;
+            let published = new Date(other.published * 1000);
+            document.getElementById('endorse-published').textContent = published.toISOString().slice(0, 10);
+            if (endorseMap == null) {
+              endorseMap = L.map('endorse-map', { dragging: false });
+              endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+              }).addTo(endorseMap);
+              endorseMarker = L.marker([lat, lon]).addTo(endorseMap);
+            } else
+              endorseMarker.setLatLng([lat, lon]);
+            endorseMarker.bindPopup(lat + ', ' + lon);
+            endorseMap.setView([lat, lon], 18);
+            endorseMap.on('contextmenu', function(event) {
+              return false;
+            });
+            fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+              .then(response => response.json())
+              .then(answer => {
+                const address = answer.display_name;
+                endorseMarker.setPopupContent(
+                  `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
+              });
+          });
+      });
+  } else {
+    const binaryContents = decodeBase128(contents);
+    let fingerprint = '';
+    const hex = '0123456789abcdef';
+    for (let i = 0; i < 20; i++) {
+      const b = binaryContents[i];
+      fingerprint += hex[b >> 4] + hex[b & 15];
+    }
+    if (type === 'me')
+      getCitizen(fingerprint);
+    else
+      getProposal(fingerprint, type);
+  }
 }
 
 function onDeviceReady() {
@@ -558,11 +1185,15 @@ function onDeviceReady() {
   document.getElementById('export').addEventListener('click', function(event) {
     function exportCard() {
       console.log('export card');
+      app.dialog.preloader('Preparing QR Code...');
+      challengeBytes = new Uint8Array(20);
+      crypto.getRandomValues(challengeBytes);
+      Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signChallenge, keystoreFailure);
     }
     app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
       'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
       'On this other phone, follow the instructions of the initial setup dialog to import your citizen card. ' +
-      'Press OK to display the export QR code.',
+      'Then, press OK to display the export QR code.',
     'Export Citizen Card?', exportCard);
   });
 
@@ -762,44 +1393,19 @@ function onDeviceReady() {
     }
   });
 
-  function stopScanner(page) {
-    hide('scanner');
-    show(page);
-    QRScanner.hide(function(status) {
-      QRScanner.destroy(function(status) {
-      });
-    });
-  }
-
   document.getElementById('cancel-scanner').addEventListener('click', function() {
     QRScanner.cancelScan(function(status) {
       stopScanner('home');
     });
   });
 
-  function scan(callback) {
-    QRScanner.prepare(function(error, status) {
-      if (error)
-        console.error(error._message);
-      else {
-        QRScanner.show(function(status) {
-          hide('home');
-          show('scanner');
-          QRScanner.scan(callback);
-        });
-      }
-    });
-  }
-
-  document.getElementById('endorse-me-button').addEventListener('click', function() {
-    disable('endorse-me-button');
+  document.getElementById('scan-qrcode').addEventListener('click', function() {
     scan(function(error, contents) {
       show('home');
       hide('scanner');
       if (error) {
         if (error.name !== 'SCAN_CANCELED')
           console.error(error.name);
-        enable('endorse-me-button');
         stopScanner('home');
         return;
       }
@@ -815,7 +1421,6 @@ function onDeviceReady() {
     if (error) {
       if (error.name !== 'SCAN_CANCELED')
         console.error(error._message);
-      enable('endorse-button');
       stopScanner('home');
       return;
     }
@@ -842,7 +1447,6 @@ function onDeviceReady() {
         endorsed = JSON.parse(answer);
         if (endorsed.hasOwnProperty('error')) {
           app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
-          enable('endorse-button');
           return;
         }
         // verify challenge signature by endorsed
@@ -853,7 +1457,6 @@ function onDeviceReady() {
         let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
         if (!verify) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-          enable('endorse-button');
           return;
         }
         // verify citizen signature on citizen card of endorsed
@@ -866,7 +1469,6 @@ function onDeviceReady() {
         verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, encoded);
         if (!verify) {
           app.dialog.alert('Cannot verify citizen signature on citizen card', 'Error verifying signature');
-          enable('endorse-button');
           return;
         }
         endorsed.signature = endorsedSignature;
@@ -878,7 +1480,6 @@ function onDeviceReady() {
         verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', binaryAppKey, bytes, encoded);
         if (!verify) {
           app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
-          enable('endorse-button');
           return;
         }
         hide('endorse-page');
@@ -919,17 +1520,14 @@ function onDeviceReady() {
       });
   }
 
-  function qrCodeDone() {
+  document.getElementById('qrcode-cancel').addEventListener('click', function() {
     hide('qrcode');
     show('home');
     if (challenge !== '')
       scan(scanChallengeAnswer);
-  }
+  });
 
-  document.getElementById('qrcode-done').addEventListener('click', qrCodeDone);
-
-  document.getElementById('endorse-button').addEventListener('click', function() {
-    disable('endorse-button');
+  document.getElementById('show-qrcode').addEventListener('click', function() {
     const randomBytes = new Uint8Array(20);
     crypto.getRandomValues(randomBytes);
     challenge = encodeBase128(randomBytes);
@@ -953,7 +1551,6 @@ function onDeviceReady() {
   document.getElementById('endorse-cancel-confirm').addEventListener('click', function() {
     hide('endorse-citizen');
     show('endorse-page');
-    enable('endorse-button');
   });
 
   document.getElementById('endorse-confirm').addEventListener('click', function(event) {
@@ -973,12 +1570,12 @@ function onDeviceReady() {
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
   });
 
-  document.getElementById('scan-citizen').addEventListener('click', function() {
-    hide('citizen-page');
-    disable('scan-citizen');
-    disable('enter-citizen');
+  document.getElementById('scan-me').addEventListener('click', function() {
+    hide('me-page');
+    disable('scan-me');
+    disable('enter-me');
     scan(function(error, contents) {
-      scanQRCode(error, contents, 'citizen');
+      scanQRCode(error, contents, 'me');
     });
   });
 
@@ -1000,25 +1597,25 @@ function onDeviceReady() {
     });
   });
 
-  document.getElementById('cancel-citizen').addEventListener('click', function() {
+  document.getElementById('cancel-me').addEventListener('click', function() {
     enableDangerButtons();
     showPage('splash');
     welcome();
   });
 
-  let citizenSearch = document.getElementById('enter-citizen');
+  let citizenSearch = document.getElementById('enter-me');
   citizenSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
-      searchFingerprint('citizen');
+      searchFingerprint('me');
   });
   citizenSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
-    searchFingerprint('citizen');
+    searchFingerprint('me');
   });
   citizenSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
-      searchFingerprint('citizen');
+      searchFingerprint('me');
   });
 
   let referendumSearch = document.getElementById('enter-referendum');
@@ -1075,7 +1672,7 @@ function onDeviceReady() {
     if (value.length === 40) {
       disable(`scan-${type}`);
       disable(`enter-${type}`);
-      if (type === 'citizen')
+      if (type === 'me')
         getCitizen(value);
       else
         getProposal(value, type);
@@ -1097,510 +1694,6 @@ function onDeviceReady() {
     if (petition.id !== undefined)
       addProposal(petition, 'petition', false);
   });
-
-  function scanQRCode(error, contents, type) {
-    stopScanner('home');
-    show(`${type}-page`);
-    enable(`scan-${type}`);
-    enable(`enter-${type}`);
-    if (error) {
-      if (error.name !== 'SCAN_CANCELED')
-        alert(error._message);
-      return;
-    }
-    const binaryContents = decodeBase128(contents);
-    let fingerprint = '';
-    const hex = '0123456789abcdef';
-    for (let i = 0; i < 20; i++) {
-      const b = binaryContents[i];
-      fingerprint += hex[b >> 4] + hex[b & 15];
-    }
-    if (type === 'citizen')
-      getCitizen(fingerprint);
-    else
-      getProposal(fingerprint, type);
-  }
-
-  async function getCitizen(fingerprint) {
-    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
-      .then(response => response.json())
-      .then(async publication => {
-        document.getElementById('enter-citizen').value = '';
-        enable('scan-citizen');
-        enable('enter-citizen');
-        if (publication.error) {
-          app.dialog.alert(publication.error, 'Citizen search error');
-          return;
-        }
-        const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
-        const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
-        if (fingerprint !== sha1) {
-          app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
-          return;
-        }
-        const signature = publication.signature;
-        const appSignature = publication.appSignature;
-        publication.appSignature = '';
-        publication.signature = '';
-        let publicKey = await importKey(publication.key);
-        let buffer = new TextEncoder().encode(JSON.stringify(publication));
-        let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
-        if (!verify) {
-          app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
-          return;
-        }
-        publication.signature = signature;
-        previousSignature = signature;
-        reportComment = 'replaced';
-        publicKey = await importKey(publication.appKey);
-        buffer = new TextEncoder().encode(signature);
-        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(appSignature), buffer);
-        if (!verify) {
-          app.dialog.alert('Failed to verify app signature', 'Citizen search error');
-          return;
-        }
-        app.dialog.preloader('Registering...');
-        Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-          citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
-          citizen.key = publicKey.slice(44, -6);
-          citizen.published = Math.trunc(new Date().getTime() / 1000);
-          citizen.givenNames = publication.givenNames;
-          citizen.familyName = publication.familyName;
-          citizen.picture = publication.picture;
-          citizen.latitude = publication.latitude;
-          citizen.longitude = publication.longitude;
-          citizen.signature = '';
-          citizen.appKey = appKey;
-          citizen.appSignature = '';
-          localStorage.setItem('publicKey', citizen.key);
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
-        });
-      });
-  }
-
-  async function getProposal(fingerprint, type) {
-    fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
-      .then(response => response.json())
-      .then(async proposal => {
-        enable(`scan-${type}`);
-        enable(`enter-${type}`);
-        if (proposal.error) {
-          app.dialog.alert(proposal.error, 'Proposal search error');
-          return;
-        }
-        const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
-        const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
-        if (fingerprint !== sha1) {
-          app.dialog.alert('Fingerprint mismatch.', 'Proposal search error');
-          return;
-        }
-        if (!await verifyProposalSignature(proposal))
-          return;
-        const outdated = (proposal.deadline * 1000 < new Date().getTime());
-        const deadline = new Date(proposal.deadline * 1000).toLocaleString();
-        const title = `<b>${proposal.title}</b><br><br>`;
-        if (type === 'petition' && proposal.secret) {
-          app.dialog.alert(
-            `${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`,
-            'Not a petition'
-          );
-        } else if (type === 'referendum' && !proposal.secret) {
-          app.dialog.alert(
-            `${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`,
-            'Not a referendum'
-          );
-        } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
-          const message = (type === 'petition')
-            ? `You are not inside the area of this petition (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-              'Therefore you cannot sign it.'
-            : `You are not inside the area of this referendum (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-              'Therefore you cannot vote.';
-          app.dialog.alert(`${title}${message}`, 'Wrong area');
-        } else if (outdated) {
-          const message = (type === 'petition')
-            ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
-            : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
-          app.dialog.alert(`${title}${message}`, 'Deadline expired');
-        } else {
-          let already = false;
-          let proposals = (type === 'petition') ? petitions : referendums;
-          for (let p of proposals) {
-            const bytes = base64ToByteArray(p.signature);
-            const bytesArray = await crypto.subtle.digest('SHA-1', bytes);
-            const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
-            if (sha1 === fingerprint) {
-              if (p.id !== undefined) {
-                app.dialog.alert(`${title}You already have this ${type}.`);
-                app.accordion.open(document.getElementById(`${type}-${p.id}`));
-              } else { // already there, insert at position 0 and restore the missing fields
-                p.id = 0;
-                let i = 0;
-                for (let p2 of proposals)
-                  p2.id = i++;
-                p.key = proposal.key;
-                p.title = proposal.title;
-                p.description = proposal.description;
-                p.areaName = proposal.areaName;
-                p.deadline = proposal.deadline;
-                p.corpus = proposal.corpus;
-                p.participation = proposal.participation;
-                p.published = proposal.published;
-                p.judge = proposal.judge;
-                if (proposal.website !== '')
-                  p.website = proposal.website;
-                if (proposal.secret) {
-                  p.question = proposal.question;
-                  p.answers = proposal.answers;
-                }
-                addProposal(p, type, true);
-              }
-              already = true;
-              break;
-            }
-          }
-          if (!already) { // move proposals id by one
-            let i = 1;
-            proposals.forEach(function(p) {
-              let e = document.getElementById(`${type}-${p.id}`);
-              if (e) {
-                p.id = i++;
-                e.setAttribute('id', p.id);
-              }
-            });
-            delete proposal.schema;
-            delete proposal.area;
-            delete proposal.areaKey;
-            delete proposal.areaPolygons;
-            delete proposal.areaPublished;
-            if (proposal.question === '')
-              delete proposal.question;
-            if (proposal.answer === '')
-              delete proposal.answers;
-            if (proposal.website === '')
-              delete proposal.website;
-            if (proposal.secret) {
-              proposal.number = 0;
-              proposal.ballot = null;
-              proposal.answer = null;
-            } else
-              proposal.signed = false;
-            proposal.id = 0; // preprend new proposal at id 0
-            proposals.unshift(proposal);
-            addProposal(proposal, type, true);
-          }
-          localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-        }
-      });
-  }
-
-  async function verifyProposalSignature(proposal) {
-    if (proposal.schema !== `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/proposal.schema.json`) {
-      app.dialog.alert('This document is not a valid proposal.', 'Wrong proposal');
-      return false;
-    }
-    let p = {
-      schema: proposal.schema,
-      key: proposal.key,
-      signature: '',
-      published: proposal.published,
-      area: proposal.area,
-      title: proposal.title,
-      description: proposal.description
-    };
-    if (proposal.question)
-      p.question = proposal.question;
-    if (proposal.answers) {
-      p.answers = proposal.answers;
-      p.answers.pop(); // remove the last one which is empty (abstention)
-    }
-    p.secret = proposal.secret;
-    p.deadline = proposal.deadline;
-    if (proposal.website)
-      p.website = proposal.website;
-
-    const publicKey = await importKey(proposal.key);
-    if (!publicKey)
-      console.error('Failed to import public key for proposal');
-    const bytes = base64ToByteArray(proposal.signature);
-    const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
-    const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
-    if (!verify) {
-      app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
-      return false;
-    }
-    let a = {
-      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/area.schema.json`,
-      key: proposal.areaKey,
-      signature: '',
-      published: proposal.areaPublished,
-      name: proposal.areaName,
-      polygons: proposal.areaPolygons
-    };
-    const areaPublicKey = await importKey(proposal.areaKey);
-    if (!areaPublicKey)
-      console.error('Failed to import public key for area');
-    const areaBytes = base64ToByteArray(proposal.area);
-    const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
-    const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
-    if (!areaVerify) {
-      app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
-      return false;
-    }
-    return true;
-  }
-
-  function addProposal(proposal, type, open) {
-    let proposals = (type === 'petition') ? petitions : referendums;
-    let item = document.createElement('div');
-    document.getElementById(`${type}s`).prepend(item);
-    item.setAttribute('id', `${type}-${proposal.id}`);
-    item.classList.add('accordion-item');
-    let a = document.createElement('a');
-    item.appendChild(a);
-    a.classList.add('item-link', 'item-content', 'no-padding');
-    let inner = document.createElement('div');
-    a.appendChild(inner);
-    inner.classList.add('item-inner');
-    let title = document.createElement('div');
-    inner.appendChild(title);
-    title.classList.add('item-title');
-    title.textContent = proposal.areaName[0].split('=')[1] + ' (' + (proposal.id + 1) + ')';
-    let content = document.createElement('div');
-    item.appendChild(content);
-    content.classList.add('accordion-item-content');
-    let block = document.createElement('div');
-    content.appendChild(block);
-    block.classList.add('block', 'no-padding');
-    a = document.createElement('a');
-    block.appendChild(a);
-    a.setAttribute('href', `${notary}/proposal.html?signature=${encodeURIComponent(proposal.signature)}`);
-    a.setAttribute('target', '_blank');
-    a.style.fontSize = '120%';
-    a.style.fontWeight = 'bold';
-    a.classList.add('link', 'external');
-    a.textContent = proposal.title;
-    let p = document.createElement('p');
-    block.appendChild(p);
-    p.textContent = proposal.description;
-    p = document.createElement('p');
-    block.appendChild(p);
-    let button = document.createElement('button');
-    if (type === 'referendum') {
-      p = document.createElement('p');
-      p.style.fontWeight = 'bold';
-      p.textContent = proposal.question;
-      block.appendChild(p);
-      for (let answer of proposal.answers) {
-        const d = document.createElement('div');
-        block.appendChild(d);
-        const label = document.createElement('label');
-        d.appendChild(label);
-        label.classList.add('checkbox', 'no-ripple', 'display-inline-flex', 'align-items-center', 'margin-bottom-half');
-        const input = document.createElement('input');
-        label.appendChild(input);
-        input.setAttribute('type', 'checkbox');
-        input.setAttribute('name', `answer-${proposal.id}`);
-        input.setAttribute('value', answer);
-        const i = document.createElement('i');
-        i.classList.add('margin-right-half', 'icon-checkbox');
-        label.appendChild(i);
-        const div = document.createElement('div');
-        label.appendChild(div);
-        div.appendChild(document.createTextNode(answer));
-        input.addEventListener('change', function(event) {
-          if (event.currentTarget.checked) {
-            const block = event.currentTarget.parentNode.parentNode.parentNode;
-            const inputs = block.querySelectorAll('input');
-            for (let i = 0; i < inputs.length; i++) {
-              if (inputs[i] === event.currentTarget)
-                continue;
-              if (inputs[i].checked)
-                inputs[i].checked = false;
-            }
-          }
-          if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
-            disable(button);
-          else
-            enable(button);
-        });
-      }
-    }
-    let url = `https://nominatim.openstreetmap.org/ui/search.html?${proposal.areaName.join('&')}&polygon_geojson=1`;
-    p = document.createElement('p');
-    block.appendChild(p);
-    let b = document.createElement('b');
-    b.textContent = 'Area: ';
-    p.appendChild(b);
-    a = document.createElement('a');
-    a.classList.add('link', 'external');
-    a.setAttribute('href', url);
-    a.setAttribute('target', '_blank');
-    a.textContent = proposal.areaName[0].split('=')[1];
-    p.appendChild(a);
-    p = document.createElement('p');
-    block.appendChild(p);
-    b = document.createElement('b');
-    b.textContent = 'Judge: ';
-    p.appendChild(b);
-    a = document.createElement('a');
-    a.classList.add('link', 'external');
-    a.setAttribute('href', proposal.judge);
-    a.setAttribute('target', '_blank');
-    a.textContent = proposal.judge;
-    p.appendChild(a);
-    p = document.createElement('p');
-    block.appendChild(p);
-    const deadline = new Date(proposal.deadline * 1000).toLocaleString();
-    const outdated = (proposal.deadline * 1000 < new Date().getTime());
-    p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
-    let grid = document.createElement('div');
-    block.appendChild(grid);
-    grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
-    grid.appendChild(button);
-    button.classList.add('button', 'button-fill');
-    if (type === 'petition') {
-      button.textContent = proposal.signed ? 'Signed' : 'Sign';
-      if (proposal.signed || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
-        disable(button);
-      button.addEventListener('click', function() {
-        app.dialog.confirm(
-          'Your name and signature will be published to show publicly your support to this petition.',
-          'Sign Petition?', async function() {
-            disable(button);
-            app.dialog.preloader('Signing...');
-            if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'petition') === false) {
-              enable(button);
-              return;
-            }
-            petitionSignature = {
-              schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-              key: citizen.key,
-              signature: '',
-              published: Math.trunc(new Date().getTime() / 1000),
-              appKey: appKey,
-              appSignature: '',
-              type: 'sign',
-              publication: proposal.signature
-            };
-            petitionButton = button;
-            petitionProposal = proposal;
-            Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(petitionSignature), publishPetitionSignature, keystoreFailure);
-          });
-      });
-    } else { // referendum
-      button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
-      if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
-        disable(button);
-      button.addEventListener('click', function(event) {
-        const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
-        const answer = checked ? checked.value : '';
-        const text = (checked ? `You are about to vote "${answer}" to this referendum. `
-          : 'You are about to abstain to vote to this referendum. ' +
-          'Your vote will be counted as an abstention in the results. ') +
-        'You will be able to change your vote until the deadline of the referendum.';
-        app.dialog.confirm(text, 'Vote?', async function() {
-          // prepare the vote aimed at blind signature
-          disable(button);
-          app.dialog.preloader('Voting...');
-          const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
-          if (greenLight === false) {
-            enable(button);
-            return;
-          }
-          let ballotBytes;
-          if (proposal.ballot === null) {
-            ballotBytes = new Uint8Array(32);
-            crypto.getRandomValues(ballotBytes);
-            proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
-          } else
-            ballotBytes = base64ToByteArray(proposal.ballot);
-
-          const randomNumber = new Uint8Array(1);
-          crypto.getRandomValues(randomNumber);
-          proposal.number += randomNumber[0];
-          proposal.answer = answer;
-          vote = {
-            referendum: proposal.signature,
-            number: proposal.number,
-            ballot: proposal.ballot,
-            answer: answer
-          };
-          const referendumBytes = base64ToByteArray(vote.referendum);
-          const numberBytes = int64ToUint8Array(vote.number);
-          const answerBytes = new TextEncoder().encode(vote.answer);
-          const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
-          voteBytes = new Uint8Array(l);
-          let p = 0;
-          voteBytes.set(referendumBytes);
-          p += referendumBytes.length;
-          voteBytes.set(numberBytes, p);
-          p += numberBytes.length;
-          voteBytes.set(ballotBytes, p);
-          p += ballotBytes.length;
-          voteBytes.set(answerBytes, p);
-          p += answer.length;
-          if (voteBytes.length !== p)
-            console.error('vote length is wrong');
-          const binaryAppKey = await importKey(appKey);
-          const blind = await rsaBlind(binaryAppKey, voteBytes);
-          blindInv = blind.inv;
-          participationToPublish = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
-            key: citizen.key,
-            signature: '',
-            published: proposal.deadline,
-            appKey: appKey,
-            appSignature: '',
-            referendum: proposal.signature,
-            encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
-          };
-          referendumButton = button;
-          referendumProposal = proposal;
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
-        });
-      });
-    }
-    let trashButton = document.createElement('button');
-    grid.appendChild(trashButton);
-    trashButton.classList.add('button', 'button-tonal');
-    trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
-    trashButton.addEventListener('click', function() {
-      const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
-      app.dialog.confirm(
-        `This ${type} will be removed from your list, but you can fetch it again if needed.`,
-        `Remove ${uppercaseType}?`, function() {
-          document.getElementById(`${type}s`).removeChild(item);
-          if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
-            const index = proposals.indexOf(proposal);
-            proposals.splice(index, 1);
-            let i = 0;
-            proposals.forEach(function(p) {
-              p.id = i++;
-            });
-          } else { // remove useless fields, keep only signature, signed, number, ballot and answer
-            delete proposal.id; // hidden
-            delete proposal.key;
-            delete proposal.published;
-            delete proposal.participants;
-            delete proposal.title;
-            delete proposal.description;
-            delete proposal.areaName;
-            delete proposal.area;
-            delete proposal.deadline;
-            delete proposal.corpus;
-            delete proposal.participation;
-            delete proposal.answers;
-            delete proposal.question;
-            delete proposal.judge;
-            delete proposal.secret;
-            delete proposal.website;
-          }
-          localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-        });
-    });
-    if (open)
-      app.accordion.open(item);
-  }
 
   function validateRegistration() {
     disable('register-button');
@@ -1729,8 +1822,7 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-citizen').setAttribute('href',
-    `${notary}?tab=citizens&me=true`);
+  document.getElementById('search-citizen').setAttribute('href', `${notary}?tab=citizens&me=true`);
   document.getElementById('search-petition').setAttribute('href',
     `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   document.getElementById('search-referendum').setAttribute('href',
@@ -1887,15 +1979,12 @@ function updateProposals(proposals) {
 function updateCitizenEndorsements() {
   let list = document.getElementById('citizen-endorsements-list');
   let badge = document.getElementById('endorsed-badge');
+  list.innerHTML = '';
   if (citizenEndorsements.length === 0) {
-    list.innerHTML =
-      `<div class="block-title" data-i18n="not-endorsed">${translator.translate('not-endorsed')}</div>` +
-      `<div class="block" data-i18n="ask-others-to-endorse-you">${translator.translate('ask-others-to-endorse-you')}</div>`;
     badge.style.background = 'red';
     badge.innerHTML = '0';
     return;
   }
-  list.innerHTML = '';
   let endorsementCount = citizenEndorsements.length;
   badge.textContent = endorsementCount;
   const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
@@ -2028,7 +2117,7 @@ function updateEndorsements() {
 // 3. the card page once registered citizen data is available
 // 4. the video scan page to get endorsed
 function showPage(page) {
-  const pages = ['splash', 'register', 'citizen', 'card'];
+  const pages = ['splash', 'register', 'me', 'card'];
   if (!pages.includes(page)) {
     console.error(`Page '${page}' not found`);
     return;

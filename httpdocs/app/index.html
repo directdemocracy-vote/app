@@ -56,9 +56,7 @@
           Scan the QR code
         </div>
         <button id="cancel-scanner" class="button button-fill color-red"
-          style="position:fixed;bottom: 18px;width: 60%;">
-          Cancel
-        </button>
+          style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
       </div>
       <div id="qrcode" class="page display-none" style="display:flex;justify-content:center">
         <div style="display:flex;flex-direction: column;justify-content: center;">
@@ -68,8 +66,8 @@
           style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
           Ask endorser to scan this QR code
         </div>
-        <button id="qrcode-done" class="button button-fill"
-          style="position:fixed;bottom: 18px;width: 60%;">Done</button>
+        <button id="qrcode-cancel" class="button button-fill color-red"
+          style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
       </div>
       <div id="home" data-name="home" class="page">
         <div class="navbar">
@@ -91,13 +89,13 @@
           <div class="toolbar-inner">
             <a href="#" class="tab-link tab-link-active" data-tab="#tab-card" id="tabbar-card">
               <i class="icon f7-icons">person_fill<span id="endorsed-badge" class="badge"></span></i>
-              <span class="tabbar-label" data-i18n="card"></span>
+              <span class="tabbar-label" data-i18n="me"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-endorse" id="tabbar-endorse">
               <i class="icon f7-icons">
-                viewfinder<span id="endorse-badge" class="badge color-blue display-none"></span>
+                person_2_fill<span id="endorse-badge" class="badge color-blue display-none"></span>
               </i>
-              <span class="tabbar-label" data-i18n="endorse"></span>
+              <span class="tabbar-label" data-i18n="citizens"></span>
             </a>
             <a href="#" class="tab-link disabled" data-tab="#tab-vote" id="tabbar-vote">
               <i class="icon f7-icons">
@@ -117,7 +115,7 @@
         </div>
         <swiper-container class="tabs" id='swiper-container' allow-touch-move='false' speed='0'>
           <swiper-slide class="tab tab-active page-content" id="tab-card">
-            <div id="citizen-page" class="display-none">
+            <div id="me-page" class="display-none">
               <div class="block" style="width:100%;display:flex;align-items:center;">
                 <div class="list" style="margin:0">
                   <ul style="width:95%">
@@ -125,24 +123,23 @@
                       <div class="item-inner">
                         <div class="item-title item-label">Enter Your Citizen Card</div>
                         <div class="item-input-wrap">
-                          <input id="enter-citizen" type="text" size="40" maxlength="40"
+                          <input id="enter-me" type="text" size="40" maxlength="40"
                             placeholder="Paste your citizen card reference here">
                           <span class="input-clear-button"></span>
                         </div>
                         <div class="item-input-info">
-                          Search your citizen card <a id="search-citizen" class="link external"
-                            target="_blank">online</a>
+                          Search your citizen card <a id="search-me" class="link external" target="_blank">online</a>
                         </div>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button id="scan-citizen" class="button" style="width:5%">
-                  <i class="icon f7-icons">viewfinder</i>
+                <button id="scan-me" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
               <div class="block">
-                <button class="button button-fill color-red" id="cancel-citizen" data-i18n="cancel"></button>
+                <button class="button button-fill color-red" id="cancel-me" data-i18n="cancel"></button>
               </div>
             </div>
             <div id="register-page" class="display-none">
@@ -239,20 +236,48 @@
                     <div><span data-i18n="reputation"></span><span id="citizen-reputation">...</span></div>
                   </div>
                 </div>
-                <div id="citizen-endorsements-list"></div>
-                <div>
-                  <button class="button button-fill disabled" id="endorse-me-button" data-i18n="endorse-me"></button>
-                  <div id="endorse-me-message" class="item-label display-flex justify-content-center" style="width:100%"
-                    data-i18n="endorse-me-message"></div>
-                </div>
+              </div>
+              <div class="block-title margin-top">Meet your neighbors to increase your reputation</div>
+              <div class="block block-strong block-outline inset">
+                Endorse and Get Endorsed by your Neighbors:
+                <button id="show-qrcode" class="button button-fill margin-top margin-bottom"><i
+                    class="icon f7-icons margin-right">qrcode</i>Show QR Code</button>
+                <button id="scan-qrcode" class="button button-fill margin-bottom"><i
+                    class="icon f7-icons margin-right">qrcode_viewfinder</i>Scan QR Code</button>
+                <div>You are endorsed by: 0</div>
+                <div>You endorsed: 0</div>
               </div>
             </div>
           </swiper-slide>
           <swiper-slide class="tab page-content" id="tab-endorse">
             <div id="endorse-page" class="block margin-top">
-              <button class="button button-fill" id="endorse-button" data-i18n="endorse-button"></button>
-              <div id="endorse-message" class="item-label display-flex justify-content-center" style="width:100%"
-                data-i18n="endorse-message"></div>
+              <div style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
+                      <div class="item-inner">
+                        <div class="item-title item-label">Report a Citizen</div>
+                        <div class="item-input-wrap">
+                          <input id="enter-citizen" type="text" size="40" maxlength="40"
+                            placeholder="Paste citizen reference here">
+                          <span class="input-clear-button"></span>
+                        </div>
+                        <div class="item-input-info">
+                          Search citizens <a id="search-citizen" class="link external" target="_blank">online</a>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button id="scan-citizen" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
+                </button>
+              </div>
+              <div id="citizen-endorsements-list"></div>
+              <div class="no-margin-left no-margin-right block-title">Your Neighbors</div>
+              <div id="neightborsS"
+                class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
+              </div>
             </div>
             <div id="endorse-citizen" class="display-none">
               <div class="block display-flex margin-top-half margin-bottom-half">
@@ -327,7 +352,7 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Enter Referendum</div>
+                        <div class="item-title item-label">Vote at a Referendum</div>
                         <div class="item-input-wrap">
                           <input id="enter-referendum" type="text" size="40" maxlength="40"
                             placeholder="Paste referendum reference here">
@@ -341,7 +366,7 @@
                   </ul>
                 </div>
                 <button id="scan-referendum" class="button" style="width:5%">
-                  <i class="icon f7-icons">viewfinder</i>
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
               <div class="no-margin-left no-margin-right block-title">Your Referendums</div>
@@ -357,7 +382,7 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Enter Petition</div>
+                        <div class="item-title item-label">Sign a Petition</div>
                         <div class="item-input-wrap">
                           <input id="enter-petition" type="text" size="40" maxlength="40"
                             placeholder="Paste petition reference here">
@@ -371,7 +396,7 @@
                   </ul>
                 </div>
                 <button id="scan-petition" class="button" style="width:5%">
-                  <i class="icon f7-icons">viewfinder</i>
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
               <div class="no-margin-left no-margin-right block-title">Your Petitions</div>
@@ -434,9 +459,13 @@
             </div>
             <div class="block-title margin-top">Danger Zone</div>
             <div class="block block-strong block-outline inset">
-              <button id="update" class="button button-fill color-red margin-bottom">Update Citizen Card</button>
-              <button id="export" class="button button-fill color-red margin-bottom">Export Citizen Card</button>
-              <button id="delete" class="button button-fill color-red">Delete Citizen Card</button>
+              <button id="update" class="button button-fill color-red margin-bottom"><i
+                  class="icon f7-icons margin-right">square_pencil</i>Update Citizen Card</button>
+              <button id="export" class="button button-fill color-red margin-bottom"><i
+                  class="icon f7-icons margin-right" style="transform:scale(-1,1)">square_arrow_left</i>Export Citizen
+                Card</button>
+              <button id="delete" class="button button-fill color-red"><i
+                  class="icon f7-icons margin-right">trash</i>Delete Citizen Card</button>
             </div>
           </swiper-slide>
         </swiper-container>

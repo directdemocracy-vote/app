@@ -1,7 +1,7 @@
 {
   "beta": "Beta",
-  "card": "Card",
-  "endorse": "Endorse",
+  "me": "Me",
+  "citizens": "Citizens",
   "vote": "Vote",
   "sign": "Sign",
   "settings": "Settings",
@@ -42,16 +42,10 @@
   "key-forge-time": "Key forged in %1 seconds.",
   "created": "Created: ",
   "reputation": "Reputation: ",
-  "not-endorsed": "Not Yet Endorsed",
-  "ask-others-to-endorse-you": "Ask other citizens to endorse you to increase your reputation.",
   "register": "Register",
   "cancel": "Cancel",
   "registering": "Registering...",
   "updating": "Updating...",
   "citizen-card-published": "Your citizen card was just published.",
-  "congratulations": "Congratulations!",
-  "endorse-me": "Ask an Endorsement",
-  "endorse-me-message": "From a neighbor or a friend",
-  "endorse-button": "Endorse a Citizen",
-  "endorse-message": "Press this button to endorse someone as a citizen"
+  "congratulations": "Congratulations!"
 }
