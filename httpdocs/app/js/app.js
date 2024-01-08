@@ -74,6 +74,7 @@ let petitionButton = null;
 let petitionProposal = null;
 let referendumProposal = null;
 let referendumButton = null;
+let review = null;
 let reviewMap = null;
 let reviewMarker = null;
 let endorseMap = null; // FIXME: remove this one
@@ -263,6 +264,11 @@ async function publish(publication, signature, type) {
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
             enableDangerButtons();
+            if (review) {
+              hide('review');
+              show('home');
+              review = null;
+            }
           } else if (type === 'endorse') {
             app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
@@ -504,11 +510,11 @@ async function getCitizen(fingerprint) {
         return;
       }
       // let the user review the replaced citizen card
-      document.getElementById('review-title').textContent = 'Import Citizen Card';
+      document.getElementById('review-title').textContent = 'Replace Citizen Card';
       document.getElementById('review-former-check-item').classList.remove('display-none');
-      document.getElementById('review-confirm').textContent = 'Import';
+      document.getElementById('review-confirm').textContent = 'Replace';
       document.getElementById('review-warning').textContent =
-        'Warning: wrongly importing a citizen card may affect your reputation.';
+        'Warning: wrongly replacing a citizen card may affect your reputation.';
       document.getElementById('review-picture').src = publication.picture;
       document.getElementById('review-given-names').textContent = publication.givenNames;
       document.getElementById('review-family-name').textContent = publication.familyName;
@@ -532,6 +538,24 @@ async function getCitizen(fingerprint) {
       reviewMap.on('contextmenu', function(event) {
         return false;
       });
+      const reputation = document.getElementById('review-reputation');
+      fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
+        .then(response => response.json())
+        .then(answer => {
+          if (answer.error) {
+            app.dialog.alert(answer.error, 'Could not get reputation from judge.');
+            reputation.textContent = 'N/A';
+            reputation.style.color = 'red';
+          } else {
+            reputation.textContent = answer.reputation;
+            reputation.style.color = answer.endorsed ? 'blue' : 'red';
+          }
+        })
+        .catch((error) => {
+          app.dialog.alert(error, 'Failed to7 get reputation from judge.');
+          reputation.textContent = 'N/A';
+          reputation.style.color = 'red';
+        });
       fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
         .then(response => response.json())
         .then(answer => {
@@ -539,29 +563,10 @@ async function getCitizen(fingerprint) {
           reviewMarker.setPopupContent(
             `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
         });
-
+      review = publication;
+      reportComment = 'replaced';
       hide('home');
       show('review');
-      /*
-      previousSignature = signature;
-      reportComment = 'replaced';
-      app.dialog.preloader('Registering...');
-      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-        citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
-        citizen.key = publicKey.slice(44, -6);
-        citizen.published = Math.trunc(new Date().getTime() / 1000);
-        citizen.givenNames = publication.givenNames;
-        citizen.familyName = publication.familyName;
-        citizen.picture = publication.picture;
-        citizen.latitude = publication.latitude;
-        citizen.longitude = publication.longitude;
-        citizen.signature = '';
-        citizen.appKey = appKey;
-        citizen.appSignature = '';
-        localStorage.setItem('publicKey', citizen.key);
-        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
-      });
-      */
     });
 }
 
@@ -1205,6 +1210,7 @@ function onDeviceReady() {
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
+      document.getElementById('tab-card-title').textContent = 'Update Citizen Card';
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
@@ -1273,6 +1279,30 @@ function onDeviceReady() {
     document.getElementById('review-former-check').checked = false;
     hide('review');
     show('home');
+    reportComment = '';
+    review = null;
+  });
+
+  document.getElementById('review-confirm').addEventListener('click', function(event) {
+    if (reportComment === 'replaced') {
+      app.dialog.preloader('Replacing...');
+      previousSignature = citizen.signature;
+      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+        citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
+        citizen.key = publicKey.slice(44, -6);
+        citizen.published = Math.trunc(new Date().getTime() / 1000);
+        citizen.givenNames = review.givenNames;
+        citizen.familyName = review.familyName;
+        citizen.picture = review.picture;
+        citizen.latitude = review.latitude;
+        citizen.longitude = review.longitude;
+        citizen.signature = '';
+        citizen.appKey = appKey;
+        citizen.appSignature = '';
+        localStorage.setItem('publicKey', citizen.key);
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+      });
+    }
   });
 
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
@@ -1409,6 +1439,7 @@ function onDeviceReady() {
     button.setAttribute('data-i18n', action);
     app.dialog.preloader(button.textContent);
     if (action === 'updating') {
+      document.getElementById('tab-card-title').textContent = translator.translate('become-citizen');
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
