@@ -16,6 +16,7 @@ const TEST_APP_KEY = // public key of the test app
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 const PRODUCTION_APP_KEY = // public key of the genuine app
   TEST_APP_KEY;
+  // FIXME: restore this production key
   /*
   'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
   'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
@@ -254,7 +255,7 @@ function transfer() {
   const fingerprint = byteArrayToFingerprint(base64ToByteArray(localStorage.getItem('citizenFingerprint')));
   fetch(`${notary}/api/transferred.php?fingerprint=${fingerprint}`)
     .then(response => response.json())
-    .then(answer => transferred);
+    .then(transferred);
 }
 
 function transferred(answer) {
@@ -267,6 +268,8 @@ function transferred(answer) {
   if (!answer.transferred)
     transfer();
   else {
+    hide('qrcode');
+    show('splash');
     app.dialog.alert('You successfully exported your citizen card.', 'Export Success');
     deleteCitizen();
   }
