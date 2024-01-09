@@ -8,17 +8,19 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '31';
+const DIRECTDEMOCRACY_VERSION_BUILD = '34';
 
-const PRODUCTION_APP_KEY = // public key of the genuine app
-  'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
-  'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
-  '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
   'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
-
+const PRODUCTION_APP_KEY = // public key of the genuine app
+  TEST_APP_KEY;
+  /*
+  'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
+  'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
+  '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
+*/
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
 let directDemocracyVersion =
@@ -145,6 +147,16 @@ function int64ToUint8Array(int64) {
   return byteArray;
 }
 
+function byteArrayToFingerprint(byteArray) {
+  let fingerprint = '';
+  const hex = '0123456789abcdef';
+  for (let i = 0; i < 20; i++) {
+    const b = byteArray[i];
+    fingerprint += hex[b >> 4] + hex[b & 15];
+  }
+  return fingerprint;
+}
+
 function sanitizeWebservice(string) {
   if (!string)
     return '';
@@ -238,6 +250,48 @@ function keystoreFailure(e) {
   app.dialog.alert(e, 'Keystore failure');
 }
 
+function transfer() {
+  const fingerprint = byteArrayToFingerprint(base64ToByteArray(localStorage.getItem('citizenFingerprint')));
+  fetch(`${notary}/api/transferred.php?fingerprint=${fingerprint}`)
+    .then(response => response.json())
+    .then(answer => transferred);
+}
+
+function transferred(answer) {
+  console.log('transferred!');
+  console.log(answer);
+  if (answer.error) {
+    console.error(answer.error);
+    return;
+  }
+  if (!answer.transferred)
+    transfer();
+  else {
+    app.dialog.alert('You successfully exported your citizen card.', 'Export Success');
+    deleteCitizen();
+  }
+}
+
+function deleteCitizen() {
+  localStorage.removeItem('registered');
+  localStorage.removeItem('citizenFingerprint');
+  localStorage.removeItem('publicKey');
+  localStorage.removeItem('referendums');
+  localStorage.removeItem('petitions');
+  endorsements = [];
+  citizenEndorsements = [];
+  updateEndorsements();
+  updateCitizenEndorsements();
+  document.getElementById('register-given-names').value = '';
+  document.getElementById('register-family-name').value = '';
+  document.getElementById('register-picture').src = 'images/default-picture.png';
+  document.getElementById('register-location').value = '';
+  document.getElementById('register-adult').checked = false;
+  document.getElementById('register-confirm').checked = false;
+  showPage('splash');
+  welcome();
+}
+
 async function publish(publication, signature, type) {
   publication.signature = signature.slice(0, -2);
   const nonce = signature.replaceAll('+', '-').replaceAll('/', '_');
@@ -296,23 +350,7 @@ async function publish(publication, signature, type) {
             if (comment === 'deleted') {
               app.dialog.close(); // preloader
               app.dialog.alert('You successfully deleted your citizen card.', 'Delete Success');
-              localStorage.removeItem('registered');
-              localStorage.removeItem('citizenFingerprint');
-              localStorage.removeItem('publicKey');
-              localStorage.removeItem('referendums');
-              localStorage.removeItem('petitions');
-              endorsements = [];
-              citizenEndorsements = [];
-              updateEndorsements();
-              updateCitizenEndorsements();
-              document.getElementById('register-given-names').value = '';
-              document.getElementById('register-family-name').value = '';
-              document.getElementById('register-picture').src = 'images/default-picture.png';
-              document.getElementById('register-location').value = '';
-              document.getElementById('register-adult').checked = false;
-              document.getElementById('register-confirm').checked = false;
-              showPage('splash');
-              welcome();
+              deleteCitizen();
             } else if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
               app.dialog.close(); // preloader
               app.dialog.alert(
@@ -359,6 +397,7 @@ async function publish(publication, signature, type) {
             document.getElementById('qrcode-message').textContent = 'Scan this code';
             hide('home');
             show('qrcode');
+            transfer();
           } else
             console.error('Unknown operation type: ' + type);
         }
@@ -375,6 +414,7 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   publish(citizen, signature, 'citizen card');
+  console.log('previousSignature = ' + previousSignature);
   if (previousSignature) {
     certificateToPublish = {
       schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -389,6 +429,7 @@ async function publishCitizen(signature) {
     };
     reportComment = '';
     previousSignature = null;
+    console.log(certificateToPublish);
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
   }
 }
@@ -422,7 +463,7 @@ function welcome() {
       text: 'No',
       onClick: function() {
         function importCitizen() {
-          console.log('import citizen: scanning the export QR core...');
+          console.log('import citizen: scanning the export QR code...');
           scan(function(error, contents) {
             scanQRCode(error, contents, 'challenge');
           });
@@ -473,10 +514,82 @@ function welcome() {
   dialog.open();
 }
 
-async function getCitizen(fingerprint) {
-  fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
+function reviewCitizen(publication, comment) { // comment may be either 'replaced' or 'transferred'
+  document.getElementById('review-former-check-item').classList.remove('display-none');
+  if (comment === 'replaced') {
+    document.getElementById('review-title').textContent = 'Replace Citizen Card';
+    document.getElementById('review-confirm').textContent = 'Replace';
+    document.getElementById('review-warning').textContent = 'Warning: wrongly replacing a citizen may affect your reputation.';
+  } else if (comment === 'transferred') {
+    document.getElementById('review-title').textContent = 'Import Citizen Card';
+    document.getElementById('review-confirm').textContent = 'Import';
+    document.getElementById('review-warning').textContent = 'Warning: wrongly importing a citizen may affect your reputation';
+  } else console.error('Unsupported comment in reviewCitizen :"' + comment + '"');
+  document.getElementById('review-picture').src = publication.picture;
+  document.getElementById('review-given-names').textContent = publication.givenNames;
+  document.getElementById('review-family-name').textContent = publication.familyName;
+  document.getElementById('review-coords').textContent = publication.latitude + ', ' + publication.longitude;
+  const published = new Date(publication.published * 1000);
+  document.getElementById('review-published').textContent = published.toISOString().slice(0, 10);
+  document.getElementById('review-reputation').textContent = '...';
+  const lat = publication.latitude;
+  const lon = publication.longitude;
+  if (reviewMap == null) {
+    reviewMap = L.map('review-map', { dragging: false });
+    reviewMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(reviewMap);
+    reviewMarker = L.marker([lat, lon]).addTo(reviewMap);
+  } else
+    reviewMarker.setLatLng([lat, lon]);
+  reviewMarker.bindPopup(lat + ', ' + lon);
+  reviewMap.setView([lat, lon], 18);
+  reviewMap.on('contextmenu', function(event) {
+    return false;
+  });
+  const reputation = document.getElementById('review-reputation');
+  fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error) {
+        app.dialog.alert(answer.error, 'Could not get reputation from judge.');
+        reputation.textContent = 'N/A';
+        reputation.style.color = 'red';
+      } else {
+        reputation.textContent = answer.reputation;
+        reputation.style.color = answer.endorsed ? 'blue' : 'red';
+      }
+    })
+    .catch((error) => {
+      app.dialog.alert(error, 'Failed to get reputation from judge.');
+      reputation.textContent = 'N/A';
+      reputation.style.color = 'red';
+    });
+  fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+    .then(response => response.json())
+    .then(answer => {
+      const address = answer.display_name;
+      reviewMarker.setPopupContent(
+        `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
+    });
+  review = publication;
+  console.log('review.signature = ' + review.signature);
+  reportComment = comment;
+  hide('home');
+  show('review');
+}
+
+async function getCitizen(reference, type, comment) {
+  if (type !== 'fingerprint' && type !== 'key') {
+    console.error('wrong citizen reference: ' + type);
+    return;
+  }
+  const parameter = (type === 'key') ? `key=${encodeURIComponent(reference)}` : `fingerprint=${reference}`;
+  fetch(`${notary}/api/publication.php?${parameter}`)
     .then(response => response.json())
     .then(async publication => {
+      console.log('publication.signature 1 = ' + publication.signature);
       document.getElementById('enter-me').value = '';
       enable('scan-me');
       enable('enter-me');
@@ -484,10 +597,15 @@ async function getCitizen(fingerprint) {
         app.dialog.alert(publication.error, 'Citizen search error');
         return;
       }
-      const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
-      const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
-      if (fingerprint !== sha1) {
-        app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
+      if (type === 'fingerprint') {
+        const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
+        const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
+        if (reference !== sha1) {
+          app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
+          return;
+        }
+      } else if (reference !== publication.key) {
+        app.dialog.alert('Key mismatch.', 'Citizen search error');
         return;
       }
       const signature = publication.signature;
@@ -509,64 +627,8 @@ async function getCitizen(fingerprint) {
         app.dialog.alert('Failed to verify app signature', 'Citizen search error');
         return;
       }
-      // let the user review the replaced citizen card
-      document.getElementById('review-title').textContent = 'Replace Citizen Card';
-      document.getElementById('review-former-check-item').classList.remove('display-none');
-      document.getElementById('review-confirm').textContent = 'Replace';
-      document.getElementById('review-warning').textContent =
-        'Warning: wrongly replacing a citizen card may affect your reputation.';
-      document.getElementById('review-picture').src = publication.picture;
-      document.getElementById('review-given-names').textContent = publication.givenNames;
-      document.getElementById('review-family-name').textContent = publication.familyName;
-      document.getElementById('review-coords').textContent = publication.latitude + ', ' + publication.longitude;
-      const published = new Date(publication.published * 1000);
-      document.getElementById('review-published').textContent = published.toISOString().slice(0, 10);
-      document.getElementById('review-reputation').textContent = '...';
-      const lat = publication.latitude;
-      const lon = publication.longitude;
-      if (reviewMap == null) {
-        reviewMap = L.map('review-map', { dragging: false });
-        reviewMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(reviewMap);
-        reviewMarker = L.marker([lat, lon]).addTo(reviewMap);
-      } else
-        reviewMarker.setLatLng([lat, lon]);
-      reviewMarker.bindPopup(lat + ', ' + lon);
-      reviewMap.setView([lat, lon], 18);
-      reviewMap.on('contextmenu', function(event) {
-        return false;
-      });
-      const reputation = document.getElementById('review-reputation');
-      fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
-        .then(response => response.json())
-        .then(answer => {
-          if (answer.error) {
-            app.dialog.alert(answer.error, 'Could not get reputation from judge.');
-            reputation.textContent = 'N/A';
-            reputation.style.color = 'red';
-          } else {
-            reputation.textContent = answer.reputation;
-            reputation.style.color = answer.endorsed ? 'blue' : 'red';
-          }
-        })
-        .catch((error) => {
-          app.dialog.alert(error, 'Failed to7 get reputation from judge.');
-          reputation.textContent = 'N/A';
-          reputation.style.color = 'red';
-        });
-      fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-        .then(response => response.json())
-        .then(answer => {
-          const address = answer.display_name;
-          reviewMarker.setPopupContent(
-            `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
-        });
-      review = publication;
-      reportComment = 'replaced';
-      hide('home');
-      show('review');
+      console.log('publication.signature 2 = ' + publication.signature);
+      reviewCitizen(publication, comment);
     });
 }
 
@@ -999,6 +1061,7 @@ function stopScanner(page) {
   show(page);
   QRScanner.hide(function(status) {
     QRScanner.destroy(function(status) {
+      console.log('Scanner destroyed.');
     });
   });
 }
@@ -1019,12 +1082,16 @@ function scan(callback) {
 
 function scanQRCode(error, contents, type) {
   stopScanner('home');
-  show(`${type}-page`);
-  enable(`scan-${type}`);
-  enable(`enter-${type}`);
+  if (type !== 'challenge') {
+    show(`${type}-page`);
+    enable(`scan-${type}`);
+    enable(`enter-${type}`);
+  }
   if (error) {
     if (error.name !== 'SCAN_CANCELED')
       alert(error._message);
+    if (type === 'challenge')
+      welcome();
     return;
   }
   if (type === 'challenge') {
@@ -1037,11 +1104,16 @@ function scanQRCode(error, contents, type) {
       app.dialog.alert(`Importing a citizen card from app "{$appUrl}" is not supported by your app`, 'Unsupported App');
       return;
     }
-    fetch(`https:${appUrl}/api/challenge?id=${challengeId}`)
+    fetch(`https://${appUrl}/api/challenge.php?id=${challengeId}`)
       .then(response => response.json())
       .then(async answer => {
         if (answer.error) {
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error');
+          console.error(answer.error);
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error', function() {
+            scan(function(error, contents) {
+              scanQRCode(error, contents, 'challenge');
+            });
+          });
           return;
         }
         const key = answer['key']; // FIXME: check key format
@@ -1049,87 +1121,19 @@ function scanQRCode(error, contents, type) {
         // verify
         const publicKey = await importKey(key);
         let bytes = base64ToByteArray(signature);
-        const challengeArrayBuffer = new TextEncoder().encode(encodeBase128(challengeBytes));
+        const challengeArrayBuffer = new TextEncoder().encode(challenge);
         challenge = '';
         let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
         if (!verify) {
           app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
           return;
         }
-        fetch(`${notary}/api/publication.php?key=` + encodeURIComponent(key))
-          .then(response => response.json())
-          .then(async other => {
-            console.log(other);
-            // verify citizen signature
-            const otherKey = await importKey(other.key);
-            let otherSignature = other.signature;
-            let otherAppSignature = other.appSignature;
-            other.appSignature = '';
-            other.signature = '';
-            bytes = base64ToByteArray(otherSignature);
-            let encoded = new TextEncoder().encode(JSON.stringify(other));
-            verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', otherKey, bytes, encoded);
-            if (!verify) {
-              app.dialog.alert('Cannot verify citizen signature on citizen card', 'Error verifying signature');
-              return;
-            }
-            // verify app signature
-            bytes = base64ToByteArray(otherAppSignature);
-            encoded = new TextEncoder().encode(otherSignature);
-            const binaryAppKey = await importKey(other.appKey);
-            verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', binaryAppKey, bytes, encoded);
-            if (!verify) {
-              app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
-              return;
-            }
-            // display citizen for user verification before endorsement or transfer
-            hide('endorse-page');
-            show('endorse-citizen');
-            document.getElementById('endorse-picture-check').checked = false;
-            document.getElementById('endorse-name-check').checked = false;
-            document.getElementById('endorse-adult-check').checked = false;
-            document.getElementById('endorse-coords-check').checked = false;
-            document.getElementById('endorse-picture').src = other.picture;
-            document.getElementById('endorse-family-name').textContent = other.familyName;
-            document.getElementById('endorse-given-names').textContent = other.givenNames;
-            const lat = other.latitude;
-            const lon = other.longitude;
-            document.getElementById('endorse-coords').textContent = lat + ', ' + lon;
-            let published = new Date(other.published * 1000);
-            document.getElementById('endorse-published').textContent = published.toISOString().slice(0, 10);
-            if (endorseMap == null) {
-              endorseMap = L.map('endorse-map', { dragging: false });
-              endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-              }).addTo(endorseMap);
-              endorseMarker = L.marker([lat, lon]).addTo(endorseMap);
-            } else
-              endorseMarker.setLatLng([lat, lon]);
-            endorseMarker.bindPopup(lat + ', ' + lon);
-            endorseMap.setView([lat, lon], 18);
-            endorseMap.on('contextmenu', function(event) {
-              return false;
-            });
-            fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-              .then(response => response.json())
-              .then(answer => {
-                const address = answer.display_name;
-                endorseMarker.setPopupContent(
-                  `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
-              });
-          });
+        getCitizen(key, 'key', 'transferred');
       });
   } else {
-    const binaryContents = decodeBase128(contents);
-    let fingerprint = '';
-    const hex = '0123456789abcdef';
-    for (let i = 0; i < 20; i++) {
-      const b = binaryContents[i];
-      fingerprint += hex[b >> 4] + hex[b & 15];
-    }
+    const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
     if (type === 'me')
-      getCitizen(fingerprint);
+      getCitizen(fingerprint, 'fingerprint', 'replaced');
     else
       getProposal(fingerprint, type);
   }
@@ -1284,25 +1288,31 @@ function onDeviceReady() {
   });
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
-    if (reportComment === 'replaced') {
+    if (reportComment === 'replaced')
       app.dialog.preloader('Replacing...');
-      previousSignature = citizen.signature;
-      Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-        citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
-        citizen.key = publicKey.slice(44, -6);
-        citizen.published = Math.trunc(new Date().getTime() / 1000);
-        citizen.givenNames = review.givenNames;
-        citizen.familyName = review.familyName;
-        citizen.picture = review.picture;
-        citizen.latitude = review.latitude;
-        citizen.longitude = review.longitude;
-        citizen.signature = '';
-        citizen.appKey = appKey;
-        citizen.appSignature = '';
-        localStorage.setItem('publicKey', citizen.key);
-        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
-      });
+    else if (reportComment === 'transferred')
+      app.dialog.preloader('Importing...');
+    else {
+      console.error('Unsupport reportComment in review-confirm button click: "' + reportComment + '"');
+      return;
     }
+    previousSignature = review.signature;
+    console.log('review.signature2 = ' + previousSignature);
+    Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+      citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
+      citizen.key = publicKey.slice(44, -6);
+      citizen.published = Math.trunc(new Date().getTime() / 1000);
+      citizen.givenNames = review.givenNames;
+      citizen.familyName = review.familyName;
+      citizen.picture = review.picture;
+      citizen.latitude = review.latitude;
+      citizen.longitude = review.longitude;
+      citizen.signature = '';
+      citizen.appKey = appKey;
+      citizen.appSignature = '';
+      localStorage.setItem('publicKey', citizen.key);
+      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
+    });
   });
 
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
@@ -1517,12 +1527,7 @@ function onDeviceReady() {
     const byteArray = decodeBase128(contents);
     if (byteArray.length !== 276)
       alert('Wrong byteArray size: ' + byteArray.length);
-    let fingerprint = '';
-    const hex = '0123456789abcdef';
-    for (let i = 0; i < 20; i++) {
-      const b = byteArray[i];
-      fingerprint += hex[b >> 4] + hex[b & 15];
-    }
+    const fingerprint = byteArrayToFingerprint(byteArray);
     let binarySignature = '';
     for (let i = 20; i < 276; i++)
       binarySignature += String.fromCharCode(byteArray[i]);
@@ -1760,7 +1765,7 @@ function onDeviceReady() {
       disable(`scan-${type}`);
       disable(`enter-${type}`);
       if (type === 'me')
-        getCitizen(value);
+        getCitizen(value, 'fingerprint', '');
       else
         getProposal(value, type);
     }
