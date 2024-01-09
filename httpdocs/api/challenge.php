@@ -4,7 +4,7 @@ if (!isset($_GET['id']))
 $id = intval($_GET['id']);
 require_once '../../php/database.php';
 $mysqli->query("DELETE FROM challenge WHERE published < (NOW() - INTERVAL 10 MINUTE)") or die($mysqli->error);
-$query = "SELECT `key`, signature FROM challenge WHERE id=$id";
+$query = "SELECT REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', ''), signature FROM challenge WHERE id=$id";
 $r = $mysqli->query($query) or die($mysqli->error);
 $challenge = $r->fetch_assoc();
 $r->free();
