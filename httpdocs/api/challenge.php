@@ -16,10 +16,12 @@ $r = $mysqli->query($query) or die($mysqli->error);
 $challenge = $r->fetch_assoc();
 $r->free();
 if ($challenge) {
+  $mysqli->query("LOCK TABLES response WRITE");
   $query = "INSERT INTO response(challenge, `key`, `signature`) VALUES($id, FROM_BASE64('$key=='), FROM_BASE64('$signature=='))";
   $mysqli->query($query) or die($mysqli->error);
   $file = fopen("../../challenges/$id", "w");
   fclose($file);
+  $mysqli->query("UNLOCK TABLES");
   $mysqli->close();
   die('{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}');
 }
