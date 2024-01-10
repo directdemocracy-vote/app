@@ -8,20 +8,19 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '34';
+const DIRECTDEMOCRACY_VERSION_BUILD = '35';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
   'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 const PRODUCTION_APP_KEY = // public key of the genuine app
-  TEST_APP_KEY;
+  // TEST_APP_KEY;
   // FIXME: restore this production key
-  /*
   'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
   'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
   '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
-*/
+
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
 let directDemocracyVersion =
@@ -417,7 +416,6 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   publish(citizen, signature, 'citizen card');
-  console.log('previousSignature = ' + previousSignature);
   if (previousSignature) {
     certificateToPublish = {
       schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -466,7 +464,6 @@ function welcome() {
       text: 'No',
       onClick: function() {
         function importCitizen() {
-          console.log('import citizen: scanning the export QR code...');
           scan(function(error, contents) {
             scanQRCode(error, contents, 'challenge');
           });
@@ -577,7 +574,6 @@ function reviewCitizen(publication, comment) { // comment may be either 'replace
         `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
     });
   review = publication;
-  console.log('review.signature = ' + review.signature);
   reportComment = comment;
   hide('home');
   show('review');
@@ -592,7 +588,6 @@ async function getCitizen(reference, type, comment) {
   fetch(`${notary}/api/publication.php?${parameter}`)
     .then(response => response.json())
     .then(async publication => {
-      console.log('publication.signature 1 = ' + publication.signature);
       document.getElementById('enter-me').value = '';
       enable('scan-me');
       enable('enter-me');
@@ -620,6 +615,7 @@ async function getCitizen(reference, type, comment) {
       let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
       if (!verify) {
         app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
+        console.log(publication);
         return;
       }
       publication.signature = signature;
@@ -630,7 +626,6 @@ async function getCitizen(reference, type, comment) {
         app.dialog.alert('Failed to verify app signature', 'Citizen search error');
         return;
       }
-      console.log('publication.signature 2 = ' + publication.signature);
       reviewCitizen(publication, comment);
     });
 }
@@ -1064,7 +1059,6 @@ function stopScanner(page) {
   show(page);
   QRScanner.hide(function(status) {
     QRScanner.destroy(function(status) {
-      console.log('Scanner destroyed.');
     });
   });
 }
@@ -1098,7 +1092,6 @@ function scanQRCode(error, contents, type) {
     return;
   }
   if (type === 'challenge') {
-    console.log('challenge contents = ' + contents);
     const contentsArray = contents.split(':');
     const appUrl = contentsArray[0]; // FIXME: check URL format
     const challengeId = parseInt(contentsArray[1]);
@@ -1300,7 +1293,6 @@ function onDeviceReady() {
       return;
     }
     previousSignature = review.signature;
-    console.log('review.signature2 = ' + previousSignature);
     Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
       citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
       citizen.key = publicKey.slice(44, -6);
