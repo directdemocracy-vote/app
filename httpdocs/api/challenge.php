@@ -9,7 +9,9 @@ $r = $mysqli->query($query) or die($mysqli->error);
 $challenge = $r->fetch_assoc();
 $r->free();
 $mysqli->close();
-if (!$challenge)
-  die('{"error":"challenge not found"}');
-die('{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}');
+if ($challenge) {
+  die('{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}');
+}
+die('{"error":"challenge not found"}');
+
 ?>
