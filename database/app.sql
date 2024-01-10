@@ -46,6 +46,7 @@ CREATE TABLE `response` (
 ALTER TABLE `response`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `signature` (`signature`) USING HASH;
+  ADD KEY `challenge` (`challenge`);
 
 ALTER TABLE `response`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
