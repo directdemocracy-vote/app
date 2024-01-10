@@ -18,7 +18,7 @@ $r->free();
 if ($challenge) {
   $query = "INSERT INTO response(challenge, `key`, `signature`) VALUES($id, FROM_BASE64('$key=='), FROM_BASE64('$signature=='))";
   $mysqli->query($query) or die($mysqli->error);
-  $file = fopen("../../challenges/$is", "w");
+  $file = fopen("../../challenges/$id", "w");
   fclose($file);
   $mysqli->close();
   die('{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}');
