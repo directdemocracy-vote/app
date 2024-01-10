@@ -8,8 +8,8 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '40';
-const DEBUGING = 0;
+const DIRECTDEMOCRACY_VERSION_BUILD = '44';
+const DEBUGING = 1;
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -251,7 +251,7 @@ function keystoreFailure(e) {
 }
 
 function challengeResponse(type, id, key, signature) {
-  fetch(`${app}/api/response.php?id=${id}&key=${key}&signature=${signature}`)
+  fetch(`https://app.directdemocracy.vote/api/response.php?id=${id}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(signature)}`)
     .then(response => response.json())
     .then(function(answer) {
       challengeResponseHandler(answer, type, id, key, signature);
@@ -446,12 +446,7 @@ async function publish(publication, signature, type) {
             document.getElementById('qrcode-image').src = qr.toDataURL();
             hide('home');
             show('qrcode');
-            if (type === 'transfer challenge')
-              transfer();
-            else if (type === 'endorse challenge')
-              challengeResponse(type, answer['id'], publication.key, publication.signature);
-            else
-              console.error('Unknown challenge: ' + type);
+            challengeResponse(type, answer['id'], publication.key, publication.signature);
           } else
             console.error('Unknown operation type: ' + type);
         }
@@ -1161,10 +1156,11 @@ async function scanQRCode(error, contents, type) {
     true, ['sign']);
     const exported = await crypto.subtle.exportKey('spki', k.publicKey);
     const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(0, -2);
-    console.log('key = ' + key);
-    const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeBytes);
-    const signature = btoa(String.fromCharCode.apply(null, s)).slice(0, -2);
-    console.log('signature = ' + signature);
+    challengeBytes = decodeBase128(challenge);
+    const challengeArrayBuffer = new TextEncoder().encode(challenge);
+    console.log(challengeArrayBuffer);
+    const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeArrayBuffer);
+    const signature = btoa(String.fromCharCode.apply(null, new Uint8Array(s))).slice(0, -2);
     fetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(signature)}`)
       .then(response => response.json())
       .then(async answer => {
