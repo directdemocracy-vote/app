@@ -9,6 +9,13 @@ require_once '../../php/sanitizer.php';
 $id = intval($_GET['id']);
 $key = sanitize_field($_GET['key'], 'base64', 'key');
 $signature = sanitize_field($_GET['signature'], 'base64', 'signature');
+require_once '../../php/database.php';
+$query = "SELECT id FROM challenge WHERE id=$id AND `key`=FROM_BASE64('$key==') AND `signature`=FROM_BASE64('$signature==')";
+$result = $mysqli->query($query) or die($mysqli->error);
+$challenge = $result->fetch_assoc();
+if (!$challenge)
+  die('{"error":"challenge not found"}');
+# from here we know that the request comes from the QR code owner client app
 $file = "../../challenges/$id";
 $counter = 0;
 while (!file_exists($file)) {
@@ -17,7 +24,6 @@ while (!file_exists($file)) {
   if ($counter >= 60) # die after one minute
     die('{"response":[]}');
 }
-require_once '../../php/database.php';
 $query = "SELECT REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature FROM response WHERE id=$id";
 $mysqli->query("LOCK TABLES response WRITE");
 $result = $mysqli->query($query) or die($mysqli->error);
