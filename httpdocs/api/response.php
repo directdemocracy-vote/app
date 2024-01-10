@@ -31,7 +31,7 @@ $response = [];
 $ids = '';
 while($r = $result->fetch_assoc())
   $response[] = $r;
-$r->free();
+$result->free();
 if (!$response) {
   $mysqli->query("UNLOCK TABLES");
   die('{"error":"missing response from database"}');
