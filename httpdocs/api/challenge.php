@@ -25,5 +25,4 @@ if ($challenge) {
 }
 $mysqli->close();
 die('{"error":"challenge not found"}');
-
 ?>
