@@ -20,17 +20,19 @@ while (!file_exists($file)) {
 require_once '../../php/database.php';
 $query = "SELECT REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature FROM response WHERE id=$id";
 $mysqli->query("LOCK TABLES response WRITE");
-$r = $mysqli->query($query) or die($mysqli->error);
-$answer = [];
+$result = $mysqli->query($query) or die($mysqli->error);
+$response = [];
 $ids = '';
-while($response = $r->fetch_assoc())
-  $answer[] = $response;
+while($r = $result->fetch_assoc())
+  $response[] = $r;
 $r->free();
-if ($answer) {
-  $mysqli->query("DELETE FROM response WHERE challenge=$id") or die($mysqli->error);
-  unlink($file);
+if (!$response) {
+  $mysqli->query("UNLOCK TABLES");
+  die('{"error":"missing response from database"}');
 }
+$mysqli->query("DELETE FROM response WHERE challenge=$id") or die($mysqli->error);
+unlink($file);
 $mysqli->query("UNLOCK TABLES");
 $mysqli->close();
-die('{"key":"'.$challenge['key'].'","signature":"'.$challenge['signature'].'"}');
+die('{"response":' . json_encode($response) . '}');
 ?>
