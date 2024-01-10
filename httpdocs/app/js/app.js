@@ -8,20 +8,19 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '37';
+const DIRECTDEMOCRACY_VERSION_BUILD = '40';
+const DEBUGING = 0;
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
   'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 const PRODUCTION_APP_KEY = // public key of the genuine app
-  TEST_APP_KEY;
-  // FIXME: restore this production key
-  /*
-  'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
-  'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
-  '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
-*/
+  DEBUGING ? TEST_APP_KEY
+    : 'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
+      'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
+      '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
+
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
 let directDemocracyVersion =
@@ -251,6 +250,55 @@ function keystoreFailure(e) {
   app.dialog.alert(e, 'Keystore failure');
 }
 
+function challengeResponse(type, id, key, signature) {
+  fetch(`${app}/api/response.php?id=${id}&key=${key}&signature=${signature}`)
+    .then(response => response.json())
+    .then(function(answer) {
+      challengeResponseHandler(answer, type, id, key, signature);
+    });
+}
+
+async function challengeResponseHandler(answer, type, id, key, signature) {
+  console.log(type + ' response: ');
+  console.log(answer);
+  if (answer.error) {
+    console.error(answer.error);
+    return;
+  }
+  let otherKey = '';
+  let otherSignature = '';
+  let verify = false;
+  for (const response in answer.response) {
+    // verify that the challenge was correctly signed.
+    otherKey = response['key'];
+    otherSignature = response['signature'];
+    const publicKey = await importKey(otherKey);
+    let bytes = base64ToByteArray(otherSignature);
+    const challengeArrayBuffer = new TextEncoder().encode(challenge);
+    const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
+    if (verify)
+      break;
+  }
+  if (!verify) {
+    challengeResponse(type, id, key, signature);
+    return;
+  }
+  // from here, I know the other guy by their key
+  challenge = '';
+  console.log('I know you are ' + otherKey);
+  if (type === 'transfer challenge') {
+    hide('qrcode');
+    show('home');
+    showPage('splash');
+    app.dialog.preloader('Transferring...');
+    transfer();
+  } else if (type === 'endorse challenge') {
+    console.log('ready to endorse ' + otherKey);
+    console.log('we should call getCitizen with this guy');
+  } else
+    console.error('Unknown challenge: ' + type);
+}
+
 function transfer() {
   const fingerprint = byteArrayToFingerprint(base64ToByteArray(localStorage.getItem('citizenFingerprint')));
   fetch(`${notary}/api/transferred.php?fingerprint=${fingerprint}`)
@@ -268,9 +316,7 @@ function transferred(answer) {
   if (!answer.transferred)
     transfer();
   else {
-    hide('qrcode');
-    show('home');
-    showPage('splash');
+    app.dialog.close(); // preloader
     app.dialog.alert('You successfully exported your citizen card.', 'Export Success');
     deleteCitizen();
   }
@@ -392,16 +438,20 @@ async function publish(publication, signature, type) {
                   localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
-          } else if (type === 'challenge') {
+          } else if (type.endsWith(' challenge')) {
             app.dialog.close(); // preloader
             const code = 'app.directdemocracy.vote:' + answer['id'] + ':' + encodeBase128(challengeBytes);
             console.log('code = ' + code);
             const qr = new QRious({ value: code, level: 'L', size: 1024, padding: 0 });
             document.getElementById('qrcode-image').src = qr.toDataURL();
-            document.getElementById('qrcode-message').textContent = 'Scan this code';
             hide('home');
             show('qrcode');
-            transfer();
+            if (type === 'transfer challenge')
+              transfer();
+            else if (type === 'endorse challenge')
+              challengeResponse(type, answer['id'], publication.key, publication.signature);
+            else
+              console.error('Unknown challenge: ' + type);
           } else
             console.error('Unknown operation type: ' + type);
         }
@@ -449,13 +499,12 @@ function publishParticipation(signature) {
   publish(participationToPublish, signature, 'participation');
 }
 
-function signChallenge(signature) {
-  const challengeToUpload = {
-    key: citizen.key,
-    signature: '',
-    appKey: appKey
-  };
-  publish(challengeToUpload, signature, 'challenge');
+function signEndorseChallenge(signature) {
+  publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'endorse challenge');
+}
+
+function signExportChallenge(signature) {
+  publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'transfer challenge');
 }
 
 function welcome() {
@@ -1079,7 +1128,7 @@ function scan(callback) {
   });
 }
 
-function scanQRCode(error, contents, type) {
+async function scanQRCode(error, contents, type) {
   stopScanner('home');
   if (type !== 'challenge') {
     show(`${type}-page`);
@@ -1095,14 +1144,28 @@ function scanQRCode(error, contents, type) {
   }
   if (type === 'challenge') {
     const contentsArray = contents.split(':');
-    const appUrl = contentsArray[0]; // FIXME: check URL format
+    const otherAppUrl = contentsArray[0];
     const challengeId = parseInt(contentsArray[1]);
     challenge = contentsArray[2];
-    if (appUrl !== 'app.directdemocracy.vote') {
-      app.dialog.alert(`Importing a citizen card from app "{$appUrl}" is not supported by your app`, 'Unsupported App');
+
+    if (otherAppUrl !== 'app.directdemocracy.vote') {
+      app.dialog.alert(`Importing a citizen card from app "{$otherAppUrl}" is not supported by your app`, 'Unsupported App');
       return;
     }
-    fetch(`https://${appUrl}/api/challenge.php?id=${challengeId}`)
+    // generate a key and sign the challenge
+    const k = await crypto.subtle.generateKey({
+      name: 'RSASSA-PKCS1-v1_5',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+      hash: 'SHA-256'},
+    true, ['sign']);
+    const exported = await crypto.subtle.exportKey('spki', k.publicKey);
+    const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(0, -2);
+    console.log('key = ' + key);
+    const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeBytes);
+    const signature = btoa(String.fromCharCode.apply(null, s)).slice(0, -2);
+    console.log('signature = ' + signature);
+    fetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(signature)}`)
       .then(response => response.json())
       .then(async answer => {
         if (answer.error) {
@@ -1235,11 +1298,11 @@ function onDeviceReady() {
 
   document.getElementById('export').addEventListener('click', function(event) {
     function exportCard() {
-      console.log('export card');
       app.dialog.preloader('Preparing QR Code...');
       challengeBytes = new Uint8Array(20);
       crypto.getRandomValues(challengeBytes);
-      Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signChallenge, keystoreFailure);
+      document.getElementById('qrcode-message').textContent = 'Scan this code';
+      Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signExportChallenge, keystoreFailure);
     }
     app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
       'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
@@ -1508,7 +1571,7 @@ function onDeviceReady() {
       const length = decodeBase128(contents).length;
       if (length !== 20)
         console.error(`Wrong challenge received, size is ${length} whereas it should be 20.`);
-      Keystore.sign(PRIVATE_KEY_ALIAS, contents, signChallenge, keystoreFailure);
+      Keystore.sign(PRIVATE_KEY_ALIAS, contents, signEndorseChallenge, keystoreFailure);
     });
   });
 
@@ -1618,19 +1681,11 @@ function onDeviceReady() {
   });
 
   document.getElementById('show-qrcode').addEventListener('click', function() {
-    const randomBytes = new Uint8Array(20);
-    crypto.getRandomValues(randomBytes);
-    challenge = encodeBase128(randomBytes);
-    const qr = new QRious({
-      value: challenge,
-      level: 'L',
-      size: 512,
-      padding: 0
-    });
-    document.getElementById('qrcode-image').src = qr.toDataURL();
+    app.dialog.preloader('Preparing QR Code...');
+    challengeBytes = new Uint8Array(20);
+    crypto.getRandomValues(challengeBytes);
     document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
-    hide('home');
-    show('qrcode');
+    Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signEndorseChallenge, keystoreFailure);
   });
 
   document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
