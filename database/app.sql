@@ -36,4 +36,18 @@ ALTER TABLE `challenge`
 ALTER TABLE `challenge`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+CREATE TABLE `response` (
+  `id` int(11) NOT NULL,
+  `challenge` int(11) NOT NULL,
+  `key` blob NOT NULL,
+  `signature` blob NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `response`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `signature` (`signature`) USING HASH;
+
+ALTER TABLE `response`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
 COMMIT;
