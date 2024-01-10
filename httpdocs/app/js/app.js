@@ -8,19 +8,20 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '35';
+const DIRECTDEMOCRACY_VERSION_BUILD = '37';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
   'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 const PRODUCTION_APP_KEY = // public key of the genuine app
-  // TEST_APP_KEY;
+  TEST_APP_KEY;
   // FIXME: restore this production key
+  /*
   'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
   'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
   '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
-
+*/
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
 let directDemocracyVersion =
@@ -268,7 +269,8 @@ function transferred(answer) {
     transfer();
   else {
     hide('qrcode');
-    show('splash');
+    show('home');
+    showPage('splash');
     app.dialog.alert('You successfully exported your citizen card.', 'Export Success');
     deleteCitizen();
   }
@@ -1284,6 +1286,7 @@ function onDeviceReady() {
   });
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
+    document.getElementById('review-former-check').checked = false;
     if (reportComment === 'replaced')
       app.dialog.preloader('Replacing...');
     else if (reportComment === 'transferred')
