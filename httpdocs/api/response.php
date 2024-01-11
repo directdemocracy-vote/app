@@ -24,7 +24,7 @@ while (!file_exists($file)) {
   if ($counter >= 60) # die after one minute
     die('{"response":[]}');
 }
-$query = "SELECT REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature FROM response WHERE id=$id";
+$query = "SELECT REPLACE(REPLACE(TO_BASE64(`key`), '\\n', ''), '=', '') AS `key`, REPLACE(REPLACE(TO_BASE64(signature), '\\n', ''), '=', '') AS signature FROM response WHERE challenge=$id";
 $mysqli->query("LOCK TABLES response WRITE");
 $result = $mysqli->query($query) or die($mysqli->error);
 $response = [];
