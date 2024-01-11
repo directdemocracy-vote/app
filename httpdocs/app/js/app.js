@@ -369,7 +369,7 @@ async function publish(publication, signature, type) {
           } else if (type === 'endorse') {
             app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-            show('citizens-page');
+            show('neighbors-page');
             for (let i in endorsements) { // remove if already in the endorsements list
               if (endorsements[i].signature === endorsed.signature) {
                 endorsements.splice(i, 1);
@@ -1666,7 +1666,7 @@ function onDeviceReady() {
           app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
           return;
         }
-        hide('citizens-page');
+        hide('neighbors-page');
       });
   }
 
@@ -1718,17 +1718,17 @@ function onDeviceReady() {
     welcome();
   });
 
-  let citizenSearch = document.getElementById('enter-me');
-  citizenSearch.addEventListener('keyup', function(event) {
+  let neighborSearch = document.getElementById('enter-me');
+  neighborSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
       searchFingerprint('me');
   });
-  citizenSearch.addEventListener('paste', function(event) {
+  neighborSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
     searchFingerprint('me');
   });
-  citizenSearch.addEventListener('input', function(event) {
+  neighborSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
       searchFingerprint('me');
   });
@@ -2208,7 +2208,7 @@ function updateEndorsements() {
       }).open();
     });
   });
-  let badge = document.getElementById('citizens-badge');
+  let badge = document.getElementById('neighbors-badge');
   badge.textContent = count;
   badge.style.display = (count === 0) ? 'none' : '';
 }
@@ -2229,7 +2229,7 @@ function showPage(page) {
     if (p !== page)
       hide(`${p}-page`);
   });
-  const cards = ['citizens', 'vote', 'sign'];
+  const cards = ['neighbors', 'vote', 'sign'];
   cards.forEach(function(i) {
     const tabbar = `tabbar-${i}`;
     if (page === 'card')
