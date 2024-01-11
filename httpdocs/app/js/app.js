@@ -79,8 +79,6 @@ let referendumButton = null;
 let review = null;
 let reviewMap = null;
 let reviewMarker = null;
-let endorseMap = null; // FIXME: remove this one
-let endorseMarker = null; // FIXME: remove this one
 let petitions = [];
 let referendums = [];
 let previousSignature = null;
@@ -371,10 +369,7 @@ async function publish(publication, signature, type) {
           } else if (type === 'endorse') {
             app.dialog.close(); // preloader
             app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-            hide('endorse-citizen');
-            show('endorse-page');
-            enable('endorse-confirm');
-            enable('endorse-cancel-confirm');
+            show('citizens-page');
             for (let i in endorsements) { // remove if already in the endorsements list
               if (endorsements[i].signature === endorsed.signature) {
                 endorsements.splice(i, 1);
@@ -1293,7 +1288,7 @@ function onDeviceReady() {
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
-      document.getElementById('tab-card-title').textContent = 'Update Citizen Card';
+      document.getElementById('tab-me-title').textContent = 'Update Citizen Card';
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
@@ -1383,17 +1378,28 @@ function onDeviceReady() {
   });
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
-    if (reportComment === 'replaced')
-      app.dialog.preloader('Replacing...');
-    else if (reportComment === 'transferred')
-      app.dialog.preloader('Importing...');
-    else if (reportComment === '')
+    if (reportComment === '') { // endorse
       app.dialog.preloader('Endorsing...');
-    else {
-      console.error('Unsupport reportComment in review-confirm button click: "' + reportComment + '"');
-      return;
-    }
-    if (reportComment !== '') {
+      certificateToPublish = {
+        schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+        key: citizen.key,
+        signature: '',
+        published: Math.trunc(new Date().getTime() / 1000),
+        appKey: appKey,
+        appSignature: '',
+        type: 'endorse',
+        publication: endorsed.signature
+      };
+      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+    } else {
+      if (reportComment === 'replaced')
+        app.dialog.preloader('Replacing...');
+      else if (reportComment === 'transferred')
+        app.dialog.preloader('Importing...');
+      else {
+        console.error('Unsupport reportComment in review-confirm button click: "' + reportComment + '"');
+        return;
+      }
       previousSignature = review.signature;
       Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
         citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
@@ -1410,8 +1416,7 @@ function onDeviceReady() {
         localStorage.setItem('publicKey', citizen.key);
         Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
       });
-    } else
-      console.log('Endorsing...');
+    }
   });
 
   document.getElementById('register-given-names').addEventListener('input', validateRegistration);
@@ -1548,7 +1553,7 @@ function onDeviceReady() {
     button.setAttribute('data-i18n', action);
     app.dialog.preloader(button.textContent);
     if (action === 'updating') {
-      document.getElementById('tab-card-title').textContent = translator.translate('become-citizen');
+      document.getElementById('tab-me-title').textContent = translator.translate('become-citizen');
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
@@ -1598,21 +1603,6 @@ function onDeviceReady() {
   document.getElementById('scan-qrcode').addEventListener('click', function() {
     scan(function(error, contents) {
       scanQRCode(error, contents, 'challenge');
-      /*
-      show('home');
-      hide('scanner');
-      if (error) {
-        if (error.name !== 'SCAN_CANCELED')
-          console.error(error.name);
-        stopScanner('home');
-        return;
-      }
-      stopScanner('home');
-      const length = decodeBase128(contents).length;
-      if (length !== 20)
-        console.error(`Wrong challenge received, size is ${length} whereas it should be 20.`);
-      Keystore.sign(PRIVATE_KEY_ALIAS, contents, signEndorseChallenge, keystoreFailure);
-    */
     });
   });
 
@@ -1676,41 +1666,7 @@ function onDeviceReady() {
           app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
           return;
         }
-        hide('endorse-page');
-        show('endorse-citizen');
-        document.getElementById('endorse-picture-check').checked = false;
-        document.getElementById('endorse-name-check').checked = false;
-        document.getElementById('endorse-adult-check').checked = false;
-        document.getElementById('endorse-coords-check').checked = false;
-        show('endorse-citizen');
-        document.getElementById('endorse-picture').src = endorsed.picture;
-        document.getElementById('endorse-family-name').textContent = endorsed.familyName;
-        document.getElementById('endorse-given-names').textContent = endorsed.givenNames;
-        const lat = endorsed.latitude;
-        const lon = endorsed.longitude;
-        document.getElementById('endorse-coords').textContent = lat + ', ' + lon;
-        let published = new Date(endorsed.published * 1000);
-        document.getElementById('endorse-published').textContent = published.toISOString().slice(0, 10);
-        if (endorseMap == null) {
-          endorseMap = L.map('endorse-map', { dragging: false });
-          endorseMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-          }).addTo(endorseMap);
-          endorseMarker = L.marker([lat, lon]).addTo(endorseMap);
-        } else
-          endorseMarker.setLatLng([lat, lon]);
-        endorseMarker.bindPopup(lat + ', ' + lon);
-        endorseMap.setView([lat, lon], 18);
-        endorseMap.on('contextmenu', function(event) {
-          return false;
-        });
-        fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-          .then(response => response.json())
-          .then(answer => {
-            const address = answer.display_name;
-            endorseMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
-          });
+        hide('citizens-page');
       });
   }
 
@@ -1727,33 +1683,6 @@ function onDeviceReady() {
     crypto.getRandomValues(challengeBytes);
     document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
     Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signEndorseChallenge, keystoreFailure);
-  });
-
-  document.getElementById('endorse-picture-check').addEventListener('change', updateEndorseConfirm);
-  document.getElementById('endorse-name-check').addEventListener('change', updateEndorseConfirm);
-  document.getElementById('endorse-adult-check').addEventListener('change', updateEndorseConfirm);
-  document.getElementById('endorse-coords-check').addEventListener('change', updateEndorseConfirm);
-
-  document.getElementById('endorse-cancel-confirm').addEventListener('click', function() {
-    hide('endorse-citizen');
-    show('endorse-page');
-  });
-
-  document.getElementById('endorse-confirm').addEventListener('click', function(event) {
-    app.dialog.preloader('Endorsing...');
-    disable(event.currentTarget);
-    disable('endorse-cancel-confirm');
-    certificateToPublish = {
-      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-      key: citizen.key,
-      signature: '',
-      published: Math.trunc(new Date().getTime() / 1000),
-      appKey: appKey,
-      appSignature: '',
-      type: 'endorse',
-      publication: endorsed.signature
-    };
-    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
   });
 
   document.getElementById('scan-me').addEventListener('click', function() {
@@ -1832,19 +1761,6 @@ function onDeviceReady() {
     if (event.currentTarget.value.length === 40)
       searchFingerprint('petition');
   });
-
-  function updateEndorseConfirm(event) {
-    disable('endorse-confirm');
-    if (!document.getElementById('endorse-picture-check').checked)
-      return;
-    if (!document.getElementById('endorse-name-check').checked)
-      return;
-    if (!document.getElementById('endorse-adult-check').checked)
-      return;
-    if (!document.getElementById('endorse-coords-check').checked)
-      return;
-    enable('endorse-confirm');
-  }
 
   function setNotary() {
     localStorage.setItem('notary', notary);
@@ -2292,7 +2208,7 @@ function updateEndorsements() {
       }).open();
     });
   });
-  let badge = document.getElementById('endorse-badge');
+  let badge = document.getElementById('citizens-badge');
   badge.textContent = count;
   badge.style.display = (count === 0) ? 'none' : '';
 }
@@ -2313,7 +2229,7 @@ function showPage(page) {
     if (p !== page)
       hide(`${p}-page`);
   });
-  const cards = ['endorse', 'vote', 'sign'];
+  const cards = ['citizens', 'vote', 'sign'];
   cards.forEach(function(i) {
     const tabbar = `tabbar-${i}`;
     if (page === 'card')
