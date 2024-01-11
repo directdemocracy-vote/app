@@ -8,7 +8,7 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '47';
+const DIRECTDEMOCRACY_VERSION_BUILD = '50';
 const DEBUGING = 1;
 
 const TEST_APP_KEY = // public key of the test app
@@ -64,11 +64,8 @@ if (!station) {
   localStorage.setItem('station', station);
 }
 let iAmEndorsedByJudge = false;
-let endorsed = null;
 let certificateToPublish = null;
 let endorsementToReport = null;
-let petitionSignature = null;
-let participationToPublish = null;
 let vote = null;
 let voteBytes = null;
 let blindInv = null;
@@ -274,6 +271,7 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
     if (verify)
       break;
+    console.error('Cannot verify signature for challenge: ' + challenge);
   }
   if (!verify) {
     challengeResponse(type, id, key, signature);
@@ -289,7 +287,8 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     transfer();
   } else if (type === 'endorse challenge') {
     console.log('ready to endorse ' + otherKey);
-    console.log('we should call getCitizen with this guy');
+    app.dialog.preloader('Getting Citizen...');
+    getCitizen(otherKey, 'key', '');
   } else
     console.error('Unknown challenge: ' + type);
 }
@@ -368,15 +367,17 @@ async function publish(publication, signature, type) {
             }
           } else if (type === 'endorse') {
             app.dialog.close(); // preloader
-            app.dialog.alert(`You successfully endorsed ${endorsed.givenNames} ${endorsed.familyName}`, 'Endorsement Success');
-            show('neighbors-page');
+            hide('review');
+            show('home');
+            document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbors tab
+            app.dialog.alert(`You successfully endorsed ${review.givenNames} ${review.familyName}`, 'Endorsement Success');
             for (let i in endorsements) { // remove if already in the endorsements list
-              if (endorsements[i].signature === endorsed.signature) {
+              if (endorsements[i].signature === review.signature) {
                 endorsements.splice(i, 1);
                 break;
               }
             }
-            endorsements.push(endorsed);
+            endorsements.push(review);
             updateEndorsements();
           } else if (type === 'petition signature') {
             app.dialog.close(); // preloader
@@ -472,22 +473,6 @@ async function publishCitizen(signature) {
 
 function publishCertificate(signature) {
   publish(certificateToPublish, signature, certificateToPublish.type);
-}
-
-function publishPetitionSignature(signature) {
-  publish(petitionSignature, signature, 'petition signature');
-}
-
-function publishParticipation(signature) {
-  publish(participationToPublish, signature, 'participation');
-}
-
-function signEndorseChallenge(signature) {
-  publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'endorse challenge');
-}
-
-function signExportChallenge(signature) {
-  publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'transfer challenge');
 }
 
 function welcome() {
@@ -586,7 +571,6 @@ function reviewCitizen(publication, comment) { // comment may be either 'replace
   } else
     console.error('Unsupported comment in reviewCitizen :"' + comment + '"');
   disable('review-confirm');
-  document.getElementById('review-page').scrollTop = 0; // FIXME: this doesn't seem to work on Android
   document.getElementById('review-picture').src = publication.picture;
   document.getElementById('review-given-names').textContent = publication.givenNames;
   document.getElementById('review-family-name').textContent = publication.familyName;
@@ -817,7 +801,7 @@ function addProposal(proposal, type, open) {
             enable(button);
             return;
           }
-          petitionSignature = {
+          const petitionSignature = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
             key: citizen.key,
             signature: '',
@@ -829,7 +813,9 @@ function addProposal(proposal, type, open) {
           };
           petitionButton = button;
           petitionProposal = proposal;
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(petitionSignature), publishPetitionSignature, keystoreFailure);
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(petitionSignature), function(signature) {
+            publish(petitionSignature, signature, 'petition signature');
+          }, keystoreFailure);
         });
     });
   } else { // referendum
@@ -889,7 +875,7 @@ function addProposal(proposal, type, open) {
         const binaryAppKey = await importKey(appKey);
         const blind = await rsaBlind(binaryAppKey, voteBytes);
         blindInv = blind.inv;
-        participationToPublish = {
+        const participationToPublish = {
           schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/participation.schema.json`,
           key: citizen.key,
           signature: '',
@@ -901,7 +887,9 @@ function addProposal(proposal, type, open) {
         };
         referendumButton = button;
         referendumProposal = proposal;
-        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), publishParticipation, keystoreFailure);
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), function(signature) {
+          publish(participationToPublish, signature, 'participation');
+        }, keystoreFailure);
       });
     });
   }
@@ -1141,6 +1129,35 @@ function scan(callback) {
   });
 }
 
+function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
+  const sig = signature.slice(0, -2);
+  fetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(sig)}`)
+    .then(response => response.json())
+    .then(async answer => {
+      if (answer.error) {
+        console.error(answer.error);
+        app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error', function() {
+          scan(function(error, contents) {
+            scanQRCode(error, contents, 'challenge', comment);
+          });
+        });
+        return;
+      }
+      const key = answer['key']; // FIXME: check key format
+      const signature = answer['signature']; // FIXME: check signature format
+      const publicKey = await importKey(key);
+      let bytes = base64ToByteArray(signature);
+      const challengeArrayBuffer = new TextEncoder().encode(challenge);
+      challenge = '';
+      let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
+      if (!verify) {
+        app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+        return;
+      }
+      getCitizen(key, 'key', comment);
+    });
+}
+
 async function scanQRCode(error, contents, type, comment = '') {
   stopScanner('home');
   if (type !== 'challenge') {
@@ -1166,44 +1183,25 @@ async function scanQRCode(error, contents, type, comment = '') {
       return;
     }
     app.dialog.preloader('Getting Citizen...');
-    // generate a key and sign the challenge
-    const k = await crypto.subtle.generateKey({
-      name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-      hash: 'SHA-256'},
-    true, ['sign']);
-    const exported = await crypto.subtle.exportKey('spki', k.publicKey);
-    const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
-    challengeBytes = decodeBase128(challenge);
-    const challengeArrayBuffer = new TextEncoder().encode(challenge);
-    const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeArrayBuffer);
-    const signature = btoa(String.fromCharCode.apply(null, new Uint8Array(s))).slice(0, -2);
-    fetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(signature)}`)
-      .then(response => response.json())
-      .then(async answer => {
-        if (answer.error) {
-          console.error(answer.error);
-          app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error', function() {
-            scan(function(error, contents) {
-              scanQRCode(error, contents, 'challenge', comment);
-            });
-          });
-          return;
-        }
-        const key = answer['key']; // FIXME: check key format
-        const signature = answer['signature']; // FIXME: check signature format
-        const publicKey = await importKey(key);
-        let bytes = base64ToByteArray(signature);
-        const challengeArrayBuffer = new TextEncoder().encode(challenge);
-        challenge = '';
-        let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
-        if (!verify) {
-          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-          return;
-        }
-        getCitizen(key, 'key', comment);
-      });
+    if (comment === 'transferred') { // generate a key and sign the challenge
+      const k = await crypto.subtle.generateKey({
+        name: 'RSASSA-PKCS1-v1_5',
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+        hash: 'SHA-256'},
+      true, ['sign']);
+      const exported = await crypto.subtle.exportKey('spki', k.publicKey);
+      const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
+      challengeBytes = decodeBase128(challenge);
+      const challengeArrayBuffer = new TextEncoder().encode(challenge);
+      const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeArrayBuffer);
+      const signature = btoa(String.fromCharCode.apply(null, new Uint8Array(s)));
+      sendChallenge(otherAppUrl, challengeId, key, signature, comment);
+    } else { // endorse with own key
+      Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
+        sendChallenge(otherAppUrl, challengeId, citizen.key, signature, comment);
+      }, keystoreFailure);
+    }
   } else {
     const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
     if (type === 'me')
@@ -1316,7 +1314,9 @@ function onDeviceReady() {
       crypto.getRandomValues(challengeBytes);
       challenge = encodeBase128(challengeBytes);
       document.getElementById('qrcode-message').textContent = 'Scan this code';
-      Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signExportChallenge, keystoreFailure);
+      Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
+        publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'transfer challenge');
+      }, keystoreFailure);
     }
     app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
       'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
@@ -1388,7 +1388,7 @@ function onDeviceReady() {
         appKey: appKey,
         appSignature: '',
         type: 'endorse',
-        publication: endorsed.signature
+        publication: review.signature
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     } else {
@@ -1606,83 +1606,20 @@ function onDeviceReady() {
     });
   });
 
-  function scanChallengeAnswer(error, contents) {
-    if (error) {
-      if (error.name !== 'SCAN_CANCELED')
-        console.error(error._message);
-      stopScanner('home');
-      return;
-    }
-    stopScanner('home');
-    if (contents.length !== 316)
-      alert('Wrong contents size: ' + contents.length);
-    const byteArray = decodeBase128(contents);
-    if (byteArray.length !== 276)
-      alert('Wrong byteArray size: ' + byteArray.length);
-    const fingerprint = byteArrayToFingerprint(byteArray);
-    let binarySignature = '';
-    for (let i = 20; i < 276; i++)
-      binarySignature += String.fromCharCode(byteArray[i]);
-    const signature = btoa(binarySignature).slice(0, -2);
-    // get endorsee from fingerprint
-    fetch(`${notary}/api/publication.php?fingerprint=${fingerprint}`)
-      .then(response => response.text())
-      .then(async answer => {
-        endorsed = JSON.parse(answer);
-        if (endorsed.hasOwnProperty('error')) {
-          app.dialog.alert(endorsed.error, 'Error getting citizen from notary');
-          return;
-        }
-        // verify challenge signature by endorsed
-        const publicKey = await importKey(endorsed.key);
-        let bytes = base64ToByteArray(signature); // FIXME: we should keep the signature as a byte array from the beginning
-        const challengeArrayBuffer = new TextEncoder().encode(challenge);
-        challenge = '';
-        let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
-        if (!verify) {
-          app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
-          return;
-        }
-        // verify citizen signature on citizen card of endorsed
-        let endorsedSignature = endorsed.signature;
-        let endorsedAppSignature = endorsed.appSignature;
-        endorsed.appSignature = '';
-        endorsed.signature = '';
-        bytes = base64ToByteArray(endorsedSignature);
-        let encoded = new TextEncoder().encode(JSON.stringify(endorsed));
-        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, encoded);
-        if (!verify) {
-          app.dialog.alert('Cannot verify citizen signature on citizen card', 'Error verifying signature');
-          return;
-        }
-        endorsed.signature = endorsedSignature;
-        endorsed.appSignature = endorsedAppSignature;
-        // verify app signature on citizen card of endorsed
-        bytes = base64ToByteArray(endorsedAppSignature);
-        encoded = new TextEncoder().encode(endorsedSignature);
-        const binaryAppKey = await importKey(endorsed.appKey);
-        verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', binaryAppKey, bytes, encoded);
-        if (!verify) {
-          app.dialog.alert('Cannot verify app signature on citizen card', 'Error verifying signature');
-          return;
-        }
-        hide('neighbors-page');
-      });
-  }
-
   document.getElementById('qrcode-cancel').addEventListener('click', function() {
     hide('qrcode');
     show('home');
-    if (challenge !== '')
-      scan(scanChallengeAnswer);
   });
 
   document.getElementById('show-qrcode').addEventListener('click', function() {
     app.dialog.preloader('Preparing QR Code...');
     challengeBytes = new Uint8Array(20);
     crypto.getRandomValues(challengeBytes);
+    challenge = encodeBase128(challengeBytes);
     document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
-    Keystore.sign(PRIVATE_KEY_ALIAS, encodeBase128(challengeBytes), signEndorseChallenge, keystoreFailure);
+    Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
+      publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'endorse challenge');
+    }, keystoreFailure);
   });
 
   document.getElementById('scan-me').addEventListener('click', function() {
