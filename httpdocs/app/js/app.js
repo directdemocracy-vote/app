@@ -644,6 +644,7 @@ function reviewCitizen(publication, comment) { // comment may be either 'replace
   reportComment = comment;
   hide('home');
   show('review');
+  document.getElementById('review-page').scrollTop = 0;
 }
 
 async function getCitizen(reference, type, comment) {
