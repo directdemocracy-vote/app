@@ -1427,16 +1427,16 @@ function onDeviceReady() {
       if (document.getElementById('review-died-check').checked)
         reportComment = 'died';
       if (document.getElementById('review-moved-check').checked)
-        reportComment = 'moved';
+        reportComment = 'address';
       if (document.getElementById('review-renamed-check').checked) {
         if (reportComment !== 'revoked')
           reportComment += '+';
-        reportComment += 'renamed';
+        reportComment += 'name';
       }
       if (document.getElementById('review-outdated-check').checked) {
         if (reportComment !== 'revoked')
           reportComment += '+';
-        reportComment += 'outdated';
+        reportComment += 'picture';
       }
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
