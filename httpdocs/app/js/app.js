@@ -551,7 +551,7 @@ function updateChecksDisplay(comment) {
     title = 'Revoke Citizen';
     confirm = 'Revoke';
     warning = 'Warning: wrongly revoking a citizen may affect your reputation';
-    checks = ['outdated', 'renamed', 'moved'];
+    checks = ['outdated', 'renamed', 'moved', 'died'];
     reviewCancel.classList.remove('color-red');
     reviewConfirm.classList.add('color-red');
   } else if (comment === '') {
@@ -1380,10 +1380,18 @@ function onDeviceReady() {
   document.getElementById('review-name-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-coords-check').addEventListener('click', endorsementChecks);
 
-  function revokeChecks() {
-    if (document.getElementById('review-moved-check').checked ||
-        document.getElementById('review-renamed-check').checked ||
-        document.getElementById('review-outdated-check').checked)
+  function revokeChecks(event) {
+    const died = document.getElementById('review-died-check');
+    const moved = document.getElementById('review-moved-check');
+    const renamed = document.getElementById('review-renamed-check');
+    const outdated = document.getElementById('review-outdated-check');
+    if (event.currentTarget === died && died.checked) {
+      moved.checked = false;
+      renamed.checked = false;
+      outdated.checked = false;
+    } else if (moved.checked || renamed.checked || outdated.checked)
+      died.checked = false;
+    if (moved.checked || renamed.checked || outdated.checked || died.checked)
       enable('review-confirm');
     else
       disable('review-confirm');
@@ -1391,6 +1399,7 @@ function onDeviceReady() {
   document.getElementById('review-moved-check').addEventListener('click', revokeChecks);
   document.getElementById('review-renamed-check').addEventListener('click', revokeChecks);
   document.getElementById('review-outdated-check').addEventListener('click', revokeChecks);
+  document.getElementById('review-died-check').addEventListener('click', revokeChecks);
 
   document.getElementById('review-cancel').addEventListener('click', function(event) {
     hide('review');
