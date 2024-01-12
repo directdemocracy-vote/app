@@ -46,7 +46,6 @@ let citizen = {
   longitude: 0
 };
 let citizenFingerprint = null;
-let citizenEndorsements = [];
 let endorsements = [];
 let notary = sanitizeWebservice(localStorage.getItem('notary'));
 if (!notary) {
@@ -286,7 +285,6 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     app.dialog.preloader('Exporting...');
     transfer();
   } else if (type === 'endorse challenge') {
-    console.log('ready to endorse ' + otherKey);
     app.dialog.preloader('Getting Citizen...');
     getCitizen(otherKey, 'key', '');
   } else
@@ -321,9 +319,7 @@ function deleteCitizen() {
   localStorage.removeItem('referendums');
   localStorage.removeItem('petitions');
   endorsements = [];
-  citizenEndorsements = [];
   updateEndorsements();
-  updateCitizenEndorsements();
   document.getElementById('register-given-names').value = '';
   document.getElementById('register-family-name').value = '';
   document.getElementById('register-picture').src = 'images/default-picture.png';
@@ -533,9 +529,42 @@ function welcome() {
   dialog.open();
 }
 
-function updateChecksDisplay(title, confirm, warning, checks) {
+function updateChecksDisplay(comment) {
+  const reviewConfirm = document.getElementById('review-confirm');
+  const reviewCancel = document.getElementById('review-cancel');
+  let title, confirm, warning, checks;
+  if (comment === 'replaced') {
+    title = 'Replace Citizen Card';
+    confirm = 'Replace';
+    warning = 'Warning: wrongly replacing a citizen may affect your reputation.';
+    checks = ['former'];
+    reviewCancel.classList.add('color-red');
+    reviewConfirm.classList.remove('color-red');
+  } else if (comment === 'transferred') {
+    title = 'Import Citizen Card';
+    confirm = 'Import';
+    warning = 'Warning: wrongly importing a citizen may affect your reputation';
+    checks = ['former'];
+    reviewCancel.classList.add('color-red');
+    reviewConfirm.classList.remove('color-red');
+  } else if (comment === 'revoked') {
+    title = 'Revoke Citizen';
+    confirm = 'Revoke';
+    warning = 'Warning: wrongly revoking a citizen may affect your reputation';
+    checks = ['outdated', 'renamed', 'moved'];
+    reviewCancel.classList.remove('color-red');
+    reviewConfirm.classList.add('color-red');
+  } else if (comment === '') {
+    title = 'Endorse Citizen';
+    confirm = 'Endorse';
+    warning = 'Warning: wrongly endorsing a citizen may affect your reputation';
+    checks = ['standing', 'adult', 'picture', 'name', 'coords'];
+    reviewCancel.classList.add('color-red');
+    reviewConfirm.classList.remove('color-red');
+  } else
+    console.error('Unsupported comment in citizen review:"' + comment + '"');
+  reviewConfirm.textContent = confirm;
   document.getElementById('review-title').textContent = title;
-  document.getElementById('review-confirm').textContent = confirm;
   document.getElementById('review-warning').textContent = warning;
   const children = document.getElementById('review-checklist').children;
   for (let i = 0; i < children.length; i++) {
@@ -550,26 +579,7 @@ function updateChecksDisplay(title, confirm, warning, checks) {
 }
 
 function reviewCitizen(publication, comment) { // comment may be either 'replaced' or 'transferred'
-  if (comment === 'replaced') {
-    updateChecksDisplay(
-      'Replace Citizen Card',
-      'Replace',
-      'Warning: wrongly replacing a citizen may affect your reputation.',
-      ['former']);
-  } else if (comment === 'transferred') {
-    updateChecksDisplay(
-      'Import Citizen Card',
-      'Import',
-      'Warning: wrongly importing a citizen may affect your reputation',
-      ['former']);
-  } else if (comment === '') {
-    updateChecksDisplay(
-      'Endorse Citizen',
-      'Endorse',
-      'Warning: wrongly endorsing a citizen may affect your reputation',
-      ['standing', 'adult', 'picture', 'name', 'coords']);
-  } else
-    console.error('Unsupported comment in reviewCitizen :"' + comment + '"');
+  updateChecksDisplay(comment);
   disable('review-confirm');
   document.getElementById('review-picture').src = publication.picture;
   document.getElementById('review-given-names').textContent = publication.givenNames;
@@ -1370,6 +1380,18 @@ function onDeviceReady() {
   document.getElementById('review-name-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-coords-check').addEventListener('click', endorsementChecks);
 
+  function revokeChecks() {
+    if (document.getElementById('review-moved-check').checked ||
+        document.getElementById('review-renamed-check').checked ||
+        document.getElementById('review-outdated-check').checked)
+      enable('review-confirm');
+    else
+      disable('review-confirm');
+  }
+  document.getElementById('review-moved-check').addEventListener('click', revokeChecks);
+  document.getElementById('review-renamed-check').addEventListener('click', revokeChecks);
+  document.getElementById('review-outdated-check').addEventListener('click', revokeChecks);
+
   document.getElementById('review-cancel').addEventListener('click', function(event) {
     hide('review');
     show('home');
@@ -1560,9 +1582,7 @@ function onDeviceReady() {
       localStorage.removeItem('referendums');
       localStorage.removeItem('petitions');
       endorsements = [];
-      citizenEndorsements = [];
       updateEndorsements();
-      updateCitizenEndorsements();
     }
     Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
       citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
@@ -1885,10 +1905,11 @@ function updateCitizenCard() {
   document.getElementById('citizen-published').textContent = published.toISOString().slice(0, 10);
   citizenFingerprint = atob(localStorage.getItem('citizenFingerprint'));
   getReputationFromJudge();
-  updateCitizenEndorsements();
+  updateEndorsements();
 }
 
 function downloadCitizen() {
+  app.dialog.preloader('Downloading Citizen...');
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -1907,7 +1928,6 @@ function downloadCitizen() {
         endorsements = answer.endorsements;
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
-        citizenEndorsements = answer.citizen_endorsements;
         updateCitizenCard();
         updateEndorsements();
         updateProposalLink();
@@ -1915,6 +1935,7 @@ function downloadCitizen() {
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
+        app.dialog.close(); // preloader
       }
     })
     .catch((error) => {
@@ -2015,44 +2036,111 @@ function updateProposals(proposals) {
   }
 }
 
-function updateCitizenEndorsements() {
-  let list = document.getElementById('citizen-endorsements-list');
+function updateEndorsements() {
+  let list = document.getElementById('endorsements-list');
   let badge = document.getElementById('reputation-badge');
   list.innerHTML = '';
-  if (citizenEndorsements.length === 0) {
+  if (endorsements.length === 0) {
     badge.style.background = 'red';
     badge.innerHTML = '!';
     return;
   }
-  let endorsementCount = citizenEndorsements.length;
+  let endorsementCount = endorsements.length;
   badge.textContent = endorsementCount;
-  const plural = (citizenEndorsements.length > 1) ? 'endorsements' : 'endorsement';
   newElement(
     list,
     'div',
     'block-title no-margin-left no-margin-right',
-    `${endorsementCount}/${citizenEndorsements.length} ${plural}`
+    `Your Neighbors: ${endorsementCount}/${endorsements.length}`
   );
   let medias = newElement(list, 'div', 'list media-list');
   let ul = newElement(medias, 'ul');
-  citizenEndorsements.forEach(function(endorsement) {
+  endorsements.forEach(function(endorsement) {
     let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right no-margin-left no-margin-right');
     let div = newElement(li, 'div', 'item-media');
     let img = newElement(div, 'img');
     img.src = endorsement.picture;
     img.style.width = '75px';
-    div = newElement(li, 'div', 'item-inner');
-    let a = newElement(div, 'a', 'link external display-block');
+    div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
+    let a = newElement(div, 'a', 'link external display-block align-self-flex-start');
     a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle', 'Endorsed you on: ' + t);
+    const day = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
+    let icon;
+    let otherDay;
+    let otherIcon;
+    if (endorsement.hasOwnProperty('reportedYou')) {
+      icon = 'arrow_right';
+      otherIcon = 'xmark';
+      otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
+    } else if (endorsement.hasOwnProperty('endorsedYou')) {
+      otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
+      if (otherDay === day) {
+        icon = 'arrow_right_arrow_left';
+        otherDay = false;
+        otherIcon = false;
+      } else {
+        icon = 'arrow_right';
+        otherIcon = 'arrow_left';
+      }
+    } else {
+      icon = 'arrow_right';
+      otherDay = false;
+      otherIcon = false;
+    }
+    let message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
+      `<i class="icon f7-icons" style="font-size:150%">${icon}</i> ` + day, true);
     message.style.fontSize = '82.353%';
+    if (otherDay) {
+      message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
+        `<i class="icon f7-icons" style="font-size:150%">${otherIcon}</i> ` + otherDay, true);
+      message.style.fontSize = '82.353%';
+    }
+    div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
+    div.style.width = '28px';
+    a = newElement(div, 'a', 'link');
+    let i = newElement(a, 'i', 'f7-icons', 'checkmark_seal_fill');
+    i.style.color = 'green';
+    let d = newElement(div, 'div', 'display-none', '...');
+    d.style.width = '28px';
+    d.style.textAlign = 'center';
+    d.style.fontSize = '90%';
+    d.style.fontWeight = 'bold';
+    d.style.color = 'green';
+    a.addEventListener('click', function() {
+      d.classList.remove('display-none');
+      fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(endorsement.key)}`)
+        .then(response => response.json())
+        .then(answer => {
+          if (answer.hasOwnProperty('error'))
+            console.error(answer.error);
+          else {
+            if (answer.hasOwnProperty('reputation')) {
+              const reputation = Math.round(100 * parseFloat(answer.reputation));
+              if (reputation >= 0 && reputation <= 100)
+                d.textContent = reputation + '%';
+              else
+                d.textContent = 'N/A';
+            }
+            if (answer.hasOwnProperty('trusted'))
+              d.style.color = answer.trusted ? 'green' : 'red';
+            else
+              d.style.color = 'grey';
+          }
+        });
+    });
+    a = newElement(div, 'a', 'link');
+    i = newElement(a, 'i', 'f7-icons', 'doc_text_search');
+    a.addEventListener('click', function() {
+      app.dialog.preloader('Getting Citizen...');
+      getCitizen(endorsement.key, 'key', 'revoked');
+    });
   });
 }
 
+/*
 function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
   list.innerHTML = ''; // clear
@@ -2072,7 +2160,8 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle', 'Endorsed: ' + t);
+    let message = newElement(div, 'div', 'item-subtitle',
+      '<i class="icon f7-icons" style="font-size:150%">arrow_left</i> ' + t, true);
     message.style.fontSize = '82.353%';
     let d = newElement(div, 'div', 'item-label text-align-right');
     a = newElement(d, 'a', 'link', 'Report');
@@ -2149,6 +2238,7 @@ function updateEndorsements() {
   badge.textContent = count;
   badge.style.display = (count === 0) ? 'none' : '';
 }
+*/
 
 // show either:
 // 1. the register page when the citizen has not yet registered
@@ -2205,7 +2295,7 @@ function hide(item) {
   addClass(item, 'display-none');
 }
 
-function newElement(parent, type, classes, textContent) {
+function newElement(parent, type, classes, content, innerHTML) {
   let element = document.createElement(type);
   if (parent)
     parent.appendChild(element);
@@ -2215,8 +2305,12 @@ function newElement(parent, type, classes, textContent) {
       element.classList.add(c);
     });
   }
-  if (typeof textContent !== 'undefined')
-    element.textContent = textContent;
+  if (typeof content !== 'undefined') {
+    if (innerHTML === true)
+      element.innerHTML = content;
+    else
+      element.textContent = content;
+  }
   return element;
 }
 

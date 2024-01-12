@@ -94,6 +94,15 @@
           <div id="review-map" style="width:100%;height:400px"></div>
           <div class="block list margin-top-half">
             <ul id="review-checklist">
+              <li id="review-former-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-former-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This is my former citizen card.</div>
+                  </div>
+                </label>
+              </li>
               <li id="review-standing-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
                   <input type="checkbox" id="review-standing-check">
@@ -109,15 +118,6 @@
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
                     <div class="item-title margin-left-half">This person is an adult.</div>
-                  </div>
-                </label>
-              </li>
-              <li id="review-former-check-item" class="display-none">
-                <label class="checkbox no-ripple item-content">
-                  <input type="checkbox" id="review-former-check">
-                  <i class="icon icon-checkbox"></i>
-                  <div class="item-inner">
-                    <div class="item-title margin-left-half">This is my former citizen card.</div>
                   </div>
                 </label>
               </li>
@@ -148,10 +148,37 @@
                   </div>
                 </label>
               </li>
+              <li id="review-moved-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-moved-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person has moved.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-renamed-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-renamed-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person was renamed.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-outdated-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-outdated-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This ID picture is outdated.</div>
+                  </div>
+                </label>
+              </li>
             </ul>
             <div class="grid grid-cols-2 grid-gap margin-top-half">
               <button class="button button-fill disabled" id="review-confirm"></button>
-              <button class="button button-fill color-red" id="review-cancel">Cancel</button>
+              <button class="button button-fill" id="review-cancel">Cancel</button>
             </div>
             <div id="review-warning" class="item-label display-flex justify-content-center margin-top-half"
               style="width:100%">
@@ -364,13 +391,8 @@
                   <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
-              <div id="citizen-endorsements-list"></div>
-              <div class="no-margin-left no-margin-right block-title">Your Neighbors</div>
-              <div id="neightborsS"
-                class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
+              <div id="endorsements-list">
               </div>
-            </div>
-            <div id="endorsements-list">
             </div>
           </swiper-slide>
           <swiper-slide class="tab page-content" id="tab-vote">
