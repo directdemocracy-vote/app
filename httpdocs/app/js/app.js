@@ -1422,6 +1422,35 @@ function onDeviceReady() {
         publication: review.signature
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+    } else if (reportComment === 'revoked') {
+      app.dialog.preloader('Revoking...');
+      if (document.getElementById('review-died-check').checked)
+        reportComment = 'died';
+      if (document.getElementById('review-moved-check').checked)
+        reportComment = 'moved';
+      if (document.getElementById('review-renamed-check').checked) {
+        if (reportComment !== 'revoked')
+          reportComment += '+';
+        reportComment += 'renamed';
+      }
+      if (document.getElementById('review-outdated-check').checked) {
+        if (reportComment !== 'revoked')
+          reportComment += '+';
+        reportComment += 'outdated';
+      }
+      certificateToPublish = {
+        schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+        key: citizen.key,
+        signature: '',
+        published: Math.trunc(new Date().getTime() / 1000),
+        appKey: appKey,
+        appSignature: '',
+        type: 'report',
+        publication: review.signature,
+        comment: reportComment
+      };
+      reportComment = '';
+      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     } else {
       if (reportComment === 'replaced')
         app.dialog.preloader('Replacing...');
