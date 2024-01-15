@@ -64,7 +64,6 @@ if (!station) {
 }
 let iAmEndorsedByJudge = false;
 let certificateToPublish = null;
-let endorsementToReport = null;
 let vote = null;
 let voteBytes = null;
 let blindInv = null;
@@ -390,13 +389,8 @@ async function publish(publication, signature, type) {
               deleteCitizen();
             } else if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
               app.dialog.close(); // preloader
-              app.dialog.alert(
-                `You successfully reported ${endorsementToReport.givenNames} ${endorsementToReport.familyName}`,
-                'Report Success');
-              endorsements.splice(endorsements.indexOf(endorsementToReport), 1); // remove it from list
-              endorsementToReport.published = certificateToPublish.published; // set the recovation date
-              endorsements.push(endorsementToReport); // add it at the end of the list
-              updateEndorsements();
+              app.dialog.alert(`You successfully revoked ${review.givenNames} ${review.familyName}`,
+                'Revoke Success', refreshEndorsements);
             }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
@@ -1423,34 +1417,41 @@ function onDeviceReady() {
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     } else if (reportComment === 'revoked') {
-      app.dialog.preloader('Revoking...');
-      if (document.getElementById('review-died-check').checked)
-        reportComment = 'died';
-      if (document.getElementById('review-moved-check').checked)
-        reportComment = 'address';
-      if (document.getElementById('review-renamed-check').checked) {
-        if (reportComment !== 'revoked')
-          reportComment += '+';
-        reportComment += 'name';
-      }
-      if (document.getElementById('review-outdated-check').checked) {
-        if (reportComment !== 'revoked')
-          reportComment += '+';
-        reportComment += 'picture';
-      }
-      certificateToPublish = {
-        schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-        key: citizen.key,
-        signature: '',
-        published: Math.trunc(new Date().getTime() / 1000),
-        appKey: appKey,
-        appSignature: '',
-        type: 'report',
-        publication: review.signature,
-        comment: reportComment
-      };
-      reportComment = '';
-      Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+      app.dialog.confirm('Revoking a neighbor will delete it from your neighbor list, are you sure you want to proceed?',
+        'Revoke Neighbor?', function() {
+          app.dialog.preloader('Revoking...');
+          if (document.getElementById('review-died-check').checked)
+            reportComment = 'died';
+          else {
+            if (document.getElementById('review-moved-check').checked)
+              reportComment = 'address';
+            if (document.getElementById('review-renamed-check').checked) {
+              if (reportComment === 'revoked')
+                reportComment = 'name';
+              else
+                reportComment += '+name';
+            }
+            if (document.getElementById('review-outdated-check').checked) {
+              if (reportComment === 'revoked')
+                reportComment = 'picture';
+              else
+                reportComment += '+picture';
+            }
+          }
+          certificateToPublish = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: Math.trunc(new Date().getTime() / 1000),
+            appKey: appKey,
+            appSignature: '',
+            type: 'report',
+            publication: review.signature,
+            comment: reportComment
+          };
+          reportComment = '';
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+        });
     } else {
       if (reportComment === 'replaced')
         app.dialog.preloader('Replacing...');
@@ -1978,6 +1979,36 @@ function downloadCitizen() {
     })
     .catch((error) => {
       app.dialog.alert('Cannot connect to the notary.<br>Please try again.', 'Citizen Error');
+      console.error(error);
+    });
+}
+
+function refreshEndorsements() {
+  app.dialog.preloader('Updating Neighbors...');
+  fetch(`${notary}/api/citizen.php`, {
+    method: 'POST',
+    headers: {
+      'directdemocracy-version': directDemocracyVersion,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
+  })
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error)
+        app.dialog.alert(answer.error + '.<br>Please try again.', 'Neighbors Update Error');
+      else {
+        endorsements = answer.endorsements;
+        if (endorsements.error)
+          app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
+        updateEndorsements();
+        hide('review');
+        show('home');
+        app.dialog.close(); // preloader
+      }
+    })
+    .catch((error) => {
+      app.dialog.alert('Cannot connect to the notary.<br>Please try again.', 'Neighbors Update Error');
       console.error(error);
     });
 }
