@@ -466,7 +466,6 @@ function publishCertificate(signature) {
 }
 
 function welcome() {
-  console.log('welcome');
   console.crash();
   let dialog = app.dialog.create({
     title: 'Welcome to directdemocracy!',
@@ -545,16 +544,16 @@ function updateChecksDisplay(comment) {
     reviewCancel.classList.add('color-red');
     reviewConfirm.classList.remove('color-red');
   } else if (comment === 'revoked') {
-    title = 'Revoke Citizen';
+    title = 'Revoke Neighbor';
     confirm = 'Revoke';
-    warning = 'Warning: wrongly revoking a citizen may affect your reputation';
+    warning = 'Warning: wrongly revoking a neighbor may affect your reputation';
     checks = ['outdated', 'renamed', 'moved', 'died'];
     reviewCancel.classList.remove('color-red');
     reviewConfirm.classList.add('color-red');
   } else if (comment.startsWith('revoked+')) { // already revoked
-    title = 'Review Citizen';
+    title = 'Review Neighbot';
     confirm = '';
-    warning = 'You already revoked this citizen (';
+    warning = 'You already revoked this neighbor (';
     if (comment.search('address') !== -1)
       warning += 'moved, ';
     if (comment.search('name') !== -1)
@@ -567,6 +566,13 @@ function updateChecksDisplay(comment) {
     checks = [];
     cancel = 'Close';
     reviewCancel.classList.remove('color-red');
+  } else if (comment === 'report') {
+    title = 'Report Neighborg';
+    confirm = 'Report';
+    warning = 'Warning: wrongly reporting a citizen may affect your reputation';
+    checks = ['report_address', 'report_name', 'report_picture', 'report_dead', 'report_other'];
+    reviewCancel.classList.remove('color-red');
+    reviewConfirm.classList.add('color-red');
   } else if (comment === '') {
     title = 'Endorse Citizen';
     confirm = 'Endorse';
@@ -596,7 +602,7 @@ function updateChecksDisplay(comment) {
   }
 }
 
-// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked' or 'revoked+...' (already revoked)
+// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked', 'revoked+...' (already revoked) or 'report'
 function reviewCitizen(publication, comment) {
   updateChecksDisplay(comment);
   disable('review-confirm');
@@ -1136,13 +1142,10 @@ async function getProposal(fingerprint, type) {
 }
 
 function stopScanner(page) {
-  console.log('stopScanner 1');
   hide('scanner');
   show(page);
-  console.log('stopScanner 2');
   QRScanner.hide(function(status) {
     QRScanner.destroy(function(status) {
-      console.log('stopScanner 3');
     });
   });
 }
@@ -1238,6 +1241,8 @@ async function scanQRCode(error, contents, type, comment = '') {
     const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
     if (type === 'me')
       getCitizen(fingerprint, 'fingerprint', 'replaced');
+    else if (type === 'neighbors')
+      getCitizen(fingerprint, 'fingerprint', 'report');
     else
       getProposal(fingerprint, type);
   }
@@ -1423,6 +1428,37 @@ function onDeviceReady() {
   document.getElementById('review-renamed-check').addEventListener('click', revokeChecks);
   document.getElementById('review-outdated-check').addEventListener('click', revokeChecks);
   document.getElementById('review-died-check').addEventListener('click', revokeChecks);
+
+  function reportChecks(event) {
+    const address = document.getElementById('review-report_address-check');
+    const name = document.getElementById('review-report_name-check');
+    const picture = document.getElementById('review-report_picture-check');
+    const dead = document.getElementById('review-report_dead-check');
+    const other = document.getElementById('review-report_other-check');
+    if (event.currentTarget === dead && dead.checked) {
+      address.checked = false;
+      name.checked = false;
+      picture.checked = false;
+      other.checked = false;
+    } else if (event.currentTarget === other && other.checked) {
+      address.checked = false;
+      name.checked = false;
+      picture.checked = false;
+      dead.checked = false;
+    } else if (address.checked || name.checked || picture.checked) {
+      dead.checked = false;
+      other.checked = false;
+    }
+    if (address.checked || name.checked || picture.checked || dead.checked || other.checked)
+      enable('review-confirm');
+    else
+      disable('review-confirm');
+  }
+  document.getElementById('review-report_address-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_name-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_picture-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_dead-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_other-check').addEventListener('click', reportChecks);
 
   document.getElementById('review-cancel').addEventListener('click', function(event) {
     hide('review');
@@ -1711,6 +1747,15 @@ function onDeviceReady() {
     });
   });
 
+  document.getElementById('scan-neighbors').addEventListener('click', function() {
+    hide('neighbors-page');
+    disable('scan-neighbors');
+    disable('enter-neighbors');
+    scan(function(error, contents) {
+      scanQRCode(error, contents, 'neighbors');
+    });
+  });
+
   document.getElementById('scan-referendum').addEventListener('click', function() {
     hide('referendum-page');
     disable('scan-referendum');
@@ -1735,19 +1780,34 @@ function onDeviceReady() {
     welcome();
   });
 
-  let neighborSearch = document.getElementById('enter-me');
-  neighborSearch.addEventListener('keyup', function(event) {
+  const meSearch = document.getElementById('enter-me');
+  meSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
       searchFingerprint('me');
   });
-  neighborSearch.addEventListener('paste', function(event) {
+  meSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
+    event.currentTarget.value = event.clipboardData.getData('text');
     searchFingerprint('me');
   });
-  neighborSearch.addEventListener('input', function(event) {
+  meSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
       searchFingerprint('me');
+  });
+
+  const neighborsSearch = document.getElementById('enter-neighbors');
+  neighborsSearch.addEventListener('keyup', function(event) {
+    if (event.key === 'Enter')
+      searchFingerprint('neighbors');
+  });
+  neighborsSearch.addEventListener('paste', function(event) {
+    event.preventDefault();
+    event.currentTarget.value = event.clipboardData.getData('text');
+    searchFingerprint('neighbors');
+  });
+  neighborsSearch.addEventListener('input', function(event) {
+    if (event.currentTarget.value.length === 40)
+      searchFingerprint('neighbors');
   });
 
   let referendumSearch = document.getElementById('enter-referendum');
@@ -1757,21 +1817,22 @@ function onDeviceReady() {
   });
   referendumSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
+    event.currentTarget.value = event.clipboardData.getData('text');
     searchFingerprint('referendum');
   });
   referendumSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
       searchFingerprint('referendum');
   });
-  let petitionSearch = document.getElementById('enter-petition');
+
+  const petitionSearch = document.getElementById('enter-petition');
   petitionSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
       searchFingerprint('petition');
   });
   petitionSearch.addEventListener('paste', function(event) {
     event.preventDefault();
-    event.currentTarget.value = (event.clipboardData || window.clipboardData).getData('text');
+    event.currentTarget.value = event.clipboardData.getData('text');
     searchFingerprint('petition');
   });
   petitionSearch.addEventListener('input', function(event) {
@@ -1941,7 +2002,7 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-citizen').setAttribute('href', `${notary}?tab=citizens&me=true`);
+  document.getElementById('search-neighbors').setAttribute('href', `${notary}?tab=citizens&me=true`);
   document.getElementById('search-petition').setAttribute('href',
     `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   document.getElementById('search-referendum').setAttribute('href',
@@ -2249,106 +2310,6 @@ function updateEndorsements() {
     });
   });
 }
-
-/*
-function updateEndorsements() {
-  let list = document.getElementById('endorsements-list');
-  list.innerHTML = ''; // clear
-  let count = 0;
-  let medias = newElement(list, 'div', 'list media-list block');
-  let ul = newElement(medias, 'ul');
-  endorsements.forEach(function(endorsement) {
-    let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right no-margin-left no-margin-right');
-    let div = newElement(li, 'div', 'item-media');
-    let img = newElement(div, 'img');
-    img.src = endorsement.picture;
-    img.style.width = '75px';
-    div = newElement(li, 'div', 'item-inner');
-    let a = newElement(div, 'a', 'link external display-block');
-    a.href = `${notary}/citizen.html?signature=${encodeURIComponent(endorsement.signature)}&judge=${judge}`;
-    a.target = '_blank';
-    newElement(a, 'div', 'item-title', endorsement.givenNames);
-    newElement(a, 'div', 'item-title', endorsement.familyName);
-    const t = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
-    let message = newElement(div, 'div', 'item-subtitle',
-      '<i class="icon f7-icons" style="font-size:150%">arrow_left</i> ' + t, true);
-    message.style.fontSize = '82.353%';
-    let d = newElement(div, 'div', 'item-label text-align-right');
-    a = newElement(d, 'a', 'link', 'Report');
-    a.href = '#';
-    a.style.fontWeight = 'bold';
-    a.style.textTransform = 'uppercase';
-    a.addEventListener('click', function() {
-      function report() {
-        disable(a);
-        message.style.color = 'red';
-        message.textContent = 'Reporting, please wait...';
-        certificateToPublish = {
-          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-          key: citizen.key,
-          signature: '',
-          published: Math.trunc(new Date().getTime() / 1000),
-          appKey: appKey,
-          appSignature: '',
-          type: 'report',
-          publication: endorsement.signature
-        };
-        endorsementToReport = endorsement;
-        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-      }
-      const text = '<p class="text-align-left">' +
-          'You should report only a citizen who has died, or has erroneous information on their citizen card, ' +
-          'for example because they moved, got married and changed their name or ' +
-          "have an ID picture that doesn't ressemble them any more. " +
-          'This might affect their ability to vote. Do you really want to report this citizen?' +
-          `</p><p class="text-align-center"><b>${endorsement.givenNames}<br>${endorsement.familyName}</b></p><p>` +
-          'Please type <b>I understand</b> here:' +
-          '</p>';
-      app.dialog.create({
-        title: 'Report Citizen',
-        text,
-        content: '<div class="dialog-input-field input"><input type="text" class="dialog-input"></div>',
-        buttons: [{
-          text: app.params.dialog.buttonCancel,
-          keyCodes: app.keyboardActions ? [27] : null
-        },
-        {
-          text: app.params.dialog.buttonOk,
-          bold: true,
-          keyCodes: app.keyboardActions ? [13] : null
-        }],
-        destroyOnClose: true,
-        onClick: function(dialog, index) {
-          if (index === 1) // OK
-            report();
-        },
-        on: {
-          open: function(d) {
-            let input = d.$el.find('.dialog-input')[0];
-            let okButton = d.$el.find('.dialog-button')[1];
-            disable(okButton);
-            input.addEventListener('input', function(event) {
-              if (event.target.value === 'I understand')
-                enable(okButton);
-              else
-                disable(okButton);
-            });
-            input.addEventListener('change', function(event) {
-              if (event.target.value === 'I understand') {
-                d.close();
-                report();
-              }
-            });
-          }
-        }
-      }).open();
-    });
-  });
-  let badge = document.getElementById('neighbors-badge');
-  badge.textContent = count;
-  badge.style.display = (count === 0) ? 'none' : '';
-}
-*/
 
 // show either:
 // 1. the register page when the citizen has not yet registered

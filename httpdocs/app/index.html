@@ -185,6 +185,58 @@
                   </div>
                 </label>
               </li>
+              <li id="review-report_address-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_address-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The address is wrong.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_name-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_name-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The name is wrong.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_picture-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_picture-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">The picture is wrong.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_dead-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_dead-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person is dead.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_other-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_other-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">Something else is wrong:</div>
+                  </div>
+                </label>
+                <div class="item-inner">
+                  <div class="item-title item-label">Explain what's wrong here</div>
+                  <div class="item-input-wrap">
+                    <input id="enter-me" type="text" size="40" maxlength="40">
+                    <span class="input-clear-button"></span>
+                  </div>
+                </div>
+              </li>
             </ul>
             <div class="display-flex margin-top-half">
               <button class="button button-fill margin-right-half margin-left-half disabled"
@@ -385,20 +437,20 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Report a Citizen</div>
+                        <div class="item-title item-label">Report a Neighbor</div>
                         <div class="item-input-wrap">
-                          <input id="enter-citizen" type="text" size="40" maxlength="40"
+                          <input id="enter-neighbors" type="text" size="40" maxlength="40"
                             placeholder="Paste citizen reference here">
                           <span class="input-clear-button"></span>
                         </div>
                         <div class="item-input-info">
-                          Search neighbors <a id="search-citizen" class="link external" target="_blank">online</a>
+                          Search neighbors <a id="search-neighbors" class="link external" target="_blank">online</a>
                         </div>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button id="scan-citizen" class="button" style="width:5%">
+                <button id="scan-neighbors" class="button" style="width:5%">
                   <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
