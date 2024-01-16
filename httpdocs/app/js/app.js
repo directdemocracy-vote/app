@@ -8,7 +8,7 @@ const TESTING = false;
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '50';
+const DIRECTDEMOCRACY_VERSION_BUILD = '51';
 const DEBUGING = 1;
 
 const TEST_APP_KEY = // public key of the test app
@@ -466,6 +466,8 @@ function publishCertificate(signature) {
 }
 
 function welcome() {
+  console.log('welcome');
+  console.crash();
   let dialog = app.dialog.create({
     title: 'Welcome to directdemocracy!',
     text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
@@ -527,6 +529,7 @@ function updateChecksDisplay(comment) {
   const reviewConfirm = document.getElementById('review-confirm');
   const reviewCancel = document.getElementById('review-cancel');
   let title, confirm, warning, checks;
+  let cancel = 'Cancel';
   if (comment === 'replaced') {
     title = 'Replace Citizen Card';
     confirm = 'Replace';
@@ -548,6 +551,22 @@ function updateChecksDisplay(comment) {
     checks = ['outdated', 'renamed', 'moved', 'died'];
     reviewCancel.classList.remove('color-red');
     reviewConfirm.classList.add('color-red');
+  } else if (comment.startsWith('revoked+')) { // already revoked
+    title = 'Review Citizen';
+    confirm = '';
+    warning = 'You already revoked this citizen (';
+    if (comment.search('address') !== -1)
+      warning += 'moved, ';
+    if (comment.search('name') !== -1)
+      warning += 'renamed, ';
+    if (comment.search('picture') !== -1)
+      warning += 'outdated picture, ';
+    if (comment.search('died') !== -1)
+      warning += 'died, ';
+    warning = warning.slice(0, -2) + ')';
+    checks = [];
+    cancel = 'Close';
+    reviewCancel.classList.remove('color-red');
   } else if (comment === '') {
     title = 'Endorse Citizen';
     confirm = 'Endorse';
@@ -557,7 +576,12 @@ function updateChecksDisplay(comment) {
     reviewConfirm.classList.remove('color-red');
   } else
     console.error('Unsupported comment in citizen review:"' + comment + '"');
+  if (confirm === '')
+    reviewConfirm.classList.add('display-none');
+  else
+    reviewConfirm.classList.remove('display-none');
   reviewConfirm.textContent = confirm;
+  reviewCancel.textContent = cancel;
   document.getElementById('review-title').textContent = title;
   document.getElementById('review-warning').textContent = warning;
   const children = document.getElementById('review-checklist').children;
@@ -572,7 +596,8 @@ function updateChecksDisplay(comment) {
   }
 }
 
-function reviewCitizen(publication, comment) { // comment may be either 'replaced' or 'transferred'
+// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked' or 'revoked+...' (already revoked)
+function reviewCitizen(publication, comment) {
   updateChecksDisplay(comment);
   disable('review-confirm');
   document.getElementById('review-picture').src = publication.picture;
@@ -1111,10 +1136,13 @@ async function getProposal(fingerprint, type) {
 }
 
 function stopScanner(page) {
+  console.log('stopScanner 1');
   hide('scanner');
   show(page);
+  console.log('stopScanner 2');
   QRScanner.hide(function(status) {
     QRScanner.destroy(function(status) {
+      console.log('stopScanner 3');
     });
   });
 }
@@ -1172,7 +1200,7 @@ async function scanQRCode(error, contents, type, comment = '') {
   if (error) {
     if (error.name !== 'SCAN_CANCELED')
       alert(error._message);
-    if (type === 'challenge')
+    if (type === 'challenge' && !localStorage.getItem('registered'))
       welcome();
     return;
   }
@@ -1217,6 +1245,7 @@ async function scanQRCode(error, contents, type, comment = '') {
 
 function onDeviceReady() {
   directDemocracyVersion += ` (${device.platform})`;
+  document.getElementById('version').textContent = `version ${directDemocracyVersion}`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
   setNotary();
   document.getElementById('notary').addEventListener('input', function(event) {
@@ -1417,26 +1446,18 @@ function onDeviceReady() {
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     } else if (reportComment === 'revoked') {
-      app.dialog.confirm('Revoking a neighbor will delete it from your neighbor list, are you sure you want to proceed?',
+      app.dialog.confirm('Revoking a neighbor may impact their reputation, are you sure you want to proceed?',
         'Revoke Neighbor?', function() {
           app.dialog.preloader('Revoking...');
           if (document.getElementById('review-died-check').checked)
-            reportComment = 'died';
+            reportComment += '+died';
           else {
             if (document.getElementById('review-moved-check').checked)
-              reportComment = 'address';
-            if (document.getElementById('review-renamed-check').checked) {
-              if (reportComment === 'revoked')
-                reportComment = 'name';
-              else
-                reportComment += '+name';
-            }
-            if (document.getElementById('review-outdated-check').checked) {
-              if (reportComment === 'revoked')
-                reportComment = 'picture';
-              else
-                reportComment += '+picture';
-            }
+              reportComment += '+address';
+            if (document.getElementById('review-renamed-check').checked)
+              reportComment += '+name';
+            if (document.getElementById('review-outdated-check').checked)
+              reportComment += '+picture';
           }
           certificateToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -2136,35 +2157,54 @@ function updateEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const day = new Date(endorsement.published * 1000).toISOString().slice(0, 10);
     let icon;
-    let otherDay;
+    let day;
+    let color;
     let otherIcon;
-    if (endorsement.hasOwnProperty('reportedYou')) {
-      icon = 'arrow_right';
-      otherIcon = 'xmark';
-      otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
-    } else if (endorsement.hasOwnProperty('endorsedYou')) {
+    let otherDay;
+    let otherColor;
+    if (endorsement.hasOwnProperty('endorsed') && endorsement.hasOwnProperty('endorsedYou')) {
+      day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
       otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
-      if (otherDay === day) {
+      if (day === otherDay) {
         icon = 'arrow_right_arrow_left';
+        color = 'green';
         otherDay = false;
         otherIcon = false;
+        otherColor = false;
       } else {
-        icon = 'arrow_right';
-        otherIcon = 'arrow_left';
+        icon = 'arrow_left';
+        color = 'green';
+        otherIcon = 'arrow_right';
+        otherColor = 'green';
       }
     } else {
-      icon = 'arrow_right';
-      otherDay = false;
-      otherIcon = false;
+      if (endorsement.hasOwnProperty('reported')) {
+        icon = 'xmark';
+        color = 'red';
+        day = new Date(endorsement.reported * 1000).toISOString().slice(0, 10);
+      } else if (endorsement.hasOwnProperty('endorsed')) {
+        icon = 'arrow_left';
+        color = 'green';
+        day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
+      }
+      if (endorsement.hasOwnProperty('reportedYou')) {
+        otherIcon = 'xmark';
+        otherColor = 'red';
+        otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
+      } else if (endorsement.hasOwnProperty('endorsedYou')) {
+        otherIcon = 'arrow_right';
+        otherColor = 'green';
+        otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
+      }
     }
     let message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
-      `<i class="icon f7-icons" style="font-size:150%">${icon}</i> ` + day, true);
+      `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${color}">${icon}</i> ` + day, true);
     message.style.fontSize = '82.353%';
     if (otherDay) {
       message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
-        `<i class="icon f7-icons" style="font-size:150%">${otherIcon}</i> ` + otherDay, true);
+        `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ` +
+        otherDay, true);
       message.style.fontSize = '82.353%';
     }
     div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
@@ -2204,7 +2244,8 @@ function updateEndorsements() {
     i = newElement(a, 'i', 'f7-icons', 'doc_text_search');
     a.addEventListener('click', function() {
       app.dialog.preloader('Getting Citizen...');
-      getCitizen(endorsement.key, 'key', 'revoked');
+      const comment = endorsement.hasOwnProperty('reportedComment') ? endorsement.reportedComment : 'revoked';
+      getCitizen(endorsement.key, 'key', comment);
     });
   });
 }
