@@ -88,7 +88,13 @@
               <div data-i18n="latitude-longitude-header"></div>
               <div><b id="review-coords"></b></div>
               <div><span data-i18n="created"></span><b id="review-published"></b></div>
-              <div><span data-i18n="reputation"></span><b id="review-reputation">...</b>
+              <div class="display-flex justify-content-space-between">
+                <div>
+                  <span data-i18n="reputation"></span><b id="review-reputation">...</b>
+                </div>
+                <div>
+                  <a id="review-online" class="link external"><i class="icon f7-icons">arrow_up_right_square</i></a>
+                </div>
               </div>
             </div>
           </div>
@@ -185,6 +191,33 @@
                   </div>
                 </label>
               </li>
+              <li id="review-report_ghost-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_ghost-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person does not exist.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_duplicate-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_duplicate-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This is a duplicate citizen card.</div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_dead-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_dead-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">This person is dead.</div>
+                  </div>
+                </label>
+              </li>
               <li id="review-report_address-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
                   <input type="checkbox" id="review-report_address-check">
@@ -212,15 +245,6 @@
                   </div>
                 </label>
               </li>
-              <li id="review-report_dead-check-item" class="display-none">
-                <label class="checkbox no-ripple item-content">
-                  <input type="checkbox" id="review-report_dead-check">
-                  <i class="icon icon-checkbox"></i>
-                  <div class="item-inner">
-                    <div class="item-title margin-left-half">This person is dead.</div>
-                  </div>
-                </label>
-              </li>
               <li id="review-report_other-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
                   <input type="checkbox" id="review-report_other-check">
@@ -229,10 +253,12 @@
                     <div class="item-title margin-left-half">Something else is wrong:</div>
                   </div>
                 </label>
+              </li>
+              <li id="review-report_other-input-item" class="item-content item-input item-input-outline display-none">
                 <div class="item-inner">
                   <div class="item-title item-label">Explain what's wrong here</div>
                   <div class="item-input-wrap">
-                    <input id="enter-me" type="text" size="40" maxlength="40">
+                    <input id="review-report_other-input" type="text">
                     <span class="input-clear-button"></span>
                   </div>
                 </div>
@@ -245,7 +271,6 @@
             </div>
             <div id="review-warning" class="item-label display-flex justify-content-center margin-top-half"
               style="width:100%">
-              Warning: wrongly endorsing a citizen may affect your reputation.
             </div>
           </div>
         </div>
@@ -272,9 +297,9 @@
               <i class="icon f7-icons">person_fill<span id="reputation-badge" class="badge"></span></i>
               <span class="tabbar-label" data-i18n="me"></span>
             </a>
-            <a href="#" class="tab-link disabled" data-tab="#tab-neighbors" id="tabbar-neighbors">
+            <a href="#" class="tab-link disabled" data-tab="#tab-neighbor" id="tabbar-neighbor">
               <i class="icon f7-icons">
-                person_2_fill<span id="neighbors-badge" class="badge color-blue display-none"></span>
+                person_2_fill<span id="neighbor-badge" class="badge color-blue display-none"></span>
               </i>
               <span class="tabbar-label" data-i18n="neighbors"></span>
             </a>
@@ -430,8 +455,8 @@
               </div>
             </div>
           </swiper-slide>
-          <swiper-slide class="tab page-content" id="tab-neighbors">
-            <div id="neighbors-page" class="block margin-top">
+          <swiper-slide class="tab page-content" id="tab-neighbor">
+            <div id="neighbor-page" class="block margin-top">
               <div style="width:100%;display:flex;align-items:center;">
                 <div class="list" style="margin:0">
                   <ul style="width:95%">
@@ -439,18 +464,18 @@
                       <div class="item-inner">
                         <div class="item-title item-label">Report a Neighbor</div>
                         <div class="item-input-wrap">
-                          <input id="enter-neighbors" type="text" size="40" maxlength="40"
+                          <input id="enter-neighbor" type="text" size="40" maxlength="40"
                             placeholder="Paste citizen reference here">
                           <span class="input-clear-button"></span>
                         </div>
                         <div class="item-input-info">
-                          Search neighbors <a id="search-neighbors" class="link external" target="_blank">online</a>
+                          Search neighbors <a id="search-neighbor" class="link external" target="_blank">online</a>
                         </div>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button id="scan-neighbors" class="button" style="width:5%">
+                <button id="scan-neighbor" class="button" style="width:5%">
                   <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>

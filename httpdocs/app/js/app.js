@@ -346,11 +346,11 @@ async function publish(publication, signature, type) {
       body: JSON.stringify(publication)
     }).then(response => response.json())
       .then(async answer => {
+        app.dialog.close(); // preloader
         if (answer.hasOwnProperty('error'))
           app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
         else {
           if (type === 'citizen card') {
-            app.dialog.close(); // preloader
             updateCitizenCard();
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
@@ -361,10 +361,9 @@ async function publish(publication, signature, type) {
               review = null;
             }
           } else if (type === 'endorse') {
-            app.dialog.close(); // preloader
             hide('review');
             show('home');
-            document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbors tab
+            document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbor tab
             app.dialog.alert(`You successfully endorsed ${review.givenNames} ${review.familyName}`, 'Endorsement Success');
             for (let i in endorsements) { // remove if already in the endorsements list
               if (endorsements[i].signature === review.signature) {
@@ -375,7 +374,6 @@ async function publish(publication, signature, type) {
             endorsements.push(review);
             updateEndorsements();
           } else if (type === 'petition signature') {
-            app.dialog.close(); // preloader
             app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
             petitionButton.textContent = 'Signed';
             petitionProposal.signed = true;
@@ -384,13 +382,14 @@ async function publish(publication, signature, type) {
           } else if (type === 'report') {
             const comment = certificateToPublish.comment;
             if (comment === 'deleted') {
-              app.dialog.close(); // preloader
               app.dialog.alert('You successfully deleted your citizen card.', 'Delete Success');
               deleteCitizen();
-            } else if (comment !== 'replaced' && comment !== 'updated' && comment !== 'transferred') {
-              app.dialog.close(); // preloader
+            } else if (comment.startsWith('revoked+')) {
               app.dialog.alert(`You successfully revoked ${review.givenNames} ${review.familyName}`,
                 'Revoke Success', refreshEndorsements);
+            } else { // report
+              app.dialog.alert(`You successfully reported ${review.givenNames} ${review.familyName}`,
+                'Report Success', refreshEndorsements);
             }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
@@ -530,28 +529,28 @@ function updateChecksDisplay(comment) {
   let title, confirm, warning, checks;
   let cancel = 'Cancel';
   if (comment === 'replaced') {
-    title = 'Replace Citizen Card';
+    title = 'Replace Your Citizen Card';
     confirm = 'Replace';
-    warning = 'Warning: wrongly replacing a citizen may affect your reputation.';
+    warning = 'Warning: a wrong replacement may affect your reputation.';
     checks = ['former'];
     reviewCancel.classList.add('color-red');
     reviewConfirm.classList.remove('color-red');
   } else if (comment === 'transferred') {
-    title = 'Import Citizen Card';
+    title = 'Import Your Citizen Card';
     confirm = 'Import';
-    warning = 'Warning: wrongly importing a citizen may affect your reputation';
+    warning = 'Warning: a wrong import may affect your reputation';
     checks = ['former'];
     reviewCancel.classList.add('color-red');
     reviewConfirm.classList.remove('color-red');
   } else if (comment === 'revoked') {
-    title = 'Revoke Neighbor';
+    title = 'Revoke a Neighbor';
     confirm = 'Revoke';
-    warning = 'Warning: wrongly revoking a neighbor may affect your reputation';
+    warning = 'Warning: a wrong revoke may affect your reputation';
     checks = ['outdated', 'renamed', 'moved', 'died'];
     reviewCancel.classList.remove('color-red');
     reviewConfirm.classList.add('color-red');
   } else if (comment.startsWith('revoked+')) { // already revoked
-    title = 'Review Neighbot';
+    title = 'Review a Neighbor';
     confirm = '';
     warning = 'You already revoked this neighbor (';
     if (comment.search('address') !== -1)
@@ -566,17 +565,18 @@ function updateChecksDisplay(comment) {
     checks = [];
     cancel = 'Close';
     reviewCancel.classList.remove('color-red');
-  } else if (comment === 'report') {
-    title = 'Report Neighborg';
+  } else if (comment === 'reported') {
+    title = 'Report a Neighborg';
     confirm = 'Report';
-    warning = 'Warning: wrongly reporting a citizen may affect your reputation';
-    checks = ['report_address', 'report_name', 'report_picture', 'report_dead', 'report_other'];
+    warning = 'Warning: a wrong report may affect your reputation';
+    checks = ['report_ghost', 'report_duplicate', 'report_dead', 'report_address', 'report_name', 'report_picture',
+      'report_other'];
     reviewCancel.classList.remove('color-red');
     reviewConfirm.classList.add('color-red');
   } else if (comment === '') {
-    title = 'Endorse Citizen';
+    title = 'Endorse a Neighbor';
     confirm = 'Endorse';
-    warning = 'Warning: wrongly endorsing a citizen may affect your reputation';
+    warning = 'Warning: a wrong endorsement may affect your reputation';
     checks = ['standing', 'adult', 'picture', 'name', 'coords'];
     reviewCancel.classList.add('color-red');
     reviewConfirm.classList.remove('color-red');
@@ -602,10 +602,12 @@ function updateChecksDisplay(comment) {
   }
 }
 
-// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked', 'revoked+...' (already revoked) or 'report'
+// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked', 'revoked+...' (already revoked) or 'reported'
 function reviewCitizen(publication, comment) {
   updateChecksDisplay(comment);
   disable('review-confirm');
+  document.getElementById('review-online').setAttribute('href',
+    `${notary}/citizen.html?signature=${encodeURIComponent(publication.signature)}`);
   document.getElementById('review-picture').src = publication.picture;
   document.getElementById('review-given-names').textContent = publication.givenNames;
   document.getElementById('review-family-name').textContent = publication.familyName;
@@ -1030,6 +1032,7 @@ async function getProposal(fingerprint, type) {
   fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
     .then(response => response.json())
     .then(async proposal => {
+      app.dialog.close(); // preloader
       enable(`scan-${type}`);
       enable(`enter-${type}`);
       if (proposal.error) {
@@ -1189,6 +1192,7 @@ function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
         app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
         return;
       }
+      app.dialog.preloader('Getting Citizen...');
       getCitizen(key, 'key', comment);
     });
 }
@@ -1239,10 +1243,13 @@ async function scanQRCode(error, contents, type, comment = '') {
     }
   } else {
     const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
+    const item = type.charAt(0).toUpperCase() + type.slice(1);
+    const message = `Getting ${item}...`;
+    app.dialog.preloader(message);
     if (type === 'me')
       getCitizen(fingerprint, 'fingerprint', 'replaced');
-    else if (type === 'neighbors')
-      getCitizen(fingerprint, 'fingerprint', 'report');
+    else if (type === 'neighbor')
+      getCitizen(fingerprint, 'fingerprint', 'reported');
     else
       getProposal(fingerprint, type);
   }
@@ -1430,35 +1437,64 @@ function onDeviceReady() {
   document.getElementById('review-died-check').addEventListener('click', revokeChecks);
 
   function reportChecks(event) {
+    const ghost = document.getElementById('review-report_ghost-check');
+    const duplicate = document.getElementById('review-report_duplicate-check');
+    const dead = document.getElementById('review-report_dead-check');
     const address = document.getElementById('review-report_address-check');
     const name = document.getElementById('review-report_name-check');
     const picture = document.getElementById('review-report_picture-check');
-    const dead = document.getElementById('review-report_dead-check');
     const other = document.getElementById('review-report_other-check');
-    if (event.currentTarget === dead && dead.checked) {
+    const input = document.getElementById('review-report_other-input');
+    if (event.currentTarget === ghost && ghost.checked) {
+      duplicate.checked = false;
+      dead.checked = false;
+      address.checked = false;
+      name.checked = false;
+      picture.checked = false;
+      other.checked = false;
+    } else if (event.currentTarget === duplicate && duplicate.checked) {
+      ghost.checked = false;
+      dead.checked = false;
+      address.checked = false;
+      name.checked = false;
+      picture.checked = false;
+      other.checked = false;
+    } else if (event.currentTarget === dead && dead.checked) {
+      ghost.checked = false;
+      duplicate.checked = false;
       address.checked = false;
       name.checked = false;
       picture.checked = false;
       other.checked = false;
     } else if (event.currentTarget === other && other.checked) {
+      ghost.checked = false;
+      duplicate.checked = false;
+      dead.checked = false;
       address.checked = false;
       name.checked = false;
       picture.checked = false;
-      dead.checked = false;
+      input.focus();
     } else if (address.checked || name.checked || picture.checked) {
+      ghost.checked = false;
+      duplicate.checked = false;
       dead.checked = false;
       other.checked = false;
     }
-    if (address.checked || name.checked || picture.checked || dead.checked || other.checked)
+    if (ghost.checked || duplicate.checked || dead.checked ||
+        address.checked || name.checked || picture.checked ||
+        (other.checked && input.value.trim() !== ''))
       enable('review-confirm');
     else
       disable('review-confirm');
   }
+  document.getElementById('review-report_ghost-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_duplicate-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_dead-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_address-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_name-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_picture-check').addEventListener('click', reportChecks);
-  document.getElementById('review-report_dead-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_other-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_other-input').addEventListener('input', reportChecks);
 
   document.getElementById('review-cancel').addEventListener('click', function(event) {
     hide('review');
@@ -1495,6 +1531,45 @@ function onDeviceReady() {
             if (document.getElementById('review-outdated-check').checked)
               reportComment += '+picture';
           }
+          certificateToPublish = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: Math.trunc(new Date().getTime() / 1000),
+            appKey: appKey,
+            appSignature: '',
+            type: 'report',
+            publication: review.signature,
+            comment: reportComment
+          };
+          reportComment = '';
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+        });
+    } else if (reportComment === 'reported') {
+      app.dialog.confirm('Reporting a neighbor may impact their reputation, are you sure you want to proceed?',
+        'Report Neighbor?', function() {
+          app.dialog.preloader('Reporting...');
+          if (document.getElementById('review-report_ghost-check').checked)
+            reportComment = 'ghost';
+          else if (document.getElementById('review-report_duplicate-check').checked)
+            reportComment = 'duplicate';
+          else if (document.getElementById('review-report_dead-check').checked)
+            reportComment = 'died';
+          else if (document.getElementById('review-report_other-check').checked)
+            reportComment = 'other';
+          else {
+            reportComment = '';
+            if (document.getElementById('review-report_address-check').checked)
+              reportComment += '+address';
+            if (document.getElementById('review-report_name-check').checked)
+              reportComment += '+name';
+            if (document.getElementById('review-report_picture-check').checked)
+              reportComment += '+picture';
+            reportComment = reportComment.substring(1); // remove the first char ('+')
+          }
+          const input = document.getElementById('review-report_other-input').value.trim();
+          if (input !== '')
+            reportComment += ':' + input;
           certificateToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
             key: citizen.key,
@@ -1747,12 +1822,12 @@ function onDeviceReady() {
     });
   });
 
-  document.getElementById('scan-neighbors').addEventListener('click', function() {
-    hide('neighbors-page');
-    disable('scan-neighbors');
-    disable('enter-neighbors');
+  document.getElementById('scan-neighbor').addEventListener('click', function() {
+    hide('neighbor-page');
+    disable('scan-neighbor');
+    disable('enter-neighbor');
     scan(function(error, contents) {
-      scanQRCode(error, contents, 'neighbors');
+      scanQRCode(error, contents, 'neighbor');
     });
   });
 
@@ -1795,19 +1870,19 @@ function onDeviceReady() {
       searchFingerprint('me');
   });
 
-  const neighborsSearch = document.getElementById('enter-neighbors');
-  neighborsSearch.addEventListener('keyup', function(event) {
+  const neighborSearch = document.getElementById('enter-neighbor');
+  neighborSearch.addEventListener('keyup', function(event) {
     if (event.key === 'Enter')
-      searchFingerprint('neighbors');
+      searchFingerprint('neighbor');
   });
-  neighborsSearch.addEventListener('paste', function(event) {
+  neighborSearch.addEventListener('paste', function(event) {
     event.preventDefault();
     event.currentTarget.value = event.clipboardData.getData('text');
-    searchFingerprint('neighbors');
+    searchFingerprint('neighbor');
   });
-  neighborsSearch.addEventListener('input', function(event) {
+  neighborSearch.addEventListener('input', function(event) {
     if (event.currentTarget.value.length === 40)
-      searchFingerprint('neighbors');
+      searchFingerprint('neighbor');
   });
 
   let referendumSearch = document.getElementById('enter-referendum');
@@ -2002,7 +2077,8 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-neighbors').setAttribute('href', `${notary}?tab=citizens&me=true`);
+  document.getElementById('search-me').setAttribute('href', `${notary}?tab=citizens&me=true`);
+  document.getElementById('search-neighbor').setAttribute('href', `${notary}?tab=citizens`);
   document.getElementById('search-petition').setAttribute('href',
     `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   document.getElementById('search-referendum').setAttribute('href',
@@ -2327,7 +2403,7 @@ function showPage(page) {
     if (p !== page)
       hide(`${p}-page`);
   });
-  const cards = ['neighbors', 'vote', 'sign'];
+  const cards = ['neighbor', 'vote', 'sign'];
   cards.forEach(function(i) {
     const tabbar = `tabbar-${i}`;
     if (page === 'card')
