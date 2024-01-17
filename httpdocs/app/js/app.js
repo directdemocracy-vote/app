@@ -62,7 +62,7 @@ if (!station) {
   station = 'https://station.directdemocracy.vote';
   localStorage.setItem('station', station);
 }
-let iAmEndorsedByJudge = false;
+let iAmTrustedByJudge = false;
 let certificateToPublish = null;
 let vote = null;
 let voteBytes = null;
@@ -283,10 +283,9 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     showPage('splash');
     app.dialog.preloader('Exporting...');
     transfer();
-  } else if (type === 'endorse challenge') {
-    app.dialog.preloader('Getting Citizen...');
+  } else if (type === 'endorse challenge')
     getCitizen(otherKey, 'key', '');
-  } else
+  else
     console.error('Unknown challenge: ' + type);
 }
 
@@ -364,15 +363,8 @@ async function publish(publication, signature, type) {
             hide('review');
             show('home');
             document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbor tab
-            app.dialog.alert(`You successfully endorsed ${review.givenNames} ${review.familyName}`, 'Endorsement Success');
-            for (let i in endorsements) { // remove if already in the endorsements list
-              if (endorsements[i].signature === review.signature) {
-                endorsements.splice(i, 1);
-                break;
-              }
-            }
-            endorsements.push(review);
-            updateEndorsements();
+            app.dialog.alert(`You successfully endorsed ${review.givenNames} ${review.familyName}`,
+              'Endorsement Success', refreshEndorsements);
           } else if (type === 'petition signature') {
             app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
             petitionButton.textContent = 'Signed';
@@ -389,7 +381,7 @@ async function publish(publication, signature, type) {
                 'Revoke Success', refreshEndorsements);
             } else { // report
               app.dialog.alert(`You successfully reported ${review.givenNames} ${review.familyName}`,
-                'Report Success', refreshEndorsements);
+                'Report Success');
             }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
@@ -641,7 +633,7 @@ function reviewCitizen(publication, comment) {
         reputation.style.color = 'red';
       } else {
         reputation.textContent = answer.reputation;
-        reputation.style.color = answer.endorsed ? 'blue' : 'red';
+        reputation.style.color = answer.trusted ? 'blue' : 'red';
       }
     })
     .catch((error) => {
@@ -664,6 +656,7 @@ function reviewCitizen(publication, comment) {
 }
 
 async function getCitizen(reference, type, comment) {
+  app.dialog.preloader('Getting Citizen...');
   if (type !== 'fingerprint' && type !== 'key') {
     console.error('wrong citizen reference: ' + type);
     return;
@@ -784,7 +777,7 @@ function addProposal(proposal, type, open) {
               inputs[i].checked = false;
           }
         }
-        if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+        if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
           disable(button);
         else
           enable(button);
@@ -826,7 +819,7 @@ function addProposal(proposal, type, open) {
   button.classList.add('button', 'button-fill');
   if (type === 'petition') {
     button.textContent = proposal.signed ? 'Signed' : 'Sign';
-    if (proposal.signed || outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+    if (proposal.signed || outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function() {
       app.dialog.confirm(
@@ -857,7 +850,7 @@ function addProposal(proposal, type, open) {
     });
   } else { // referendum
     button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
-    if (outdated || (proposal.judge === judge && !iAmEndorsedByJudge))
+    if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function(event) {
       const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
@@ -1029,6 +1022,8 @@ async function verifyProposalSignature(proposal) {
 }
 
 async function getProposal(fingerprint, type) {
+  const item = type.charAt(0).toUpperCase() + type.slice(1);
+  app.dialog.preloader(`Getting ${item}...`);
   fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
     .then(response => response.json())
     .then(async proposal => {
@@ -1192,7 +1187,6 @@ function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
         app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
         return;
       }
-      app.dialog.preloader('Getting Citizen...');
       getCitizen(key, 'key', comment);
     });
 }
@@ -1221,7 +1215,6 @@ async function scanQRCode(error, contents, type, comment = '') {
       app.dialog.alert(`Importing a citizen card from app "{$otherAppUrl}" is not supported by your app`, 'Unsupported App');
       return;
     }
-    app.dialog.preloader('Getting Citizen...');
     if (comment === 'transferred') { // generate a key and sign the challenge
       const k = await crypto.subtle.generateKey({
         name: 'RSASSA-PKCS1-v1_5',
@@ -1243,9 +1236,6 @@ async function scanQRCode(error, contents, type, comment = '') {
     }
   } else {
     const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
-    const item = type.charAt(0).toUpperCase() + type.slice(1);
-    const message = `Getting ${item}...`;
-    app.dialog.preloader(message);
     if (type === 'me')
       getCitizen(fingerprint, 'fingerprint', 'replaced');
     else if (type === 'neighbor')
@@ -2177,7 +2167,7 @@ function updateReputation(reputationValue, endorsed) {
   const span = document.createElement('span');
   const color = endorsed ? 'blue' : 'red';
   span.setAttribute('style', `font-weight:bold;color:${color}`);
-  span.textContent = reputationValue;
+  span.textContent = Math.round(reputationValue * 100) + '%';
   reputation.innerHTML = '';
   reputation.appendChild(span);
   badge.classList.remove(`color-red`);
@@ -2194,16 +2184,16 @@ function getReputationFromJudge() {
       if (answer.error) {
         app.dialog.alert(answer.error, 'Could not get reputation from judge.');
         updateReputation('N/A', false);
-        iAmEndorsedByJudge = false;
+        iAmTrustedByJudge = false;
       } else {
-        iAmEndorsedByJudge = answer.endorsed;
-        updateReputation(answer.reputation, answer.endorsed);
+        iAmTrustedByJudge = answer.trusted;
+        updateReputation(answer.reputation, answer.trusted);
       }
     })
     .catch((error) => {
       app.dialog.alert(error, 'Could not get reputation from judge.');
       updateReputation('N/A', false);
-      iAmEndorsedByJudge = false;
+      iAmTrustedByJudge = false;
     });
 }
 
@@ -2216,7 +2206,7 @@ async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, type
   const answer = await response.json();
   if (answer.error) {
     if (judgeUrl === judge) {
-      iAmEndorsedByJudge = false;
+      iAmTrustedByJudge = false;
       updateReputation('N/A', false);
     }
     app.dialog.alert(answer.error, 'Could not get reputation from judge');
@@ -2230,17 +2220,17 @@ async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, type
     return false;
   }
   if (judgeUrl === judge) {
-    iAmEndorsedByJudge = answer.endorsement;
-    updateReputation(answer.reputation, answer.endorsement);
+    iAmTrustedByJudge = answer.trusted;
+    updateReputation(answer.reputation, answer.trusted);
   }
   if (answer.timestamp >= proposalDeadline) {
     app.dialog.alert(`The deadline of the ${type} has passed.`, 'Deadline passed');
     return false;
   }
-  if (answer.endorsed !== true) {
+  if (answer.trusted !== true) {
     const reputation = Number(answer.reputation);
-    app.dialog.alert(`You are not endorsed by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
-      'Not endorsed');
+    app.dialog.alert(`You are not trusted by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
+      'Not trusted');
     return false;
   }
   return true;
@@ -2252,7 +2242,7 @@ function updateProposals(proposals) {
     if (proposal.judge === judge) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
-        if (iAmEndorsedByJudge &&
+        if (iAmTrustedByJudge &&
             proposal.deadline * 1000 > new Date().getTime() &&
             ((!proposal.secret && !proposal.signed) || proposal.secret))
           enable(button);
@@ -2380,7 +2370,6 @@ function updateEndorsements() {
     a = newElement(div, 'a', 'link');
     i = newElement(a, 'i', 'f7-icons', 'doc_text_search');
     a.addEventListener('click', function() {
-      app.dialog.preloader('Getting Citizen...');
       const comment = endorsement.hasOwnProperty('reportedComment') ? endorsement.reportedComment : 'revoked';
       getCitizen(endorsement.key, 'key', comment);
     });
