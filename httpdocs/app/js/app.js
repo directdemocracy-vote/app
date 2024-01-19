@@ -457,7 +457,6 @@ function publishCertificate(signature) {
 }
 
 function welcome() {
-  console.crash();
   let dialog = app.dialog.create({
     title: 'Welcome to directdemocracy!',
     text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
