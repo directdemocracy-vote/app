@@ -640,7 +640,7 @@ function reviewCitizen(publication, comment) {
       reputation.textContent = 'N/A';
       reputation.style.color = 'red';
     });
-  fetch(`https://nominatim.openstreetmap.org/reverse.php?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`)
     .then(response => response.json())
     .then(answer => {
       const address = answer.display_name;
@@ -1636,7 +1636,7 @@ function onDeviceReady() {
 
           function updateLocation() {
             registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
-            fetch('https://nominatim.openstreetmap.org/reverse.php' +
+            fetch('https://nominatim.openstreetmap.org/reverse' +
               `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`)
               .then(response => response.json())
               .then(answer => {
