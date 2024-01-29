@@ -1,0 +1,13 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/proposal.schema.json",
+    "key": "",
+    "signature": "",
+    "published": "",
+    "area": "",
+    "area_name": "lat=46.5261672&lon=6.5620735",
+    "title": "Démission du Syndic d'Écublens",
+    "description": "Cette pétition demande la démission immédiate du Syndic d'Écublens, suite aux accusations de détournements de fonds publics publiées dans le journal de Morges le 12 janvier 2024.",
+    "type": "petition",
+    "deadline": "2024-02-03T19:00:00+01:00",
+    "trust": 3600
+}
