@@ -177,7 +177,7 @@ def generate_proposals():
 
 
 # generate_app()
-# generate_citizens()
-# generate_endorsements()
-# generate_endorsements('others')
+generate_citizens()
+generate_endorsements()
+generate_endorsements('other')
 generate_proposals()
