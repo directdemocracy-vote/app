@@ -1013,7 +1013,7 @@ async function verifyProposalSignature(proposal) {
   const areaPublicKey = await importKey(proposal.areaKey);
   if (!areaPublicKey)
     console.error('Failed to import public key for area');
-  const areaBytes = base64ToByteArray(proposal.area);
+  const areaBytes = base64ToByteArray(proposal.areaSignature);
   const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
   const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
   if (!areaVerify) {
