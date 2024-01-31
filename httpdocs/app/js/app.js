@@ -340,6 +340,7 @@ async function publish(publication, signature, type) {
         'directdemocracy-version': directDemocracyVersion,
         'integrity-token': token,
         'user-notary': notary,
+        'app-time': Date.now(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(publication)
