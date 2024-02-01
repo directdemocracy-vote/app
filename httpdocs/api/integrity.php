@@ -54,7 +54,12 @@ if (!isset($headers['user-notary']))
 $notary = $headers['user-notary'];
 if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
   error("bad user-notary header: $notary");
-  
+
+if (!isset($headers['app-time']))
+  error('unable to read app-time header');
+$time_difference = time() - intval($headers['app-time']);
+if (abs($time_difference) > 60)
+  error("app time mismatches server time by $time_difference seconds"); 
 # if the integrity check is successful, this means the publication is well formed because
 # it was created by a geniune app, so we don't need to check it
 

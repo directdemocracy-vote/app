@@ -1,8 +1,8 @@
 /* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
 import Translator from './translator.js';
-import {rsaBlind, rsaUnblind} from './rsa-blind.js';
-import {pointInPolygons} from './point-in-polygons.js';
+import { rsaBlind, rsaUnblind } from './rsa-blind.js';
+import { pointInPolygons } from './point-in-polygons.js';
 
 const TESTING = false;
 
@@ -18,8 +18,8 @@ const TEST_APP_KEY = // public key of the test app
 const PRODUCTION_APP_KEY = // public key of the genuine app
   DEBUGING ? TEST_APP_KEY
     : 'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
-      'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
-      '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
+    'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
+    '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
@@ -340,6 +340,7 @@ async function publish(publication, signature, type) {
         'directdemocracy-version': directDemocracyVersion,
         'integrity-token': token,
         'user-notary': notary,
+        'app-time': Date.now(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(publication)
@@ -475,14 +476,14 @@ function welcome() {
         let dialog = app.dialog.create({
           title: 'Import Citizen Card',
           text: 'It is recommended to import your citizen card from the phone containing it. ' +
-                'Do you have this phone on hand?',
+            'Do you have this phone on hand?',
           buttons: [{
             text: 'Yes',
             onClick: function() {
               app.dialog.confirm('On the phone containing your citizen card, ' +
                 'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
                 'following the instructions. Then, press OK to scan the export QR code.',
-              'Import Citizen Card', importCitizen, welcome);
+                'Import Citizen Card', importCitizen, welcome);
             }
           }, {
             text: 'No',
@@ -491,7 +492,7 @@ function welcome() {
                 'you will have to search your current citizen card from a notary database ' +
                 'and scan its QR code (or copy/paste its reference). ' +
                 'Then, you will have to get endorsed again by your neighbors.',
-              'Lost Citizen Card', lost, welcome);
+                'Lost Citizen Card', lost, welcome);
             }
           }, {
             text: 'Cancel',
@@ -857,7 +858,7 @@ function addProposal(proposal, type, open) {
       const text = (checked ? `You are about to vote "${answer}" to this referendum. `
         : 'You are about to abstain to vote to this referendum. ' +
         'Your vote will be counted as an abstention in the results. ') +
-      'You will be able to change your vote until the deadline of the referendum.';
+        'You will be able to change your vote until the deadline of the referendum.';
       app.dialog.confirm(text, 'Vote?', async function() {
         // prepare the vote aimed at blind signature
         disable(button);
@@ -984,11 +985,12 @@ async function verifyProposalSignature(proposal) {
     p.answers = proposal.answers;
     p.answers.pop(); // remove the last one which is empty (abstention)
   }
+  p.type = proposal.type;
   p.secret = proposal.secret;
   p.deadline = proposal.deadline;
   if (proposal.website)
     p.website = proposal.website;
-
+  p.trust = proposal.trust;
   const publicKey = await importKey(proposal.key);
   if (!publicKey)
     console.error('Failed to import public key for proposal');
@@ -1004,17 +1006,24 @@ async function verifyProposalSignature(proposal) {
     key: proposal.areaKey,
     signature: '',
     published: proposal.areaPublished,
+    id: proposal.area,
     name: proposal.areaName,
-    polygons: proposal.areaPolygons
+    polygons: proposal.areaPolygons,
+    local: proposal.areaLocal
   };
   const areaPublicKey = await importKey(proposal.areaKey);
   if (!areaPublicKey)
     console.error('Failed to import public key for area');
-  const areaBytes = base64ToByteArray(proposal.area);
+  const areaBytes = base64ToByteArray(proposal.areaSignature);
   const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
   const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
   if (!areaVerify) {
+    console.log(JSON.stringify(a));
     app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
+    return false;
+  }
+  if (proposal.areaKey !== proposal.key) {
+    app.dialog.alert('Proposal and area key mismeatch', 'Wrong proposal or area');
     return false;
   }
   return true;
@@ -1023,7 +1032,7 @@ async function verifyProposalSignature(proposal) {
 async function getProposal(fingerprint, type) {
   const item = type.charAt(0).toUpperCase() + type.slice(1);
   app.dialog.preloader(`Getting ${item}...`);
-  fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
+  fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&citizen=${encodeURIComponent(citizen.signature)}`)
     .then(response => response.json())
     .then(async proposal => {
       app.dialog.close(); // preloader
@@ -1031,6 +1040,38 @@ async function getProposal(fingerprint, type) {
       enable(`enter-${type}`);
       if (proposal.error) {
         app.dialog.alert(proposal.error, 'Proposal search error');
+        return;
+      }
+      if (proposal.trusted === 0) {
+        app.dialog.alert('You are not trusted by the judge of this proposal.', 'Untrusted');
+        return;
+      }
+      if (proposal.trusted === -1) {
+        app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
+        return;
+      }
+      let trust;
+      if (proposal.trust > 315576000) // if more than 10 years, we consider it as a date
+        trust = proposal.trust;
+      else // we consider it as a delay from now
+        trust = (Date.now() / 1000) - proposal.trust;
+      if (proposal.trusted > trust) {
+        let details;
+        if (proposal.trust > 315576000) {
+          const date = new Date(proposal.trust * 1000).toISOString().replace('T', ' ').substring(0, 19);
+          details = `You should be trusted since ${date}`;
+        } else {
+          const hours = Math.floor(proposal.trust / 3600);
+          if (hours === 1)
+            details = `You should be trusted for more than one hour.`;
+          else if (hours <= 24)
+            details = `You should be trusted for more than ${hours} hours.`;
+          else {
+            const days = Math.ceil(hours / 24);
+            details = `You should be trusted for more than ${days} days.`;
+          }
+        }
+        app.dialog.alert(`You are not trusted by the judge of this proposal for long enough. ${details}`, 'Too early trust');
         return;
       }
       const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
@@ -1057,9 +1098,9 @@ async function getProposal(fingerprint, type) {
       } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
         const message = (type === 'petition')
           ? `You are not inside the area of this petition (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-            'Therefore you cannot sign it.'
+          'Therefore you cannot sign it.'
           : `You are not inside the area of this referendum (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-            'Therefore you cannot vote.';
+          'Therefore you cannot vote.';
         app.dialog.alert(`${title}${message}`, 'Wrong area');
       } else if (outdated) {
         const message = (type === 'petition')
@@ -1219,8 +1260,9 @@ async function scanQRCode(error, contents, type, comment = '') {
         name: 'RSASSA-PKCS1-v1_5',
         modulusLength: 2048,
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-        hash: 'SHA-256'},
-      true, ['sign']);
+        hash: 'SHA-256'
+      },
+        true, ['sign']);
       const exported = await crypto.subtle.exportKey('spki', k.publicKey);
       const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
       challengeBytes = decodeBase128(challenge);
@@ -1336,7 +1378,7 @@ function onDeviceReady() {
         'Also, you will loose your endorsements and have to get endorsed again to be able to vote and sign again. ' +
         'Note that your updated citizen card should still refer to you and not to someone else. ' +
         'Do you really want to update your citizen card?',
-      'Update Citizen Card?', updateCard);
+        'Update Citizen Card?', updateCard);
     } else
       updateCard();
   });
@@ -1349,14 +1391,14 @@ function onDeviceReady() {
       challenge = encodeBase128(challengeBytes);
       document.getElementById('qrcode-message').textContent = 'Scan this code';
       Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
-        publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'transfer challenge');
+        publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'transfer challenge');
       }, keystoreFailure);
     }
     app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
       'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
       'On this other phone, follow the instructions of the initial setup dialog to import your citizen card. ' +
       'Then, press OK to display the export QR code.',
-    'Export Citizen Card?', exportCard);
+      'Export Citizen Card?', exportCard);
   });
 
   document.getElementById('delete').addEventListener('click', function(event) {
@@ -1378,7 +1420,7 @@ function onDeviceReady() {
     app.dialog.confirm("You should not delete your citizen card unless you don't want to be a citizen any more. " +
       'If possible, you should rather update it or transfer it to another phone. ' +
       'Are you sure want to delete your citizen card? There is no way back!',
-    'Delete Citizen Card?', deleteCard);
+      'Delete Citizen Card?', deleteCard);
   });
 
   document.getElementById('review-former-check').addEventListener('click', function(event) {
@@ -1390,10 +1432,10 @@ function onDeviceReady() {
 
   function endorsementChecks() {
     if (document.getElementById('review-standing-check').checked &&
-        document.getElementById('review-adult-check').checked &&
-        document.getElementById('review-picture-check').checked &&
-        document.getElementById('review-name-check').checked &&
-        document.getElementById('review-coords-check').checked)
+      document.getElementById('review-adult-check').checked &&
+      document.getElementById('review-picture-check').checked &&
+      document.getElementById('review-name-check').checked &&
+      document.getElementById('review-coords-check').checked)
       enable('review-confirm');
     else
       disable('review-confirm');
@@ -1470,8 +1512,8 @@ function onDeviceReady() {
       other.checked = false;
     }
     if (ghost.checked || duplicate.checked || dead.checked ||
-        address.checked || name.checked || picture.checked ||
-        (other.checked && input.value.trim() !== ''))
+      address.checked || name.checked || picture.checked ||
+      (other.checked && input.value.trim() !== ''))
       enable('review-confirm');
     else
       disable('review-confirm');
@@ -1798,7 +1840,7 @@ function onDeviceReady() {
     challenge = encodeBase128(challengeBytes);
     document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
     Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
-      publish({key: citizen.key, signature: '', appKey: appKey}, signature, 'endorse challenge');
+      publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'endorse challenge');
     }, keystoreFailure);
   });
 
@@ -1961,11 +2003,11 @@ function onDeviceReady() {
     const latitude = parseFloat(coords[0]);
     const longitude = parseFloat(coords[1]);
     if (previousSignature && reportComment === 'updated' && // test for change
-        givenNames === citizen.givenNames &&
-        familyName === citizen.familyName &&
-        picture === citizen.picture &&
-        latitude === citizen.latitude &&
-        longitude === citizen.longitude)
+      givenNames === citizen.givenNames &&
+      familyName === citizen.familyName &&
+      picture === citizen.picture &&
+      latitude === citizen.latitude &&
+      longitude === citizen.longitude)
       return;
     enable('register-button');
   }
@@ -2242,8 +2284,8 @@ function updateProposals(proposals) {
       let button = document.querySelector(`#${type}-${proposal.id} > div > div > div > button`);
       if (button) {
         if (iAmTrustedByJudge &&
-            proposal.deadline * 1000 > new Date().getTime() &&
-            ((!proposal.secret && !proposal.signed) || proposal.secret))
+          proposal.deadline * 1000 > new Date().getTime() &&
+          ((!proposal.secret && !proposal.signed) || proposal.secret))
           enable(button);
         else
           disable(button);
@@ -2296,8 +2338,6 @@ function updateEndorsements() {
         icon = 'arrow_right_arrow_left';
         color = 'green';
         otherDay = false;
-        otherIcon = false;
-        otherColor = false;
       } else {
         icon = 'arrow_left';
         color = 'green';
@@ -2313,7 +2353,8 @@ function updateEndorsements() {
         icon = 'arrow_left';
         color = 'green';
         day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
-      }
+      } else
+        day = false;
       if (endorsement.hasOwnProperty('reportedYou')) {
         otherIcon = 'xmark';
         otherColor = 'red';
@@ -2322,11 +2363,15 @@ function updateEndorsements() {
         otherIcon = 'arrow_right';
         otherColor = 'green';
         otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
-      }
+      } else
+        otherDay = false;
     }
-    let message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
-      `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${color}">${icon}</i> ` + day, true);
-    message.style.fontSize = '82.353%';
+    let message;
+    if (day) {
+      message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
+        `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${color}">${icon}</i> ` + day, true);
+      message.style.fontSize = '82.353%';
+    }
     if (otherDay) {
       message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
         `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ` +
