@@ -1032,7 +1032,7 @@ async function verifyProposalSignature(proposal) {
 async function getProposal(fingerprint, type) {
   const item = type.charAt(0).toUpperCase() + type.slice(1);
   app.dialog.preloader(`Getting ${item}...`);
-  fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}`)
+  fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&citizen=${encodeURIComponent(citizen.signature)}`)
     .then(response => response.json())
     .then(async proposal => {
       app.dialog.close(); // preloader
