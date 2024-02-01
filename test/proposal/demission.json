@@ -8,6 +8,7 @@
     "title": "Démission du Syndic d'Écublens",
     "description": "Cette pétition demande la démission immédiate du Syndic d'Écublens, suite aux accusations de détournements de fonds publics publiées dans le journal de Morges le 12 janvier 2024.",
     "type": "petition",
+    "secret": false,
     "deadline": "2024-02-03T19:00:00+01:00",
     "trust": 3600
 }
