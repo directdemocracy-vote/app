@@ -1042,6 +1042,38 @@ async function getProposal(fingerprint, type) {
         app.dialog.alert(proposal.error, 'Proposal search error');
         return;
       }
+      if (proposal.trusted === 0) {
+        app.dialog.alert('You are not trusted by the judge of this proposal.', 'Untrusted');
+        return;
+      }
+      if (proposal.trusted === -1) {
+        app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
+        return;
+      }
+      let trust;
+      if (proposal.trust > 315576000) // if more than 10 years, we consider it as a date
+        trust = proposal.trust;
+      else // we consider it as a delay from now
+        trust = (Date.now() / 1000) - proposal.trust;
+      if (proposal.trusted > trust) {
+        let details;
+        if (proposal.trust > 315576000) {
+          const date = new Date(proposal.trust * 1000).toISOString().replace('T', ' ').substring(0, 19);
+          details = `You should be trusted since ${date}`;
+        } else {
+          const hours = Math.floor(proposal.trust / 3600);
+          if (hours === 1)
+            details = `You should be trusted for more than one hour.`;
+          else if (hours <= 24)
+            details = `You should be trusted for more than ${hours} hours.`;
+          else {
+            const days = Math.ceil(hours / 24);
+            details = `You should be trusted for more than ${days} days.`;
+          }
+        }
+        app.dialog.alert(`You are not trusted by the judge of this proposal for long enough. ${details}`, 'Too early trust');
+        return;
+      }
       const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
       const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
       if (fingerprint !== sha1) {
