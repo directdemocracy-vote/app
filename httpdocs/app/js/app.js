@@ -84,6 +84,10 @@ let currentLongitude = 6.629111;
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function encodeBase128(byteArray) { // Uint8Array
   function toBin(byteArray) {
     let end = '';
@@ -178,6 +182,29 @@ function base64ToByteArray(base64) {
   for (let i = 0; i < binaryString.length; i++)
     bytes[i] = binaryString.charCodeAt(i);
   return bytes;
+}
+
+async function verifySignature(message) {
+  if (!message.hasOwnProperty('signature')) {
+    console.error('message has no signature', message);
+    return false;
+  }
+  if (!message.hasOwnProperty('key')) {
+    console.error('message has no key', message);
+    return false;
+  }
+  const signature = message.signature;
+  message.signature = '';
+  const publicKey = await importKey(message.key);
+  if (!publicKey) {
+    console.error('Failed to import public key for proposal');
+    return false;
+  }
+  const bytes = base64ToByteArray(signature);
+  const buffer = new TextEncoder().encode(JSON.stringify(message));
+  const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, buffer);
+  message.signature = signature;
+  return verify;
 }
 
 function setupLanguagePicker() {
@@ -870,6 +897,12 @@ function addProposal(proposal, type, open) {
           enable(button);
           return;
         }
+        const area = await getLocalAreaFromProposalJudge(proposal.key);
+        if (area === 0) {
+          enable(button);
+          return;
+        }
+        console.log('AREA = ' + area);
         let ballotBytes;
         if (proposal.ballot === null) {
           ballotBytes = new Uint8Array(32);
@@ -877,7 +910,6 @@ function addProposal(proposal, type, open) {
           proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
         } else
           ballotBytes = base64ToByteArray(proposal.ballot);
-
         const randomNumber = new Uint8Array(1);
         crypto.getRandomValues(randomNumber);
         proposal.number += randomNumber[0];
@@ -886,7 +918,8 @@ function addProposal(proposal, type, open) {
           referendum: proposal.signature,
           number: proposal.number,
           ballot: proposal.ballot,
-          answer: answer
+          answer: answer,
+          area: area
         };
         const referendumBytes = base64ToByteArray(vote.referendum);
         const numberBytes = int64ToUint8Array(vote.number);
@@ -930,10 +963,9 @@ function addProposal(proposal, type, open) {
   trashButton.classList.add('button', 'button-tonal');
   trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
   trashButton.addEventListener('click', function() {
-    const uppercaseType = type.charAt(0).toUpperCase() + type.slice(1);
     app.dialog.confirm(
       `This ${type} will be removed from your list, but you can fetch it again if needed.`,
-      `Remove ${uppercaseType}?`, function() {
+      `Remove ${capitalizeFirstLetter(type)}?`, function() {
         document.getElementById(`${type}s`).removeChild(item);
         if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
           const index = proposals.indexOf(proposal);
@@ -975,7 +1007,7 @@ async function verifyProposalSignature(proposal) {
   let p = {
     schema: proposal.schema,
     key: proposal.key,
-    signature: '',
+    signature: proposal.signature,
     published: proposal.published,
     area: proposal.area,
     title: proposal.title,
@@ -983,44 +1015,29 @@ async function verifyProposalSignature(proposal) {
   };
   if (proposal.question)
     p.question = proposal.question;
-  if (proposal.answers) {
+  if (proposal.answers)
     p.answers = proposal.answers;
-    p.answers.pop(); // remove the last one which is empty (abstention)
-  }
   p.type = proposal.type;
   p.secret = proposal.secret;
   p.deadline = proposal.deadline;
   if (proposal.website)
     p.website = proposal.website;
   p.trust = proposal.trust;
-  const publicKey = await importKey(proposal.key);
-  if (!publicKey)
-    console.error('Failed to import public key for proposal');
-  const bytes = base64ToByteArray(proposal.signature);
-  const packetArrayBuffer = new TextEncoder().encode(JSON.stringify(p));
-  const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, packetArrayBuffer);
-  if (!verify) {
+  if (!verifySignature(p)) {
     app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
     return false;
   }
   let a = {
     schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/area.schema.json`,
     key: proposal.areaKey,
-    signature: '',
+    signature: proposal.areaSignature,
     published: proposal.areaPublished,
     id: proposal.area,
     name: proposal.areaName,
     polygons: proposal.areaPolygons,
     local: proposal.areaLocal
   };
-  const areaPublicKey = await importKey(proposal.areaKey);
-  if (!areaPublicKey)
-    console.error('Failed to import public key for area');
-  const areaBytes = base64ToByteArray(proposal.areaSignature);
-  const areaPacketArrayBuffer = new TextEncoder().encode(JSON.stringify(a));
-  const areaVerify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', areaPublicKey, areaBytes, areaPacketArrayBuffer);
-  if (!areaVerify) {
-    console.log(JSON.stringify(a));
+  if (!verifySignature(a)) {
     app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
     return false;
   }
@@ -1036,7 +1053,7 @@ function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) 
   if (proposalTrust > 315576000) // if more than 10 years, we consider it as a date
     trust = proposalTrust;
   else // we consider it as a delay from now
-    trust = (now / 1000) - proposalTrust;
+    trust = now - proposalTrust;
   if (certificateIssued > trust) {
     let details;
     if (proposalTrust > 315576000) {
@@ -1060,8 +1077,7 @@ function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) 
 }
 
 async function getProposal(fingerprint, type) {
-  const item = type.charAt(0).toUpperCase() + type.slice(1);
-  app.dialog.preloader(`Getting ${item}...`);
+  app.dialog.preloader(`Getting ${capitalizeFirstLetter(type)}...`);
   fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&citizen=${encodeURIComponent(citizen.signature)}`)
     .then(response => response.json())
     .then(async proposal => {
@@ -1080,7 +1096,7 @@ async function getProposal(fingerprint, type) {
         app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
         return;
       }
-      if (!testProposalTrust(proposal.trust, proposal.trusted, Date.now() / 1000, proposal.type))
+      if (!testProposalTrust(proposal.trust, proposal.trusted, Math.round(Date.now() / 1000), proposal.type))
         return;
       const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
       const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
@@ -2255,16 +2271,15 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
       iAmTrustedByJudge = false;
       updateReputation('N/A', false);
     }
-    app.dialog.alert(answer.error, 'Could not get reputation from judge');
+    app.dialog.alert(answer.error, 'Could not get reputation from notary');
     return false;
   }
-  const publicKey = await importKey(judgeKey);
-  const signature = base64ToByteArray(answer.signature);
-  answer.signature = '';
-  let buffer = new TextEncoder().encode(JSON.stringify(answer));
-  let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, buffer);
-  if (!verify) {
-    app.dialog.alert('Failed to verify judge signature.', 'Bad response from judge');
+  if (answer.key !== judgeKey) {
+    app.dialog.alert(`Wrong judge key while getting reputation from notary.`, `Wrong judge key`);
+    return false;
+  }
+  if (!verifySignature(answer)) {
+    app.dialog.alert('Failed to verify judge signature.', 'Bad response from notary');
     return false;
   }
   if (judgeUrl === judge) {
@@ -2294,6 +2309,27 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   if (!testProposalTrust(proposalTrust, issued, answer.timestamp, type))
     return false;
   return true;
+}
+
+async function getLocalAreaFromProposalJudge(judgeKey) {
+  const url = `${notary}/api/publish_area.php?judge=${encodeURIComponent(judgeKey)}` +
+                                             `&lat=${citizen.latitude}&lon=${citizen.longitude}`;
+  const response = await fetch(url);
+  const answer = await response.json();
+  if (answer.error) {
+    app.dialog.alert(answer.error, 'Could not get local area from notary');
+    return 0;
+  }
+  if (answer.key !== judgeKey) {
+    app.dialog.alert('Wrong judge key returned by notary for local area.', 'Local area error');
+    return 0;
+  }
+  const signed = await verifySignature(answer);
+  if (!signed) {
+    app.dialog.alert('Wrong signature for judge area.', 'Wrong signature');
+    return 0;
+  }
+  return answer.id;
 }
 
 function updateProposals(proposals) {
