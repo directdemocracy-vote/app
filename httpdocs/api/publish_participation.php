@@ -18,7 +18,7 @@ $query = "SELECT id, version, "
         ."REPLACE(REPLACE(TO_BASE64(appKey), '\\n', ''), '=', '') AS appKey, "
         ."REPLACE(REPLACE(TO_BASE64(appSignature), '\\n', ''), '=', '') AS appSignature, "
         ."REPLACE(REPLACE(TO_BASE64(referendum), '\\n', ''), '=', '') AS referendum, "
-        ."REPLACE(TO_BASE64(encryptedVote), '\\n', '') AS encryptedVote "
+        ."area "
         ."FROM participation WHERE published <= NOW()";
 $result = $mysqli->query($query) or die($mysqli->error);
 $list = '';
@@ -31,7 +31,7 @@ while ($row = $result->fetch_assoc()) {
     'appKey' => $row['appKey'],
     'appSignature' => $row['appSignature'],
     'referendum' => $row['referendum'],
-    'encryptedVote' => $row['encryptedVote']
+    'area' => intval($row['area']
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
