@@ -167,15 +167,14 @@ if (isset($publication->schema)) { # this is a publication
 
 require_once '../../php/database.php';
 $version = intval(explode('/', $publication->schema)[4]);
-$query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, referendum, encryptedVote) "
+$query = "INSERT INTO participation(`version`, `key`, signature, published, appKey, appSignature, referendum, area) "
         ."VALUES($version, FROM_BASE64('$publication->key=='), FROM_BASE64('$publication->signature=='), FROM_UNIXTIME($publication->published), "
         ."FROM_BASE64('$publication->appKey=='), FROM_BASE64('$publication->appSignature=='), "
-        ."FROM_BASE64('$publication->referendum=='), FROM_BASE64('$publication->encryptedVote')) "
+        ."FROM_BASE64('$publication->referendum=='), $publication->area) "
         ."ON DUPLICATE KEY UPDATE "
         ."`version`=$version, "
         ."signature=FROM_BASE64('$publication->signature=='), "
-        ."appSignature=FROM_BASE64('$publication->appSignature=='), "
-        ."encryptedVote=FROM_BASE64('$publication->encryptedVote')";
+        ."appSignature=FROM_BASE64('$publication->appSignature==')";
 $mysqli->query($query) or error($mysqli->error);
 $mysqli->close();
 
