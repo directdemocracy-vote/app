@@ -134,6 +134,10 @@ if (isset($publication->schema)) { # this is a publication
   $private_key = openssl_get_privatekey('file://../../'.$folder.'id_rsa');
   if ($private_key == FALSE)
     error('failed to read private key');
+  if (isset($publication->encryptedVote)) {
+    $encryptedVote = $publication->encryptedVote;
+    unset($publication->encryptedVote);
+  }
   $binarySignature = '';
   $success = openssl_sign($publication->signature, $binarySignature, $private_key, OPENSSL_ALGO_SHA256);
   if ($success === FALSE)
@@ -183,7 +187,7 @@ $details = openssl_pkey_get_details($private_key);
 $n = gmp_import($details['rsa']['n'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
 $e = gmp_import($details['rsa']['e'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
 $d = gmp_import($details['rsa']['d'], 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
-$blinded_message = gmp_import(base64_decode($publication->encryptedVote), 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
+$blinded_message = gmp_import(base64_decode($encryptedVote), 1, GMP_BIG_ENDIAN | GMP_MSW_FIRST);
 $blind_signature = gmp_powm($blinded_message, $d, $n);
 $m = gmp_powm($blind_signature, $e, $n);
 if (gmp_cmp($m, $blinded_message) !== 0)
