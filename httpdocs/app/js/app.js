@@ -827,7 +827,8 @@ function addProposal(proposal, type, open) {
         'Sign Petition?', async function() {
           disable(button);
           app.dialog.preloader('Signing...');
-          if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'petition') === false) {
+          if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust, 'petition') ===
+            false) {
             enable(button);
             return;
           }
@@ -863,7 +864,8 @@ function addProposal(proposal, type, open) {
         // prepare the vote aimed at blind signature
         disable(button);
         app.dialog.preloader('Voting...');
-        const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, 'referendum');
+        const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust,
+          'referendum');
         if (greenLight === false) {
           enable(button);
           return;
@@ -1029,6 +1031,34 @@ async function verifyProposalSignature(proposal) {
   return true;
 }
 
+function testProposalTrust(proposalTrust, certificateIssued, now) {
+  let trust;
+  if (proposalTrust > 315576000) // if more than 10 years, we consider it as a date
+    trust = proposalTrust;
+  else // we consider it as a delay from now
+    trust = (now / 1000) - proposalTrust;
+  if (certificateIssued > trust) {
+    let details;
+    if (proposalTrust > 315576000) {
+      const date = new Date(proposalTrust * 1000).toISOString().replace('T', ' ').substring(0, 19);
+      details = `You should be trusted since ${date}`;
+    } else {
+      const hours = Math.floor(proposalTrust / 3600);
+      if (hours === 1)
+        details = `You should be trusted for more than one hour.`;
+      else if (hours <= 24)
+        details = `You should be trusted for more than ${hours} hours.`;
+      else {
+        const days = Math.ceil(hours / 24);
+        details = `You should be trusted for more than ${days} days.`;
+      }
+    }
+    app.dialog.alert(`You are not trusted by the judge of this proposal for long enough. ${details}`, 'Too early trust');
+    return false;
+  }
+  return true;
+}
+
 async function getProposal(fingerprint, type) {
   const item = type.charAt(0).toUpperCase() + type.slice(1);
   app.dialog.preloader(`Getting ${item}...`);
@@ -1050,30 +1080,8 @@ async function getProposal(fingerprint, type) {
         app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
         return;
       }
-      let trust;
-      if (proposal.trust > 315576000) // if more than 10 years, we consider it as a date
-        trust = proposal.trust;
-      else // we consider it as a delay from now
-        trust = (Date.now() / 1000) - proposal.trust;
-      if (proposal.trusted > trust) {
-        let details;
-        if (proposal.trust > 315576000) {
-          const date = new Date(proposal.trust * 1000).toISOString().replace('T', ' ').substring(0, 19);
-          details = `You should be trusted since ${date}`;
-        } else {
-          const hours = Math.floor(proposal.trust / 3600);
-          if (hours === 1)
-            details = `You should be trusted for more than one hour.`;
-          else if (hours <= 24)
-            details = `You should be trusted for more than ${hours} hours.`;
-          else {
-            const days = Math.ceil(hours / 24);
-            details = `You should be trusted for more than ${days} days.`;
-          }
-        }
-        app.dialog.alert(`You are not trusted by the judge of this proposal for long enough. ${details}`, 'Too early trust');
+      if (!testProposalTrust(proposal.trust, proposal.trusted, Date.now() / 1000))
         return;
-      }
       const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
       const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
       if (fingerprint !== sha1) {
@@ -2238,11 +2246,8 @@ function getReputationFromJudge() {
     });
 }
 
-async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, type) {
-  const randomBytes = new Uint8Array(20);
-  crypto.getRandomValues(randomBytes);
-  challenge = btoa(String.fromCharCode.apply(null, randomBytes));
-  const url = `${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}&challenge=${encodeURIComponent(challenge)}`;
+async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, proposalTrust, type) {
+  const url = `${notary}/api/reputation.php?judge=${encodeURIComponent(judgeKey)}&key=${encodeURIComponent(citizen.key)}`;
   const response = await fetch(url);
   const answer = await response.json();
   if (answer.error) {
@@ -2254,26 +2259,40 @@ async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, type
     return false;
   }
   const publicKey = await importKey(judgeKey);
-  let signature = base64ToByteArray(answer.signature);
-  let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, randomBytes);
+  const signature = base64ToByteArray(answer.signature);
+  answer.signature = '';
+  let buffer = new TextEncoder().encode(JSON.stringify(answer));
+  let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, buffer);
   if (!verify) {
-    app.dialog.alert('Failed to verify judge challenge.', 'Bad response from judge');
+    app.dialog.alert('Failed to verify judge signature.', 'Bad response from judge');
     return false;
   }
   if (judgeUrl === judge) {
     iAmTrustedByJudge = answer.trusted;
     updateReputation(answer.reputation, answer.trusted);
   }
+  const timeDifference = Math.round(Date.now() / 1000) - answer.timestamp;
+  if (Math.abs(timeDifference) > 60) {
+    app.dialog.alert(`The app time differs from the judge time by ${timeDifference} seconds`, 'Time mismatch');
+    return false;
+  }
   if (answer.timestamp >= proposalDeadline) {
     app.dialog.alert(`The deadline of the ${type} has passed.`, 'Deadline passed');
     return false;
   }
-  if (answer.trusted !== true) {
-    const reputation = Number(answer.reputation);
+  const reputation = parseFloat(answer.reputation);
+  if (answer.trusted === 0) {
     app.dialog.alert(`You are not trusted by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
       'Not trusted');
     return false;
+  } else if (answer.trusted === -1) {
+    app.dialog.alert(`You were distrusted by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
+      'Distrusted');
+    return false;
   }
+  const issued = parseInt(answer.issued);
+  if (!testProposalTrust(proposalTrust, issued, answer.timestamp))
+    return false;
   return true;
 }
 
