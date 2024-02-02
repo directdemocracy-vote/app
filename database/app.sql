@@ -12,7 +12,7 @@ CREATE TABLE `participation` (
   `appKey` blob NOT NULL,
   `appSignature` blob NOT NULL,
   `referendum` blob NOT NULL,
-  `encryptedVote` blob NOT NULL
+  `area` int(11) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE `participation`
