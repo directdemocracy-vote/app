@@ -340,7 +340,7 @@ async function publish(publication, signature, type) {
         'directdemocracy-version': directDemocracyVersion,
         'integrity-token': token,
         'user-notary': notary,
-        'app-time': Date.now(),
+        'app-time': Math.round(Date.now() / 1000),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(publication)
@@ -483,7 +483,7 @@ function welcome() {
               app.dialog.confirm('On the phone containing your citizen card, ' +
                 'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
                 'following the instructions. Then, press OK to scan the export QR code.',
-                'Import Citizen Card', importCitizen, welcome);
+              'Import Citizen Card', importCitizen, welcome);
             }
           }, {
             text: 'No',
@@ -492,7 +492,7 @@ function welcome() {
                 'you will have to search your current citizen card from a notary database ' +
                 'and scan its QR code (or copy/paste its reference). ' +
                 'Then, you will have to get endorsed again by your neighbors.',
-                'Lost Citizen Card', lost, welcome);
+              'Lost Citizen Card', lost, welcome);
             }
           }, {
             text: 'Cancel',
@@ -1270,7 +1270,7 @@ async function scanQRCode(error, contents, type, comment = '') {
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
         hash: 'SHA-256'
       },
-        true, ['sign']);
+      true, ['sign']);
       const exported = await crypto.subtle.exportKey('spki', k.publicKey);
       const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
       challengeBytes = decodeBase128(challenge);
@@ -1386,7 +1386,7 @@ function onDeviceReady() {
         'Also, you will loose your endorsements and have to get endorsed again to be able to vote and sign again. ' +
         'Note that your updated citizen card should still refer to you and not to someone else. ' +
         'Do you really want to update your citizen card?',
-        'Update Citizen Card?', updateCard);
+      'Update Citizen Card?', updateCard);
     } else
       updateCard();
   });
@@ -1406,7 +1406,7 @@ function onDeviceReady() {
       'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
       'On this other phone, follow the instructions of the initial setup dialog to import your citizen card. ' +
       'Then, press OK to display the export QR code.',
-      'Export Citizen Card?', exportCard);
+    'Export Citizen Card?', exportCard);
   });
 
   document.getElementById('delete').addEventListener('click', function(event) {
@@ -1428,7 +1428,7 @@ function onDeviceReady() {
     app.dialog.confirm("You should not delete your citizen card unless you don't want to be a citizen any more. " +
       'If possible, you should rather update it or transfer it to another phone. ' +
       'Are you sure want to delete your citizen card? There is no way back!',
-      'Delete Citizen Card?', deleteCard);
+    'Delete Citizen Card?', deleteCard);
   });
 
   document.getElementById('review-former-check').addEventListener('click', function(event) {
@@ -2322,13 +2322,22 @@ function updateEndorsements() {
     badge.innerHTML = '!';
     return;
   }
-  let endorsementCount = endorsements.length;
-  badge.textContent = endorsementCount;
+  let endorsedYouCount = 0;
+  let endorsedCount = 0;
+  for (const endorsement of endorsements) {
+    if (endorsement.hasOwnProperty('endorsedYou'))
+      endorsedYouCount++;
+    if (endorsement.hasOwnProperty('endorsed'))
+      endorsedCount++;
+  }
+  document.getElementById('endorsed-by').textContent = endorsedYouCount;
+  document.getElementById('endorsed').textContent = endorsedCount;
+  badge.textContent = endorsedYouCount;
   newElement(
     list,
     'div',
     'block-title no-margin-left no-margin-right',
-    `Your Neighbors: ${endorsementCount}/${endorsements.length}`
+    `Your Neighbors: ${endorsedYouCount}/${endorsements.length}`
   );
   let medias = newElement(list, 'div', 'list media-list');
   let ul = newElement(medias, 'ul');
