@@ -902,7 +902,6 @@ function addProposal(proposal, type, open) {
           enable(button);
           return;
         }
-        console.log('AREA = ' + area);
         let ballotBytes;
         if (proposal.ballot === null) {
           ballotBytes = new Uint8Array(32);
@@ -951,11 +950,12 @@ function addProposal(proposal, type, open) {
           appKey: appKey,
           appSignature: '',
           referendum: proposal.signature,
-          encryptedVote: btoa(String.fromCharCode(...blind.blindMessage))
+          area: area
         };
         referendumButton = button;
         referendumProposal = proposal;
         Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), function(signature) {
+          participationToPublish.encryptedVote = btoa(String.fromCharCode(...blind.blindMessage));
           publish(participationToPublish, signature, 'participation');
         }, keystoreFailure);
       });
