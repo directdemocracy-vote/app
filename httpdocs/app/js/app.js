@@ -917,20 +917,23 @@ function addProposal(proposal, type, open) {
         vote = {
           referendum: proposal.signature,
           number: proposal.number,
+          area: area,
           ballot: proposal.ballot,
-          answer: answer,
-          area: area
+          answer: answer
         };
         const referendumBytes = base64ToByteArray(vote.referendum);
         const numberBytes = int64ToUint8Array(vote.number);
+        const areaBytes = int64ToUint8Array(vote.area);
         const answerBytes = new TextEncoder().encode(vote.answer);
-        const l = referendumBytes.length + numberBytes.length + ballotBytes.length + answerBytes.length;
+        const l = referendumBytes.length + numberBytes.length + areaBytes.length + ballotBytes.length + answerBytes.length;
         voteBytes = new Uint8Array(l);
         let p = 0;
         voteBytes.set(referendumBytes);
         p += referendumBytes.length;
         voteBytes.set(numberBytes, p);
         p += numberBytes.length;
+        voteBytes.set(areaBytes, p);
+        p += areaBytes.length;
         voteBytes.set(ballotBytes, p);
         p += ballotBytes.length;
         voteBytes.set(answerBytes, p);
