@@ -31,7 +31,7 @@ while ($row = $result->fetch_assoc()) {
     'appKey' => $row['appKey'],
     'appSignature' => $row['appSignature'],
     'referendum' => $row['referendum'],
-    'area' => intval($row['area']
+    'area' => intval($row['area'])
   );
   $list .= $row['id'].', ';
   $data = json_encode($participation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
