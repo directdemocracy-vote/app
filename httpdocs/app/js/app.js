@@ -827,8 +827,8 @@ function addProposal(proposal, type, open) {
         'Sign Petition?', async function() {
           disable(button);
           app.dialog.preloader('Signing...');
-          if (await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust, 'petition') ===
-            false) {
+          if (await getGreenLightFromProposalJudge(proposal.judge,
+            proposal.key, proposal.deadline, proposal.trust, 'petition') === false) {
             enable(button);
             return;
           }
@@ -864,7 +864,7 @@ function addProposal(proposal, type, open) {
         // prepare the vote aimed at blind signature
         disable(button);
         app.dialog.preloader('Voting...');
-        const greenLight = await getGreenLightFromJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust,
+        const greenLight = await getGreenLightFromProposalJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust,
           'referendum');
         if (greenLight === false) {
           enable(button);
@@ -1031,7 +1031,7 @@ async function verifyProposalSignature(proposal) {
   return true;
 }
 
-function testProposalTrust(proposalTrust, certificateIssued, now) {
+function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) {
   let trust;
   if (proposalTrust > 315576000) // if more than 10 years, we consider it as a date
     trust = proposalTrust;
@@ -1053,7 +1053,7 @@ function testProposalTrust(proposalTrust, certificateIssued, now) {
         details = `You should be trusted for more than ${days} days.`;
       }
     }
-    app.dialog.alert(`You are not trusted by the judge of this proposal for long enough. ${details}`, 'Too early trust');
+    app.dialog.alert(`You are not trusted by the judge of this ${proposalType} for long enough. ${details}`, 'Too early trust');
     return false;
   }
   return true;
@@ -1080,7 +1080,7 @@ async function getProposal(fingerprint, type) {
         app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
         return;
       }
-      if (!testProposalTrust(proposal.trust, proposal.trusted, Date.now() / 1000))
+      if (!testProposalTrust(proposal.trust, proposal.trusted, Date.now() / 1000, proposal.type))
         return;
       const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(proposal.signature + '=='));
       const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
@@ -2246,7 +2246,7 @@ function getReputationFromJudge() {
     });
 }
 
-async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, proposalTrust, type) {
+async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadline, proposalTrust, type) {
   const url = `${notary}/api/reputation.php?judge=${encodeURIComponent(judgeKey)}&key=${encodeURIComponent(citizen.key)}`;
   const response = await fetch(url);
   const answer = await response.json();
@@ -2291,7 +2291,7 @@ async function getGreenLightFromJudge(judgeUrl, judgeKey, proposalDeadline, prop
     return false;
   }
   const issued = parseInt(answer.issued);
-  if (!testProposalTrust(proposalTrust, issued, answer.timestamp))
+  if (!testProposalTrust(proposalTrust, issued, answer.timestamp, type))
     return false;
   return true;
 }
