@@ -101,6 +101,22 @@
           <div id="review-map" style="width:100%;height:400px"></div>
           <div class="block list margin-top-half">
             <ul id="review-checklist">
+              <li id="review-choice-item" class="display-flex justify-content-center">
+                <label class="radio item-content">
+                  <input type="radio" name="review-choice" value="endorse">
+                  <i class="icon icon-radio"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">Endorse</div>
+                  </div>
+                </label>
+                <label class="radio item-content">
+                  <input type="radio" name="review-choice" value="report">
+                  <i class="icon icon-radio"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half">Report</div>
+                  </div>
+                </label>
+              </li>
               <li id="review-former-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
                   <input type="checkbox" id="review-former-check">
@@ -110,12 +126,12 @@
                   </div>
                 </label>
               </li>
-              <li id="review-standing-check-item" class="display-none">
+              <li id="review-know-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
-                  <input type="checkbox" id="review-standing-check">
+                  <input type="checkbox" id="review-know-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person standing in front of me.</div>
+                    <div class="item-title margin-left-half" id="review-know-text"></div>
                   </div>
                 </label>
               </li>
@@ -265,7 +281,7 @@
               </li>
             </ul>
             <div class="display-flex margin-top-half">
-              <button class="button button-fill margin-right-half margin-left-half disabled"
+              <button class="button button-fill color-red margin-right-half margin-left-half disabled"
                 id="review-confirm"></button>
               <button class="button button-fill margin-right-half margin-left-half" id="review-cancel">Cancel</button>
             </div>
@@ -450,8 +466,8 @@
                     class="icon f7-icons margin-right">qrcode</i>Show QR Code</button>
                 <button id="scan-qrcode" class="button button-fill margin-bottom"><i
                     class="icon f7-icons margin-right">qrcode_viewfinder</i>Scan QR Code</button>
-                <div>You are endorsed by: <span id="endorsed-by">0</span></div>
-                <div>You endorsed: <span id="endorsed">0</span></div>
+                <button id="remote-endorsement" class="button button-fill margin-top margin-bottom"><i
+                    class="icon f7-icons margin-right">arrowshape_turn_up_right</i>Get Endorsed Remotely</button>
               </div>
             </div>
           </swiper-slide>
@@ -462,7 +478,7 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Report a Neighbor</div>
+                        <div class="item-title item-label">Review a Neighbor</div>
                         <div class="item-input-wrap">
                           <input id="enter-neighbor" type="text" size="40" maxlength="40"
                             placeholder="Paste citizen reference here">

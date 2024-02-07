@@ -77,7 +77,8 @@ let reviewMarker = null;
 let petitions = [];
 let referendums = [];
 let previousSignature = null;
-let reportComment = ''; // '', 'replaced', 'updated' or 'transferred'
+let certificateComment = ''; // 'in-person', 'online', 'deleted', 'replaced', 'updated', 'transferred', 'revoked+...', etc.
+let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 
@@ -311,7 +312,7 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     app.dialog.preloader('Exporting...');
     transfer();
   } else if (type === 'endorse challenge')
-    getCitizen(otherKey, 'key', '');
+    getCitizen(otherKey, 'endorse');
   else
     console.error('Unknown challenge: ' + type);
 }
@@ -472,9 +473,9 @@ async function publishCitizen(signature) {
       appSignature: '',
       type: 'report',
       publication: previousSignature,
-      comment: reportComment
+      comment: certificateComment
     };
-    reportComment = '';
+    certificateComment = '';
     previousSignature = null;
     Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
   }
@@ -493,7 +494,7 @@ function welcome() {
       onClick: function() {
         function importCitizen() {
           scan(function(error, contents) {
-            scanQRCode(error, contents, 'challenge', 'transferred');
+            scanQRCode(error, contents, 'challenge', 'transfer');
           });
         }
         function lost() {
@@ -542,65 +543,118 @@ function welcome() {
   dialog.open();
 }
 
-function updateChecksDisplay(comment) {
+function showChecks(checks) {
+  const children = document.getElementById('review-checklist').children;
+  for (let i = 0; i < children.length; i++) {
+    const item = children[i];
+    if (item.id.endsWith('-check-item')) {
+      const check = item.id.split('-')[1];
+      document.getElementById(`review-${check}-check`).checked = false;
+      if (checks.includes(check))
+        item.classList.remove('display-none');
+      else
+        item.classList.add('display-none');
+    }
+  }
+  document.getElementById('review-report_other-input-item').classList.add('display-none');
+}
+
+function showEndorseChecks(inPerson, warning) {
+  document.getElementById('review-know-text').textContent = inPerson
+    ? 'This person is standing in front of me.'
+    : 'I know this person.';
+  showChecks(['know', 'adult', 'picture', 'name', 'coords']);
+  const reviewConfirm = document.getElementById('review-confirm');
+  reviewConfirm.textContent = 'Endorse';
+  certificateComment = inPerson ? 'in-person' : 'online';
+  reviewConfirm.classList.remove('display-none');
+  document.getElementById('review-cancel').textContent = 'Cancel';
+  document.getElementById('review-title').textContent = 'Endorse a Citizen';
+  document.getElementById('review-warning').textContent = warning || 'Warning: a wrong endorsement may affect your reputation';
+}
+
+function showRevokeChecks() {
+  showChecks(['outdated', 'renamed', 'moved', 'died']);
+  const reviewConfirm = document.getElementById('review-confirm');
+  reviewConfirm.textContent = 'Revoke';
+  certificateComment = 'revoked';
+  reviewConfirm.classList.remove('display-none');
+  document.getElementById('review-cancel').textContent = 'Cancel';
+  document.getElementById('review-title').textContent = 'Revoke a Cizizen';
+  document.getElementById('review-warning').textContent = 'Warning: a wrong revoke may affect your reputation';
+}
+
+function showReportChecks() {
+  showChecks(['report_ghost', 'report_duplicate', 'report_dead', 'report_address',
+    'report_name', 'report_picture', 'report_other']);
+  const reviewConfirm = document.getElementById('review-confirm');
+  reviewConfirm.textContent = 'Report';
+  certificateComment = 'reported';
+  reviewConfirm.classList.remove('display-none');
+  document.getElementById('review-cancel').textContent = 'Cancel';
+  document.getElementById('review-title').textContent = 'Report a Cizizen';
+  document.getElementById('review-warning').textContent = 'Warning: a wrong report may affect your reputation';
+}
+
+function updateChecksDisplay(action) {
   const reviewConfirm = document.getElementById('review-confirm');
   const reviewCancel = document.getElementById('review-cancel');
-  let title, confirm, warning, checks;
+  const reviewChoiceClassList = document.getElementById('review-choice-item').classList;
+  const reviewChoices = document.getElementsByName('review-choice');
+  if (action === 'endorse') {
+    reviewChoiceClassList.remove('display-none');
+    showEndorseChecks(true);
+    return;
+  }
+  if (action === 'endorsed') {
+    reviewChoiceClassList.remove('display-none');
+    reviewChoices[0].checked = false;
+    reviewChoices[1].checked = true;
+    showRevokeChecks();
+    return;
+  }
+  if (action.startsWith('revoked+')) { // already revoked
+    let warning = 'You revoked this neighbor (';
+    if (action.search('address') !== -1)
+      warning += 'moved, ';
+    if (action.search('name') !== -1)
+      warning += 'renamed, ';
+    if (action.search('picture') !== -1)
+      warning += 'outdated picture, ';
+    if (action.search('died') !== -1)
+      warning += 'died, ';
+    warning = warning.slice(0, -2) + ')';
+    reviewChoiceClassList.remove('display-none');
+    reviewChoices[0].checked = true;
+    reviewChoices[1].checked = false;
+    showEndorseChecks(false, warning);
+    return;
+  }
+  let title, confirm, warning;
   let cancel = 'Cancel';
-  if (comment === 'replaced') {
+  if (action === 'replace') {
     title = 'Replace Your Citizen Card';
     confirm = 'Replace';
     warning = 'Warning: a wrong replacement may affect your reputation.';
-    checks = ['former'];
-    reviewCancel.classList.add('color-red');
-    reviewConfirm.classList.remove('color-red');
-  } else if (comment === 'transferred') {
+    reviewChoiceClassList.add('display-none');
+    showChecks(['former']);
+  } else if (action === 'transfer') {
     title = 'Import Your Citizen Card';
     confirm = 'Import';
     warning = 'Warning: a wrong import may affect your reputation';
-    checks = ['former'];
-    reviewCancel.classList.add('color-red');
-    reviewConfirm.classList.remove('color-red');
-  } else if (comment === 'revoked') {
-    title = 'Revoke a Neighbor';
-    confirm = 'Revoke';
-    warning = 'Warning: a wrong revoke may affect your reputation';
-    checks = ['outdated', 'renamed', 'moved', 'died'];
-    reviewCancel.classList.remove('color-red');
-    reviewConfirm.classList.add('color-red');
-  } else if (comment.startsWith('revoked+')) { // already revoked
-    title = 'Review a Neighbor';
+    reviewChoiceClassList.add('display-none');
+    showChecks(['former']);
+  } else if (action === 'review') {
+    title = 'Review a Neighborg';
     confirm = '';
-    warning = 'You already revoked this neighbor (';
-    if (comment.search('address') !== -1)
-      warning += 'moved, ';
-    if (comment.search('name') !== -1)
-      warning += 'renamed, ';
-    if (comment.search('picture') !== -1)
-      warning += 'outdated picture, ';
-    if (comment.search('died') !== -1)
-      warning += 'died, ';
-    warning = warning.slice(0, -2) + ')';
-    checks = [];
+    warning = '';
     cancel = 'Close';
-    reviewCancel.classList.remove('color-red');
-  } else if (comment === 'reported') {
-    title = 'Report a Neighborg';
-    confirm = 'Report';
-    warning = 'Warning: a wrong report may affect your reputation';
-    checks = ['report_ghost', 'report_duplicate', 'report_dead', 'report_address', 'report_name', 'report_picture',
-      'report_other'];
-    reviewCancel.classList.remove('color-red');
-    reviewConfirm.classList.add('color-red');
-  } else if (comment === '') {
-    title = 'Endorse a Neighbor';
-    confirm = 'Endorse';
-    warning = 'Warning: a wrong endorsement may affect your reputation';
-    checks = ['standing', 'adult', 'picture', 'name', 'coords'];
-    reviewCancel.classList.add('color-red');
-    reviewConfirm.classList.remove('color-red');
+    showChecks([]);
+    reviewChoiceClassList.remove('display-none');
+    reviewChoices[0].checked = false;
+    reviewChoices[1].checked = false;
   } else
-    console.error('Unsupported comment in citizen review:"' + comment + '"');
+    console.error('Unsupported comment in citizen review:"' + action + '"');
   if (confirm === '')
     reviewConfirm.classList.add('display-none');
   else
@@ -609,21 +663,18 @@ function updateChecksDisplay(comment) {
   reviewCancel.textContent = cancel;
   document.getElementById('review-title').textContent = title;
   document.getElementById('review-warning').textContent = warning;
-  const children = document.getElementById('review-checklist').children;
-  for (let i = 0; i < children.length; i++) {
-    const item = children[i];
-    const check = item.id.split('-')[1];
-    document.getElementById(`review-${check}-check`).checked = false;
-    if (checks.includes(check))
-      item.classList.remove('display-none');
-    else
-      item.classList.add('display-none');
-  }
 }
 
-// comment may be either '' (endorse), 'replaced', 'transferred', 'revoked', 'revoked+...' (already revoked) or 'reported'
-function reviewCitizen(publication, comment) {
-  updateChecksDisplay(comment);
+// action may be either:
+// 'replace': replace my own citizen card (no choice)
+// 'transfer': transfer my own citizen card (no choice)
+// 'endorse': review a face-to-face citizen (preselect endorse)
+// 'review': review an online citizen (no preselection)
+// 'endorsed': review an already endorsed citizen (preselect revoke), or
+// 'revoked+...': review already revoked citizen who endorses me (preselect endorse)
+
+function reviewCitizen(publication, action) {
+  updateChecksDisplay(action);
   disable('review-confirm');
   document.getElementById('review-online').setAttribute('href',
     `${notary}/citizen.html?signature=${encodeURIComponent(publication.signature)}`);
@@ -660,7 +711,7 @@ function reviewCitizen(publication, comment) {
         reputation.style.color = 'red';
       } else {
         reputation.textContent = answer.reputation;
-        reputation.style.color = answer.trusted ? 'blue' : 'red';
+        reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
       }
     })
     .catch((error) => {
@@ -676,19 +727,15 @@ function reviewCitizen(publication, comment) {
         `${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
     });
   review = publication;
-  reportComment = comment;
   hide('home');
   show('review');
   document.getElementById('review-page').scrollTop = 0;
+  reviewAction = action;
 }
 
-async function getCitizen(reference, type, comment) {
+async function getCitizen(reference, action) {
   app.dialog.preloader('Getting Citizen...');
-  if (type !== 'fingerprint' && type !== 'key') {
-    console.error('wrong citizen reference: ' + type);
-    return;
-  }
-  const parameter = (type === 'key') ? `key=${encodeURIComponent(reference)}` : `fingerprint=${reference}`;
+  const parameter = (reference.length === 40) ? `fingerprint=${reference}` : `key=${encodeURIComponent(reference)}`;
   fetch(`${notary}/api/publication.php?${parameter}`)
     .then(response => response.json())
     .then(async publication => {
@@ -700,7 +747,7 @@ async function getCitizen(reference, type, comment) {
         app.dialog.alert(publication.error, 'Citizen search error');
         return;
       }
-      if (type === 'fingerprint') {
+      if (reference.length === 40) {
         const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
         const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
         if (reference !== sha1) {
@@ -720,7 +767,7 @@ async function getCitizen(reference, type, comment) {
       let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
       if (!verify) {
         app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
-        console.log(publication);
+        console.error(publication);
         return;
       }
       publication.signature = signature;
@@ -731,7 +778,7 @@ async function getCitizen(reference, type, comment) {
         app.dialog.alert('Failed to verify app signature', 'Citizen search error');
         return;
       }
-      reviewCitizen(publication, comment);
+      reviewCitizen(publication, action);
     });
 }
 
@@ -1229,7 +1276,7 @@ function scan(callback) {
   });
 }
 
-function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
+function sendChallenge(otherAppUrl, challengeId, key, signature, action) {
   const sig = signature.slice(0, -2);
   fetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(sig)}`)
     .then(response => response.json())
@@ -1238,7 +1285,7 @@ function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
         console.error(answer.error);
         app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error', function() {
           scan(function(error, contents) {
-            scanQRCode(error, contents, 'challenge', comment);
+            scanQRCode(error, contents, 'challenge', action);
           });
         });
         return;
@@ -1254,11 +1301,11 @@ function sendChallenge(otherAppUrl, challengeId, key, signature, comment) {
         app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
         return;
       }
-      getCitizen(key, 'key', comment);
+      getCitizen(key, action);
     });
 }
 
-async function scanQRCode(error, contents, type, comment = '') {
+async function scanQRCode(error, contents, type, action = '') {
   stopScanner('home');
   if (type !== 'challenge') {
     show(`${type}-page`);
@@ -1282,7 +1329,7 @@ async function scanQRCode(error, contents, type, comment = '') {
       app.dialog.alert(`Importing a citizen card from app "{$otherAppUrl}" is not supported by your app`, 'Unsupported App');
       return;
     }
-    if (comment === 'transferred') { // generate a key and sign the challenge
+    if (action === 'transfer') { // generate a key and sign the challenge
       const k = await crypto.subtle.generateKey({
         name: 'RSASSA-PKCS1-v1_5',
         modulusLength: 2048,
@@ -1296,18 +1343,18 @@ async function scanQRCode(error, contents, type, comment = '') {
       const challengeArrayBuffer = new TextEncoder().encode(challenge);
       const s = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', k.privateKey, challengeArrayBuffer);
       const signature = btoa(String.fromCharCode.apply(null, new Uint8Array(s)));
-      sendChallenge(otherAppUrl, challengeId, key, signature, comment);
+      sendChallenge(otherAppUrl, challengeId, key, signature, action);
     } else { // endorse with own key
       Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
-        sendChallenge(otherAppUrl, challengeId, citizen.key, signature, comment);
+        sendChallenge(otherAppUrl, challengeId, citizen.key, signature, action);
       }, keystoreFailure);
     }
   } else {
     const fingerprint = byteArrayToFingerprint(decodeBase128(contents));
     if (type === 'me')
-      getCitizen(fingerprint, 'fingerprint', 'replaced');
+      getCitizen(fingerprint, 'replace');
     else if (type === 'neighbor')
-      getCitizen(fingerprint, 'fingerprint', 'reported');
+      getCitizen(fingerprint, 'review');
     else
       getProposal(fingerprint, type);
   }
@@ -1385,7 +1432,7 @@ function onDeviceReady() {
   document.getElementById('update').addEventListener('click', function(event) {
     function updateCard() {
       previousSignature = citizen.signature;
-      reportComment = 'updated';
+      certificateComment = 'updated';
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
@@ -1450,6 +1497,35 @@ function onDeviceReady() {
     'Delete Citizen Card?', deleteCard);
   });
 
+  function choiceChange(event) {
+    const button = event.currentTarget;
+    if (reviewAction === 'endorse') {
+      if (button.value === 'endorse') // face-to-face
+        showEndorseChecks(true);
+      else
+        showReportChecks(true);
+    } else if (reviewAction === 'review') {
+      if (button.value === 'endorse')
+        showEndorseChecks(false); // offline
+      else
+        showReportChecks(false);
+    } else if (reviewAction === 'endorsed') {
+      if (button.value === 'endorse')
+        showEndorseChecks(false); // offline
+      else
+        showRevokeChecks(false);
+    } else if (reviewAction.startsWith('revoked+')) {
+      if (button.value === 'endorse')
+        showEndorseChecks(false); // offline
+      else
+        showRevokeChecks(false, reviewAction.substring(8));
+    } else
+      console.error('Unsupported review action: ' + reviewAction);
+  }
+  const reviewChoice = document.getElementsByName('review-choice');
+  reviewChoice[0].addEventListener('click', choiceChange);
+  reviewChoice[1].addEventListener('click', choiceChange);
+
   document.getElementById('review-former-check').addEventListener('click', function(event) {
     if (event.currentTarget.checked)
       enable('review-confirm');
@@ -1458,7 +1534,7 @@ function onDeviceReady() {
   });
 
   function endorsementChecks() {
-    if (document.getElementById('review-standing-check').checked &&
+    if (document.getElementById('review-know-check').checked &&
       document.getElementById('review-adult-check').checked &&
       document.getElementById('review-picture-check').checked &&
       document.getElementById('review-name-check').checked &&
@@ -1467,7 +1543,7 @@ function onDeviceReady() {
     else
       disable('review-confirm');
   }
-  document.getElementById('review-standing-check').addEventListener('click', endorsementChecks);
+  document.getElementById('review-know-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-adult-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-picture-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-name-check').addEventListener('click', endorsementChecks);
@@ -1538,6 +1614,10 @@ function onDeviceReady() {
       dead.checked = false;
       other.checked = false;
     }
+    if (other.checked === false)
+      document.getElementById('review-report_other-input-item').classList.add('display-none');
+    else
+      document.getElementById('review-report_other-input-item').classList.remove('display-none');
     if (ghost.checked || duplicate.checked || dead.checked ||
       address.checked || name.checked || picture.checked ||
       (other.checked && input.value.trim() !== ''))
@@ -1557,12 +1637,12 @@ function onDeviceReady() {
   document.getElementById('review-cancel').addEventListener('click', function(event) {
     hide('review');
     show('home');
-    reportComment = '';
+    certificateComment = '';
     review = null;
   });
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
-    if (reportComment === '') { // endorse
+    if (certificateComment === 'in-person' || certificateComment === 'online') { // endorse
       app.dialog.preloader('Endorsing...');
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -1572,22 +1652,24 @@ function onDeviceReady() {
         appKey: appKey,
         appSignature: '',
         type: 'endorse',
-        publication: review.signature
+        publication: review.signature,
+        comment: certificateComment
       };
+      certificateComment = '';
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-    } else if (reportComment === 'revoked') {
+    } else if (certificateComment === 'revoked') {
       app.dialog.confirm('Revoking a neighbor may impact their reputation, are you sure you want to proceed?',
         'Revoke Neighbor?', function() {
           app.dialog.preloader('Revoking...');
           if (document.getElementById('review-died-check').checked)
-            reportComment += '+died';
+            certificateComment += '+died';
           else {
             if (document.getElementById('review-moved-check').checked)
-              reportComment += '+address';
+              certificateComment += '+address';
             if (document.getElementById('review-renamed-check').checked)
-              reportComment += '+name';
+              certificateComment += '+name';
             if (document.getElementById('review-outdated-check').checked)
-              reportComment += '+picture';
+              certificateComment += '+picture';
           }
           certificateToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -1598,36 +1680,36 @@ function onDeviceReady() {
             appSignature: '',
             type: 'report',
             publication: review.signature,
-            comment: reportComment
+            comment: certificateComment
           };
-          reportComment = '';
+          certificateComment = '';
           Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
         });
-    } else if (reportComment === 'reported') {
+    } else if (certificateComment === 'reported') {
       app.dialog.confirm('Reporting a neighbor may impact their reputation, are you sure you want to proceed?',
         'Report Neighbor?', function() {
           app.dialog.preloader('Reporting...');
           if (document.getElementById('review-report_ghost-check').checked)
-            reportComment = 'ghost';
+            certificateComment = 'ghost';
           else if (document.getElementById('review-report_duplicate-check').checked)
-            reportComment = 'duplicate';
+            certificateComment = 'duplicate';
           else if (document.getElementById('review-report_dead-check').checked)
-            reportComment = 'died';
+            certificateComment = 'died';
           else if (document.getElementById('review-report_other-check').checked)
-            reportComment = 'other';
+            certificateComment = 'other';
           else {
-            reportComment = '';
+            certificateComment = '';
             if (document.getElementById('review-report_address-check').checked)
-              reportComment += '+address';
+              certificateComment += '+address';
             if (document.getElementById('review-report_name-check').checked)
-              reportComment += '+name';
+              certificateComment += '+name';
             if (document.getElementById('review-report_picture-check').checked)
-              reportComment += '+picture';
-            reportComment = reportComment.substring(1); // remove the first char ('+')
+              certificateComment += '+picture';
+            certificateComment = certificateComment.substring(1); // remove the first char ('+')
           }
           const input = document.getElementById('review-report_other-input').value.trim();
           if (input !== '')
-            reportComment += ':' + input;
+            certificateComment += ':' + input;
           certificateToPublish = {
             schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
             key: citizen.key,
@@ -1637,18 +1719,18 @@ function onDeviceReady() {
             appSignature: '',
             type: 'report',
             publication: review.signature,
-            comment: reportComment
+            comment: certificateComment
           };
-          reportComment = '';
+          certificateComment = '';
           Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
         });
     } else {
-      if (reportComment === 'replaced')
+      if (certificateComment === 'replaced')
         app.dialog.preloader('Replacing...');
-      else if (reportComment === 'transferred')
+      else if (certificateComment === 'transferred')
         app.dialog.preloader('Importing...');
       else {
-        console.error('Unsupport reportComment in review-confirm button click: "' + reportComment + '"');
+        console.error('Unsupport certificateComment in review-confirm button click: "' + certificateComment + '"');
         return;
       }
       previousSignature = review.signature;
@@ -1743,7 +1825,7 @@ function onDeviceReady() {
                 return;
               if (answer.startsWith('{')) {
                 const json = JSON.parse(answer);
-                console.log('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
+                console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
               } else {
                 const coords = answer.split(',');
                 currentLatitude = parseFloat(coords[0]);
@@ -1799,7 +1881,7 @@ function onDeviceReady() {
   document.getElementById('register-button').addEventListener('click', async function(event) {
     disable('register-button');
     const button = document.getElementById('register-button');
-    const action = reportComment === 'updated' ? 'updating' : 'registering';
+    const action = certificateComment === 'updated' ? 'updating' : 'registering';
     button.textContent = translator.translate(action);
     button.setAttribute('data-i18n', action);
     app.dialog.preloader(button.textContent);
@@ -1832,10 +1914,10 @@ function onDeviceReady() {
   });
 
   document.getElementById('cancel-register-button').addEventListener('click', function(event) {
-    if (previousSignature && reportComment === 'updated') {
+    if (previousSignature && certificateComment === 'updated') {
       showPage('card');
       enableDangerButtons();
-      reportComment = '';
+      certificateComment = '';
       previousSignature = null;
     } else {
       showPage('splash');
@@ -1851,7 +1933,7 @@ function onDeviceReady() {
 
   document.getElementById('scan-qrcode').addEventListener('click', function() {
     scan(function(error, contents) {
-      scanQRCode(error, contents, 'challenge');
+      scanQRCode(error, contents, 'challenge', 'endorse');
     });
   });
 
@@ -1876,7 +1958,7 @@ function onDeviceReady() {
     disable('scan-me');
     disable('enter-me');
     scan(function(error, contents) {
-      scanQRCode(error, contents, 'me');
+      scanQRCode(error, contents, 'me', 'replace');
     });
   });
 
@@ -1885,7 +1967,7 @@ function onDeviceReady() {
     disable('scan-neighbor');
     disable('enter-neighbor');
     scan(function(error, contents) {
-      scanQRCode(error, contents, 'neighbor');
+      scanQRCode(error, contents, 'neighbor', 'review');
     });
   });
 
@@ -1985,8 +2067,8 @@ function onDeviceReady() {
     if (value.length === 40) {
       disable(`scan-${type}`);
       disable(`enter-${type}`);
-      if (type === 'me')
-        getCitizen(value, 'fingerprint', '');
+      if (type === 'me' || type === 'neighbor')
+        getCitizen(value, 'review');
       else
         getProposal(value, type);
     }
@@ -2029,7 +2111,7 @@ function onDeviceReady() {
     const coords = location.split(', ');
     const latitude = parseFloat(coords[0]);
     const longitude = parseFloat(coords[1]);
-    if (previousSignature && reportComment === 'updated' && // test for change
+    if (previousSignature && certificateComment === 'updated' && // test for change
       givenNames === citizen.givenNames &&
       familyName === citizen.familyName &&
       picture === citizen.picture &&
@@ -2369,16 +2451,17 @@ function updateEndorsements() {
     if (endorsement.hasOwnProperty('endorsed'))
       endorsedCount++;
   }
-  document.getElementById('endorsed-by').textContent = endorsedYouCount;
-  document.getElementById('endorsed').textContent = endorsedCount;
+
   badge.textContent = endorsedYouCount;
   newElement(
     list,
     'div',
     'block-title no-margin-left no-margin-right',
-    `Your Neighbors: ${endorsedYouCount}/${endorsements.length}`
+    'Your Neighbors'
   );
-  let medias = newElement(list, 'div', 'list media-list');
+  newElement(list, 'div', 'no-margin-left no-margin-right', `You are endorsed by: ${endorsedYouCount}`).style.fontSize = '85%';
+  newElement(list, 'div', 'no-margin-left no-margin-right', `You endorsed: ${endorsedCount}`).style.fontSize = '85%';
+  let medias = newElement(list, 'div', 'list media-list margin-top-half');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
     let li = newElement(ul, 'li', 'item-content no-padding-left no-padding-right no-margin-left no-margin-right');
@@ -2448,8 +2531,20 @@ function updateEndorsements() {
     div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
     div.style.width = '28px';
     a = newElement(div, 'a', 'link');
-    let i = newElement(a, 'i', 'f7-icons', 'checkmark_seal_fill');
-    i.style.color = 'green';
+    if (endorsement.hasOwnProperty('trusted')) {
+      if (endorsement.trusted === 1) {
+        icon = 'checkmark_seal_fill';
+        color = 'green';
+      } else {
+        icon = 'xmark_seal_fill';
+        color = 'red';
+      }
+    } else {
+      icon = 'checkmark_seal';
+      color = 'grey';
+    }
+    let i = newElement(a, 'i', 'f7-icons', icon);
+    i.style.color = color;
     let d = newElement(div, 'div', 'display-none', '...');
     d.style.width = '28px';
     d.style.textAlign = 'center';
@@ -2458,6 +2553,10 @@ function updateEndorsements() {
     d.style.color = 'green';
     a.addEventListener('click', function() {
       d.classList.remove('display-none');
+      d.textContent = '...';
+      d.style.color = 'grey';
+      i.style.color = 'grey';
+      i.textContent = 'checkmark_seal';
       fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(endorsement.key)}`)
         .then(response => response.json())
         .then(answer => {
@@ -2471,18 +2570,32 @@ function updateEndorsements() {
               else
                 d.textContent = 'N/A';
             }
-            if (answer.hasOwnProperty('trusted'))
-              d.style.color = answer.trusted ? 'green' : 'red';
-            else
+            if (answer.hasOwnProperty('trusted')) {
+              if (answer.trusted === 1) { // trusted
+                d.style.color = 'green';
+                i.style.color = 'green';
+                i.textContent = 'checkmark_seal_fill';
+              } else { // never trusted or distrusted
+                d.style.color = 'red';
+                i.style.color = 'red';
+                i.textContent = 'xmark_seal_fill';
+              }
+            } else
               d.style.color = 'grey';
           }
         });
     });
     a = newElement(div, 'a', 'link');
-    i = newElement(a, 'i', 'f7-icons', 'doc_text_search');
+    newElement(a, 'i', 'f7-icons', 'doc_text_search');
     a.addEventListener('click', function() {
-      const comment = endorsement.hasOwnProperty('reportedComment') ? endorsement.reportedComment : 'revoked';
-      getCitizen(endorsement.key, 'key', comment);
+      let action;
+      if (endorsement.hasOwnProperty('reportedComment'))
+        action = endorsement.reportedComment.replace('revoke+', 'revoked+');
+      else if (endorsement.hasOwnProperty('endorsed'))
+        action = 'endorsed';
+      else
+        action = 'review';
+      getCitizen(endorsement.key, action);
     });
   });
 }
