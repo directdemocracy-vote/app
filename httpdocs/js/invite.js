@@ -19,5 +19,5 @@ window.onload = function() {
         return;
       }
       console.log(answer);
-    }
-}
+    });
+};
