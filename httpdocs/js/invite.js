@@ -9,7 +9,6 @@ function findGetParameter(parameterName) {
 }
 
 window.onload = function() {
-  console.log("coucou");
   const fingerprint = findGetParameter('fingerprint');
   fetch(`https://notary.directdemocracy.vote/api/publication.php?fingerprint=${fingerprint}`)
     .then(response => response.json())
@@ -18,7 +17,7 @@ window.onload = function() {
         console.error(answer.error);
         return;
       }
-      document.getElementById('introduction').innerHTML = `<img src="${answer.picture}">` +
+      document.getElementById('introduction').innerHTML = `<img src="${answer.picture}" style="float:left;margin-right:16px">` +
         `${answer.givenNames} ${answer.familyName} would like to be endorsed by you.<br>` +
         'If you agree, install the app on your phone and click the Review link on this ' +
         `<a target="_blank" href="https://notary.directdemocracy.vote/citizen.html?fingerprint=${fingerprint}">citizen page</a>.`;
