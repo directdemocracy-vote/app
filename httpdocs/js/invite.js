@@ -18,6 +18,9 @@ window.onload = function() {
         console.error(answer.error);
         return;
       }
-      console.log(answer);
+      document.getElementById('introduction').innerHTML = `<img src="${answer.picture}">` +
+        `${answer.givenNames} ${answer.familyName} would like to be endorsed by you.<br>` +
+        'If you agree, install the app on your phone and click the Review link on this ' +
+        `<a target="_blank" href="https://notary.directdemocracy.vote/citizen.html?fingerprint=${fingerprint}">citizen page</a>.`;
     });
 };
