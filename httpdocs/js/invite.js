@@ -9,6 +9,7 @@ function findGetParameter(parameterName) {
 }
 
 window.onload = function() {
+  console.log("coucou");
   const fingerprint = findGetParameter('fingerprint');
   fetch(`https://notary.directdemocracy.vote/api/publication.php?fingerprint=${fingerprint}`)
     .then(response => response.json())
