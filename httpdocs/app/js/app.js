@@ -77,7 +77,7 @@ let reviewMarker = null;
 let petitions = [];
 let referendums = [];
 let previousSignature = null;
-let certificateComment = ''; // 'in-person', 'online', 'deleted', 'replaced', 'updated', 'transferred', 'revoked+...', etc.
+let certificateComment = ''; // 'in-person', 'remote', 'deleted', 'replaced', 'updated', 'transferred', 'revoked+...', etc.
 let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
@@ -566,7 +566,7 @@ function showEndorseChecks(inPerson, warning) {
   showChecks(['know', 'adult', 'picture', 'name', 'coords']);
   const reviewConfirm = document.getElementById('review-confirm');
   reviewConfirm.textContent = 'Endorse';
-  certificateComment = inPerson ? 'in-person' : 'online';
+  certificateComment = inPerson ? 'in-person' : 'remote';
   reviewConfirm.classList.remove('display-none');
   document.getElementById('review-cancel').textContent = 'Cancel';
   document.getElementById('review-title').textContent = 'Endorse a Citizen';
@@ -701,6 +701,8 @@ function reviewCitizen(publication, action) {
   reviewMap.on('contextmenu', function(event) {
     return false;
   });
+  const distance = distanceAsText(citizen.latitude, citizen.longitude, publication.latitude, publication.longitude);
+  document.getElementById('distance').textContent = distance;
   const reputation = document.getElementById('review-reputation');
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
     .then(response => response.json())
@@ -1642,7 +1644,7 @@ function onDeviceReady() {
   });
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
-    if (certificateComment === 'in-person' || certificateComment === 'online') { // endorse
+    if (certificateComment === 'in-person' || certificateComment === 'remote') { // endorse
       app.dialog.preloader('Endorsing...');
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
@@ -1951,6 +1953,17 @@ function onDeviceReady() {
     Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
       publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'endorse challenge');
     }, keystoreFailure);
+  });
+
+  document.getElementById('remote-endorsement').addEventListener('click', function() {
+    const fingerprint = byteArrayToFingerprint(base64ToByteArray(localStorage.getItem('citizenFingerprint')));
+    window.plugins.socialsharing.shareWithOptions({
+      message: 'Do you want to join DirectDemocracy and endorse me as a neighbor? ' +
+               'All the information is provided in this link. ' +
+               'Thank you!',
+      subject: 'DirectDemocracy',
+      url: `https://app.directdemocracy.vote/invite.html?fingerprint=${fingerprint}`
+    });
   });
 
   document.getElementById('scan-me').addEventListener('click', function() {
@@ -2434,6 +2447,33 @@ function updateProposals(proposals) {
   }
 }
 
+function distanceAsText(lat1, lon1, lat2, lon2) {
+  const d = distanceInMeter(lat1, lon1, lat2, lon2);
+  console.log(`distance = ${d} meters`);
+  let text;
+  if (d >= 10000)
+    text = `${Math.round(d / 1000)} km`;
+  else if (d > 1000)
+    text = `${Math.round(d / 100) / 10} km`;
+  else
+    text = `${Math.round(d)} m`;
+  return text;
+}
+
+function distanceInMeter(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const p1 = lat1 * Math.PI / 180;
+  const p2 = lat2 * Math.PI / 180;
+  const deltaP = p2 - p1;
+  const deltaLon = lon2 - lon1;
+  const deltaLambda = (deltaLon * Math.PI) / 180;
+  const a = Math.sin(deltaP / 2) * Math.sin(deltaP / 2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const d = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * R;
+  return d;
+}
+
 function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
   let badge = document.getElementById('reputation-badge');
@@ -2451,7 +2491,6 @@ function updateEndorsements() {
     if (endorsement.hasOwnProperty('endorsed'))
       endorsedCount++;
   }
-
   badge.textContent = endorsedYouCount;
   newElement(
     list,
@@ -2459,8 +2498,8 @@ function updateEndorsements() {
     'block-title no-margin-left no-margin-right',
     'Your Neighbors'
   );
-  newElement(list, 'div', 'no-margin-left no-margin-right', `You are endorsed by: ${endorsedYouCount}`).style.fontSize = '85%';
-  newElement(list, 'div', 'no-margin-left no-margin-right', `You endorsed: ${endorsedCount}`).style.fontSize = '85%';
+  newElement(list, 'div', 'no-margin-left no-margin-right',
+    `You are endorsed by ${endorsedYouCount} and endorsed ${endorsedCount}`).style.fontSize = '85%';
   let medias = newElement(list, 'div', 'list media-list margin-top-half');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
@@ -2475,58 +2514,107 @@ function updateEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
+    const distance = distanceAsText(citizen.latitude, citizen.longitude, endorsement.latitude, endorsement.longitude);
+    newElement(div, 'div', 'item-subtitle align-self-flex-start', distance);
     let icon;
     let day;
     let color;
+    let comment;
     let otherIcon;
     let otherDay;
     let otherColor;
-    if (endorsement.hasOwnProperty('endorsed') && endorsement.hasOwnProperty('endorsedYou')) {
+    let otherComment;
+    if (endorsement.hasOwnProperty('endorsed')) {
       day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
+      color = endorsement.endorsedComment === 'in-person' ? 'green' : 'blue';
+      icon = 'arrow_left';
+      comment = endorsement.endorsedComment;
+    } else if (endorsement.hasOwnProperty('reported')) {
+      day = new Date(endorsement.reported * 1000).toISOString().slice(0, 10);
+      color = 'red';
+      icon = 'arrow_left';
+      comment = endorsement.reportedComment;
+    } else
+      day = false;
+    if (endorsement.hasOwnProperty('endorsedYou')) {
       otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
-      if (day === otherDay) {
+      otherColor = endorsement.endorsedYouComment === 'in-person' ? 'green' : 'blue';
+      otherIcon = 'arrow_right';
+      otherComment = endorsement.endorsedYouComment;
+    } else if (endorsement.hasOwnProperty('reportedYou')) {
+      otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
+      otherColor = 'red';
+      otherIcon = 'arrow_right';
+      otherComment = endorsement.reportedYouComment;
+    } else
+      otherDay = false;
+    if (day !== false || otherDay !== false) {
+      if (day === otherDay && color === otherColor && comment === otherComment) {
+        otherDay = false;
         icon = 'arrow_right_arrow_left';
-        color = 'green';
-        otherDay = false;
-      } else {
-        icon = 'arrow_left';
-        color = 'green';
-        otherIcon = 'arrow_right';
-        otherColor = 'green';
       }
-    } else {
-      if (endorsement.hasOwnProperty('reported')) {
-        icon = 'xmark';
-        color = 'red';
-        day = new Date(endorsement.reported * 1000).toISOString().slice(0, 10);
-      } else if (endorsement.hasOwnProperty('endorsed')) {
-        icon = 'arrow_left';
-        color = 'green';
-        day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
-      } else
-        day = false;
-      if (endorsement.hasOwnProperty('reportedYou')) {
-        otherIcon = 'xmark';
-        otherColor = 'red';
-        otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
-      } else if (endorsement.hasOwnProperty('endorsedYou')) {
-        otherIcon = 'arrow_right';
-        otherColor = 'green';
-        otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
-      } else
-        otherDay = false;
-    }
-    let message;
-    if (day) {
-      message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
-        `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${color}">${icon}</i> ` + day, true);
+      const name = `${endorsement.givenNames} ${endorsement.familyName}`;
+      if (otherComment === 'remote')
+        otherComment = `${name} endorsed you remotely.`;
+      else if (otherComment === 'in-person')
+        otherComment = `${name} endorsed you in person.`;
+      else if (otherComment === 'revoked+address')
+        otherComment = `${name} revoked you because they believe you moved.`;
+      else if (otherComment === 'revoked+name')
+        otherComment = `${name} revoked you because they believe your name changed.`;
+      else if (otherComment === 'revoked+picture')
+        otherComment = `${name} revoked you because they believe your picture is outdated.`;
+      else if (otherComment === 'revoked+address+name')
+        otherComment = `${name} revoked you because they believe you moved and your name changed.`;
+      else if (otherComment === 'revoked+address+picture')
+        otherComment = `${name} revoked you because they believe you moved and your picture is outdated.`;
+      else if (otherComment === 'revoked+name+picture')
+        otherComment = `${name} revoked you because they believe your name changed and your picture is outdated.`;
+      else if (otherComment === 'revoked+address+name+picture')
+        otherComment = `${name} revoked you because they believe your name changed, you moved and your picture is outdated.`;
+      else if (otherComment === 'revoked+died')
+        otherComment = `${name} revoked you because they believe you died.`;
+
+      if (comment === 'remote')
+        comment = `You endorsed ${name} remotely.`;
+      else if (comment === 'in-person')
+        comment = `You endorsed ${name} in person.`;
+      else if (comment === 'revoked+address')
+        comment = `You revoked ${name} because you believe they moved.`;
+      else if (comment === 'revoked+name')
+        comment = `You revoked ${name} because you believe their name changed.`;
+      else if (comment === 'revoked+picture')
+        comment = `You revoked ${name} because you believe their picture is outdated.`;
+      else if (comment === 'revoked+address+name')
+        comment = `You revoked ${name} because you believe they moved and their name changed.`;
+      else if (comment === 'revoked+address+picture')
+        comment = `You revoked ${name} because you believe they moved and their picture is outdated.`;
+      else if (comment === 'revoked+name+picture')
+        comment = `You revoked ${name} because you believe their name changed and their picture is outdated.`;
+      else if (comment === 'revoked+address+name+picture')
+        comment = `You revoked ${name} because you believe their name changed, they moved and their picture is outdated.`;
+      else if (comment === 'revoked+died')
+        comment = `You revoked ${name} because you believe they died.`;
+
+      let other = otherDay
+        ? `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ${otherDay}` +
+        `${day ? ' ' : ''}`
+        : '';
+      let main = day
+        ? `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${color}">${icon}</i> ${day}`
+        : '';
+      let message = newElement(div, 'div', 'item-subtitle align-self-flex-start');
       message.style.fontSize = '82.353%';
-    }
-    if (otherDay) {
-      message = newElement(div, 'div', 'item-subtitle align-self-flex-start',
-        `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ` +
-        otherDay, true);
-      message.style.fontSize = '82.353%';
+      if (other !== '') {
+        newElement(message, 'span', '', other, true).addEventListener('click', function(event) {
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? otherComment + '\n' + comment : otherComment);
+        });
+      }
+      if (main !== '') {
+        newElement(message, 'span', '', main, true).addEventListener('click', function(event) {
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? comment + '\n' + otherComment : comment);
+        });
+      }
     }
     div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
     div.style.width = '28px';
