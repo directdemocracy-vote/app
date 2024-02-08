@@ -70,7 +70,8 @@ let blindInv = null;
 let petitionButton = null;
 let petitionProposal = null;
 let referendumProposal = null;
-let referendumButton = null;
+let voteButton = null;
+let verifyButton = null;
 let review = null;
 let reviewMap = null;
 let reviewMarker = null;
@@ -433,9 +434,10 @@ async function publish(publication, signature, type) {
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
                   app.dialog.alert(`You successfully voted to the referendum entitled "${referendumProposal.title}"`, 'Voted!');
-                  referendumButton.textContent = 'Re-vote';
+                  voteButton.textContent = 'Re-vote';
                   if (referendumProposal.deadline * 1000 < new Date().getTime())
-                    enable(referendumButton);
+                    enable(voteButton);
+                  enable(verifyButton);
                   localStorage.setItem('referendums', JSON.stringify(referendums));
                 }
               });
@@ -890,7 +892,7 @@ function addProposal(proposal, type, open) {
   p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
   let grid = document.createElement('div');
   block.appendChild(grid);
-  grid.classList.add('grid', 'grid-cols-2', 'grid-gap');
+  grid.classList.add('grid', type === 'petition' ? 'grid-cols-2' : 'grid-cols-3', 'grid-gap');
   grid.appendChild(button);
   button.classList.add('button', 'button-fill');
   if (type === 'petition') {
@@ -926,6 +928,27 @@ function addProposal(proposal, type, open) {
         });
     });
   } else { // referendum
+    const vButton = document.createElement('button');
+    grid.appendChild(vButton);
+    vButton.classList.add('button', 'button-fill');
+    vButton.innerHTML = '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle</i>Verify';
+    if (proposal.ballot === null)
+      disable(vButton);
+    vButton.addEventListener('click', function(event) {
+      app.dialog.preloader(`Verifying Vote...`);
+      let template = '*';
+      fetch(`${notary}/api/verify.php?signature=${encodeURIComponent(proposal.signature)}&template=${template}}`)
+        .then(response => response.json())
+        .then(answer => {
+          app.dialog.close(); // preloader
+          console.log(answer);
+          app.dialog.alert('Your vote was successfully veryfied.', 'Vote Verified');
+          vButton.innerHTML =
+            '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verify';
+          vButton.classList.remove('color-orange');
+          vButton.classList.add('color-green');
+        });
+    });
     button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
     if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
@@ -1001,7 +1024,8 @@ function addProposal(proposal, type, open) {
           referendum: proposal.signature,
           area: area
         };
-        referendumButton = button;
+        voteButton = button;
+        verifyButton = vButton;
         referendumProposal = proposal;
         Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(participationToPublish), function(signature) {
           participationToPublish.encryptedVote = btoa(String.fromCharCode(...blind.blindMessage));
@@ -2449,7 +2473,6 @@ function updateProposals(proposals) {
 
 function distanceAsText(lat1, lon1, lat2, lon2) {
   const d = distanceInMeter(lat1, lon1, lat2, lon2);
-  console.log(`distance = ${d} meters`);
   let text;
   if (d >= 10000)
     text = `${Math.round(d / 1000)} km`;
