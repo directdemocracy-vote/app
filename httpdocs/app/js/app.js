@@ -934,20 +934,92 @@ function addProposal(proposal, type, open) {
     vButton.innerHTML = '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle</i>Verify';
     if (proposal.ballot === null)
       disable(vButton);
-    vButton.addEventListener('click', function(event) {
+    vButton.addEventListener('click', async function(event) {
       app.dialog.preloader(`Verifying Vote...`);
-      let template = '*';
-      fetch(`${notary}/api/verify.php?signature=${encodeURIComponent(proposal.signature)}&template=${template}}`)
-        .then(response => response.json())
-        .then(answer => {
-          app.dialog.close(); // preloader
-          console.log(answer);
-          app.dialog.alert('Your vote was successfully veryfied.', 'Vote Verified');
+      let result = '';
+      let bits = Math.round(proposal.participants / 100);
+      const b = base64ToByteArray(proposal.ballot);
+      let bin = '';
+      for (let i = 0; i < b.length; i++)
+        bin += b[i].toString(2).padStart(8, '0');
+      do {
+        let fromBin = '';
+        for (let i = 0; i < bits; i++)
+          fromBin += bin[i];
+        fromBin += '0'.repeat(32 * 8 - bits);
+        let from = '';
+        for (let i = 0; i < 32 * 8; i += 8) {
+          const v = parseInt(fromBin.substring(i, i + 8), 2);
+          console.log(fromBin.substring(i, i + 8) + ' => ' + v);
+          from += v.toString(16);
+        }
+        const url = `${notary}/api/verify.php?signature=${encodeURIComponent(proposal.signature)}&from=${from}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          result = `bad response (${response.status}) from server`;
+          break;
+        }
+        let answer;
+        try {
+          answer = await response.json();
+        } catch (e) {
+          result = e.message;
+          break;
+        }
+        if (answer.error) {
+          console.error(answer.error);
+          result = answer.error;
+          break;
+        } else {
+          for (vote of answer) {
+            console.log(vote);
+            if (!await verifySignature(vote)) {
+              result = 'corrupted'; // bad station signature
+              break;
+            }
+            // FIXME: verify app signatures
+            if (vote.ballot === proposal.ballot) {
+              result = vote.answer === proposal.answer ? 'verified' : 'tampered';
+              break;
+            }
+          }
+        }
+        if (result)
+          break;
+        bits++;
+      } while (true);
+      app.dialog.close(); // preloader
+      vButton.classList.remove('color-orange');
+      if (result === 'verified') {
+        app.dialog.alert('Your vote was successfully verified.', 'Vote Verified');
+        vButton.innerHTML =
+         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verified';
+        vButton.classList.add('color-green');
+      } else if (result === 'corrupted') {
+        app.dialog.alert('The votes returned by the notary are corrupted.', 'Votes Corrupted');
+        vButton.innerHTML =
+         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
+        vButton.classList.add('color-red');
+      } else if (result === 'tampered') {
+        app.dialog.alert('Your vote was tampered (your answer to the question was modified).', 'Vote Tampered');
+        vButton.innerHTML =
+         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Tampered';
+        vButton.classList.add('color-red');
+      } else if (result === 'not found') {
+        app.dialog.alert('Your vote was not found at the notary, please try again later.', 'Vote Not Found');
+        vButton.innerHTML =
+         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_on_rectangle_angled</i>Verify';
+        vButton.classList.add('color-orange');
+      } else {
+        if (result === '') {
+          result = 'unknown error';
+          app.dialog.alert(`An error occurred while verifying your vote: ${result}. please try again later.`,
+            'Vote Verification Error');
           vButton.innerHTML =
-            '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verify';
-          vButton.classList.remove('color-orange');
-          vButton.classList.add('color-green');
-        });
+           '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
+          vButton.classList.add('color-red');
+        }
+      }
     });
     button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
     if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
@@ -1099,7 +1171,7 @@ async function verifyProposalSignature(proposal) {
   if (proposal.website)
     p.website = proposal.website;
   p.trust = proposal.trust;
-  if (!verifySignature(p)) {
+  if (!await verifySignature(p)) {
     app.dialog.alert('Cannot verify the signature of this proposal.', 'Wrong proposal signature');
     return false;
   }
@@ -1113,7 +1185,7 @@ async function verifyProposalSignature(proposal) {
     polygons: proposal.areaPolygons,
     local: proposal.areaLocal
   };
-  if (!verifySignature(a)) {
+  if (!await verifySignature(a)) {
     app.dialog.alert('Cannot verify the signature of the area of this proposal', 'Wrong area signature');
     return false;
   }
@@ -2400,7 +2472,7 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
     app.dialog.alert(`Wrong judge key while getting reputation from notary.`, `Wrong judge key`);
     return false;
   }
-  if (!verifySignature(answer)) {
+  if (!await verifySignature(answer)) {
     app.dialog.alert('Failed to verify judge signature.', 'Bad response from notary');
     return false;
   }
@@ -2446,8 +2518,7 @@ async function getLocalAreaFromProposalJudge(judgeKey) {
     app.dialog.alert('Wrong judge key returned by notary for local area.', 'Local area error');
     return 0;
   }
-  const signed = await verifySignature(answer);
-  if (!signed) {
+  if (!await verifySignature(answer)) {
     app.dialog.alert('Wrong signature for judge area.', 'Wrong signature');
     return 0;
   }
