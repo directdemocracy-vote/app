@@ -238,6 +238,37 @@ export async function rsaBlind(publicKey, message, salt) {
 }
 
 /**
+   * verify a blind signature.
+   * @param {Uint8Array} data - The signed data.
+   * @param {CryptoKey} key - The public key.
+   * @param {Uint8array} signature - The blind signature.
+   * @param {bool} jwk - Whether the key parameter is in jwk format
+   * @returns {bool} verified - Whether the signature is correct.
+   */
+export async function rsaVerifyBlind(data, key, signature, jwk = false) {
+  const publicKeyExport = jwk ? key : await crypto.subtle.exportKey('jwk', key);
+  const keyData = {
+    kty: 'RSA',
+    e: base64ToBase64u(publicKeyExport.e),
+    n: base64ToBase64u(publicKeyExport.n),
+    alg: 'PS384',
+    ext: true
+  };
+  const algorithm = { name: 'RSA-PSS', hash: { name: 'SHA-384' } };
+  const ps384Key = await crypto.subtle.importKey('jwk', keyData, algorithm, false, ['verify']);
+  if (!ps384Key) {
+    console.error('failed to create public key from exponent and modulus');
+    return false;
+  }
+  const verify = await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 48 }, ps384Key, signature, data);
+  if (!verify) {
+    console.error('failed to verify blind signature');
+    return false;
+  }
+  return true;
+}
+
+/**
    * unblind a blindly signed message and verify it (see RFC 9474 - finalize).
    * @param {CryptoKey} publicKey - The public key.
    * @param {Uint8Array} blindMessage - The prepared message which was blind signed.
@@ -252,18 +283,7 @@ export async function rsaUnblind(publicKey, blindMessage, blindSignature, inv) {
   const nInt = base64uToBigInt(publicKeyExport.n);
   const s = (bytesToBigInt(blindSignature) * inv) % nInt;
   const signature = bigIntToUint8Array(s, base64uToBinary(publicKeyExport.n).length);
-  const keyData = {
-    kty: 'RSA',
-    e: base64ToBase64u(publicKeyExport.e),
-    n: base64ToBase64u(publicKeyExport.n),
-    alg: 'PS384',
-    ext: true
-  };
-  const algorithm = { name: 'RSA-PSS', hash: { name: 'SHA-384' } };
-  const ps384Key = await crypto.subtle.importKey('jwk', keyData, algorithm, false, ['verify']);
-  if (!ps384Key)
-    throw new Error('failed to create public key from exponent and modulus');
-  const verify = await window.crypto.subtle.verify({ name: 'RSA-PSS', saltLength: 48 }, ps384Key, signature, blindMessage);
+  const verify = await rsaVerifyBlind(blindMessage, publicKeyExport, signature, true);
   if (!verify)
     throw new Error('failed to verify blind signature');
   return signature;

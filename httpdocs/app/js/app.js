@@ -1,7 +1,7 @@
 /* global Framework7, QRious, Keystore, L, Camera, Croppie, integrity, device, QRScanner */
 
 import Translator from './translator.js';
-import { rsaBlind, rsaUnblind } from './rsa-blind.js';
+import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
 const TESTING = false;
@@ -206,6 +206,36 @@ async function verifySignature(message) {
   const buffer = new TextEncoder().encode(JSON.stringify(message));
   const verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, buffer);
   message.signature = signature;
+  return verify;
+}
+
+function computeVoteBytes(vote) {
+  const referendumBytes = base64ToByteArray(vote.referendum);
+  const numberBytes = int64ToUint8Array(vote.number);
+  const areaBytes = int64ToUint8Array(vote.area);
+  const ballotBytes = base64ToByteArray(vote.ballot);
+  const answerBytes = new TextEncoder().encode(vote.answer);
+  const l = referendumBytes.length + numberBytes.length + areaBytes.length + ballotBytes.length + answerBytes.length;
+  voteBytes = new Uint8Array(l);
+  let p = 0;
+  voteBytes.set(referendumBytes);
+  p += referendumBytes.length;
+  voteBytes.set(numberBytes, p);
+  p += numberBytes.length;
+  voteBytes.set(areaBytes, p);
+  p += areaBytes.length;
+  voteBytes.set(ballotBytes, p);
+  p += ballotBytes.length;
+  voteBytes.set(answerBytes, p);
+  p += vote.answer.length;
+  if (voteBytes.length !== p)
+    console.error('vote length is wrong');
+}
+
+async function verifyBlind(vote) {
+  computeVoteBytes(vote);
+  const key = await importKey(appKey);
+  const verify = rsaVerifyBlind(voteBytes, key, base64ToByteArray(vote.appSignature));
   return verify;
 }
 
@@ -950,7 +980,6 @@ function addProposal(proposal, type, open) {
         let from = '';
         for (let i = 0; i < 32 * 8; i += 8) {
           const v = parseInt(fromBin.substring(i, i + 8), 2);
-          console.log(fromBin.substring(i, i + 8) + ' => ' + v);
           from += v.toString(16);
         }
         const url = `${notary}/api/verify.php?signature=${encodeURIComponent(proposal.signature)}&from=${from}`;
@@ -972,12 +1001,14 @@ function addProposal(proposal, type, open) {
           break;
         } else {
           for (vote of answer) {
-            console.log(vote);
-            if (!await verifySignature(vote)) {
-              result = 'corrupted'; // bad station signature
+            if (!await verifySignature(vote)) { // bad station signature
+              result = 'station';
               break;
             }
-            // FIXME: verify app signatures
+            if (!await verifyBlind(vote)) { // bad app signature
+              result = 'app';
+              break;
+            }
             if (vote.ballot === proposal.ballot) {
               result = vote.answer === proposal.answer ? 'verified' : 'tampered';
               break;
@@ -995,8 +1026,13 @@ function addProposal(proposal, type, open) {
         vButton.innerHTML =
          '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verified';
         vButton.classList.add('color-green');
-      } else if (result === 'corrupted') {
-        app.dialog.alert('The votes returned by the notary are corrupted.', 'Votes Corrupted');
+      } else if (result === 'app') {
+        app.dialog.alert('The votes returned by the notary are corrupted: wrong app signature', 'Votes Corrupted');
+        vButton.innerHTML =
+         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
+        vButton.classList.add('color-red');
+      } else if (result === 'station') {
+        app.dialog.alert('The votes returned by the notary are corrupted: wrong station signature.', 'Votes Corrupted');
         vButton.innerHTML =
          '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
         vButton.classList.add('color-red');
@@ -1046,13 +1082,11 @@ function addProposal(proposal, type, open) {
           enable(button);
           return;
         }
-        let ballotBytes;
         if (proposal.ballot === null) {
-          ballotBytes = new Uint8Array(32);
+          let ballotBytes = new Uint8Array(32);
           crypto.getRandomValues(ballotBytes);
           proposal.ballot = btoa(String.fromCharCode.apply(null, ballotBytes));
-        } else
-          ballotBytes = base64ToByteArray(proposal.ballot);
+        }
         const randomNumber = new Uint8Array(1);
         crypto.getRandomValues(randomNumber);
         proposal.number += randomNumber[0];
@@ -1064,25 +1098,7 @@ function addProposal(proposal, type, open) {
           ballot: proposal.ballot,
           answer: answer
         };
-        const referendumBytes = base64ToByteArray(vote.referendum);
-        const numberBytes = int64ToUint8Array(vote.number);
-        const areaBytes = int64ToUint8Array(vote.area);
-        const answerBytes = new TextEncoder().encode(vote.answer);
-        const l = referendumBytes.length + numberBytes.length + areaBytes.length + ballotBytes.length + answerBytes.length;
-        voteBytes = new Uint8Array(l);
-        let p = 0;
-        voteBytes.set(referendumBytes);
-        p += referendumBytes.length;
-        voteBytes.set(numberBytes, p);
-        p += numberBytes.length;
-        voteBytes.set(areaBytes, p);
-        p += areaBytes.length;
-        voteBytes.set(ballotBytes, p);
-        p += ballotBytes.length;
-        voteBytes.set(answerBytes, p);
-        p += answer.length;
-        if (voteBytes.length !== p)
-          console.error('vote length is wrong');
+        computeVoteBytes(vote);
         const binaryAppKey = await importKey(appKey);
         const blind = await rsaBlind(binaryAppKey, voteBytes);
         blindInv = blind.inv;
