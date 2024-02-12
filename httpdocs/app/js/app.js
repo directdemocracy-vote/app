@@ -560,7 +560,7 @@ function welcome() {
               'Lost Citizen Card', lost, welcome);
             }
           }, {
-            text: 'Cancel',
+            text: translator.translate('cancel'),
             onClick: welcome
           }]
         });
@@ -598,38 +598,40 @@ function showChecks(checks) {
 
 function showEndorseChecks(inPerson, warning) {
   document.getElementById('review-know-text').textContent = inPerson
-    ? 'This person is standing in front of me.'
-    : 'I know this person.';
+    ? translator.translate('review-standing')
+    : translator.translate('review-know');
   showChecks(['know', 'adult', 'picture', 'name', 'coords']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = 'Endorse';
+  reviewConfirm.textContent = translator.translate('endorse');
   certificateComment = inPerson ? 'in-person' : 'remote';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = 'Cancel';
-  document.getElementById('review-title').textContent = 'Endorse a Citizen';
-  document.getElementById('review-warning').textContent = warning || 'Warning: a wrong endorsement may affect your reputation';
+  document.getElementById('review-cancel').textContent = translator.translate('cancel');
+  document.getElementById('review-title').textContent = translator.translate('endorse-a-citizen');
+  document.getElementById('review-warning').textContent = warning || translator.translate('endorsement-warning');
 }
 
 function showRevokeChecks() {
   showChecks(['outdated', 'renamed', 'moved', 'died']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = 'Revoke';
+  reviewConfirm.textContent = translator.translate('revoke');
   certificateComment = 'revoked';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = 'Cancel';
-  document.getElementById('review-title').textContent = 'Revoke a Cizizen';
-  document.getElementById('review-warning').textContent = 'Warning: a wrong revoke may affect your reputation';
+  document.getElementById('review-cancel').textContent = translator.translate('cancel');
+  document.getElementById('review-title').textContent = translator.translate('revoke-a-citizen');
+  document.getElementById('report-radio').textContent = translator.translate('revoke');
+  document.getElementById('review-warning').textContent = translator.translate('revoke-warning');
 }
 
 function showReportChecks() {
   showChecks(['report_ghost', 'report_duplicate', 'report_dead', 'report_address',
     'report_name', 'report_picture', 'report_other']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = 'Report';
+  reviewConfirm.textContent = translator.translate('report');
   certificateComment = 'reported';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = 'Cancel';
-  document.getElementById('review-title').textContent = 'Report a Cizizen';
+  document.getElementById('review-cancel').textContent = translator.translate('cancel');
+  document.getElementById('review-title').textContent = translator.translate('report-a-citizen');
+  document.getElementById('report-radio').textContent = translator.translate('report');
   document.getElementById('review-warning').textContent = 'Warning: a wrong report may affect your reputation';
 }
 
@@ -651,15 +653,15 @@ function updateChecksDisplay(action) {
     return;
   }
   if (action.startsWith('revoked+')) { // already revoked
-    let warning = 'You revoked this neighbor (';
+    let warning = translator.translate('you-revoked-this-neighbor') + ' (';
     if (action.search('address') !== -1)
-      warning += 'moved, ';
+      warning += translator.translate('moved') + ', ';
     if (action.search('name') !== -1)
-      warning += 'renamed, ';
+      warning += translator.translate('renamed') + ', ';
     if (action.search('picture') !== -1)
-      warning += 'outdated picture, ';
+      warning += translator.translate('outdated-picture') + ', ';
     if (action.search('died') !== -1)
-      warning += 'died, ';
+      warning += translator.translate('died') + ', ';
     warning = warning.slice(0, -2) + ')';
     reviewChoiceClassList.remove('display-none');
     reviewChoices[0].checked = true;
@@ -668,24 +670,24 @@ function updateChecksDisplay(action) {
     return;
   }
   let title, confirm, warning;
-  let cancel = 'Cancel';
+  let cancel = translator.translate('cancel');
   if (action === 'replace') {
-    title = 'Replace Your Citizen Card';
-    confirm = 'Replace';
-    warning = 'Warning: a wrong replacement may affect your reputation.';
+    title = translator.translate('replace-citizen-card');
+    confirm = translator.translate('replace');
+    warning = translator.translate('replace-warning');
     reviewChoiceClassList.add('display-none');
     showChecks(['former']);
   } else if (action === 'transfer') {
-    title = 'Import Your Citizen Card';
-    confirm = 'Import';
-    warning = 'Warning: a wrong import may affect your reputation';
+    title = translator.translate('import-citizen-card');
+    confirm = translator.translate('import');
+    warning = translator.translate('import-warning');
     reviewChoiceClassList.add('display-none');
     showChecks(['former']);
   } else if (action === 'review') {
-    title = 'Review a Neighborg';
+    title = translator.translate('review-a-neighbor');
     confirm = '';
     warning = '';
-    cancel = 'Close';
+    cancel = translator.translate('close');
     showChecks([]);
     reviewChoiceClassList.remove('display-none');
     reviewChoices[0].checked = false;
@@ -740,6 +742,7 @@ function reviewCitizen(publication, action) {
   });
   const distance = distanceAsText(citizen.latitude, citizen.longitude, publication.latitude, publication.longitude);
   document.getElementById('distance').textContent = distance;
+  document.getElementById('report-radio').textContent = translator.translate(action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
     .then(response => response.json())
@@ -773,7 +776,7 @@ function reviewCitizen(publication, action) {
 }
 
 async function getCitizen(reference, action) {
-  app.dialog.preloader('Getting Citizen...');
+  app.dialog.preloader(translator.translate('getting-citizen'));
   const parameter = (reference.length === 40) ? `fingerprint=${reference}` : `key=${encodeURIComponent(reference)}`;
   fetch(`${notary}/api/publication.php?${parameter}`)
     .then(response => response.json())
@@ -1574,7 +1577,7 @@ function onDeviceReady() {
 
   document.getElementById('export').addEventListener('click', function(event) {
     function exportCard() {
-      app.dialog.preloader('Preparing QR Code...');
+      app.dialog.preloader(translator.translate('preparing-qr-code'));
       challengeBytes = new Uint8Array(20);
       crypto.getRandomValues(challengeBytes);
       challenge = encodeBase128(challengeBytes);
@@ -1614,6 +1617,7 @@ function onDeviceReady() {
 
   function choiceChange(event) {
     const button = event.currentTarget;
+    disable('review-confirm');
     if (reviewAction === 'endorse') {
       if (button.value === 'endorse') // face-to-face
         showEndorseChecks(true);
@@ -2062,7 +2066,7 @@ function onDeviceReady() {
     challengeBytes = new Uint8Array(20);
     crypto.getRandomValues(challengeBytes);
     challenge = encodeBase128(challengeBytes);
-    document.getElementById('qrcode-message').textContent = 'Ask citizen to scan this code';
+    document.getElementById('qrcode-message').textContent = translator.translate('ask-cizien-to-scan-this-code');
     Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
       publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'endorse challenge');
     }, keystoreFailure);
@@ -2071,9 +2075,7 @@ function onDeviceReady() {
   document.getElementById('remote-endorsement').addEventListener('click', function() {
     const fingerprint = byteArrayToFingerprint(base64ToByteArray(localStorage.getItem('citizenFingerprint')));
     window.plugins.socialsharing.shareWithOptions({
-      message: 'Do you want to join DirectDemocracy and endorse me as a neighbor? ' +
-               'All the information is provided in this link. ' +
-               'Thank you!',
+      message: translator.translate('remote-endorsement-invite'),
       subject: 'DirectDemocracy',
       url: `https://app.directdemocracy.vote/invite.html?fingerprint=${fingerprint}`
     });
@@ -2675,46 +2677,56 @@ function updateEndorsements() {
       }
       const name = `${endorsement.givenNames} ${endorsement.familyName}`;
       if (otherComment === 'remote')
-        otherComment = `${name} endorsed you remotely.`;
+        otherComment = 'endorsed-you-remotely';
       else if (otherComment === 'in-person')
-        otherComment = `${name} endorsed you in person.`;
+        otherComment = 'endorsed-you-in-person';
       else if (otherComment === 'revoked+address')
-        otherComment = `${name} revoked you because they believe you moved.`;
+        otherComment = 'revoked-moved';
       else if (otherComment === 'revoked+name')
-        otherComment = `${name} revoked you because they believe your name changed.`;
+        otherComment = 'revoked-name';
       else if (otherComment === 'revoked+picture')
-        otherComment = `${name} revoked you because they believe your picture is outdated.`;
+        otherComment = 'revoked-picture';
       else if (otherComment === 'revoked+address+name')
-        otherComment = `${name} revoked you because they believe you moved and your name changed.`;
+        otherComment = 'revoked-address-name';
       else if (otherComment === 'revoked+address+picture')
-        otherComment = `${name} revoked you because they believe you moved and your picture is outdated.`;
+        otherComment = 'revoked-address-picture';
       else if (otherComment === 'revoked+name+picture')
-        otherComment = `${name} revoked you because they believe your name changed and your picture is outdated.`;
+        otherComment = 'revoked-name-picture';
       else if (otherComment === 'revoked+address+name+picture')
-        otherComment = `${name} revoked you because they believe your name changed, you moved and your picture is outdated.`;
+        otherComment = 'revoked-address-name-picture';
       else if (otherComment === 'revoked+died')
-        otherComment = `${name} revoked you because they believe you died.`;
-
+        otherComment = 'revoked-died';
+      else if (otherComment)
+        console.error('Unsupported other comment: ' + otherComment);
+      if (otherComment) {
+        otherComment = translator.translate(otherComment)
+          .replace('%1', endorsement.givenNames)
+          .replace('%2', endorsement.familyName);
+      }
       if (comment === 'remote')
-        comment = `You endorsed ${name} remotely.`;
+        comment = 'you-endorsed-remotely';
       else if (comment === 'in-person')
-        comment = `You endorsed ${name} in person.`;
+        comment = 'you-endorsed-in-person';
       else if (comment === 'revoked+address')
-        comment = `You revoked ${name} because you believe they moved.`;
+        comment = 'you-revoked-moved';
       else if (comment === 'revoked+name')
-        comment = `You revoked ${name} because you believe their name changed.`;
+        comment = 'you-revoked-name';
       else if (comment === 'revoked+picture')
-        comment = `You revoked ${name} because you believe their picture is outdated.`;
+        comment = 'you-revoked-picture';
       else if (comment === 'revoked+address+name')
-        comment = `You revoked ${name} because you believe they moved and their name changed.`;
+        comment = 'you-revoked-address-name';
       else if (comment === 'revoked+address+picture')
-        comment = `You revoked ${name} because you believe they moved and their picture is outdated.`;
+        comment = 'you-revoked-address-picture';
       else if (comment === 'revoked+name+picture')
-        comment = `You revoked ${name} because you believe their name changed and their picture is outdated.`;
+        comment = 'you-revoked-name-picture';
       else if (comment === 'revoked+address+name+picture')
-        comment = `You revoked ${name} because you believe their name changed, they moved and their picture is outdated.`;
+        comment = 'you-revoked-address-name-picture';
       else if (comment === 'revoked+died')
-        comment = `You revoked ${name} because you believe they died.`;
+        comment = 'you-revoked-died';
+      else if (comment)
+        console.error('Unsupported comment: ' + comment);
+      if (comment)
+        comment = translator.translate(comment).replace('%1', endorsement.givenNames).replace('%2', endorsement.familyName);
 
       let other = otherDay
         ? `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ${otherDay}` +

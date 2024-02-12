@@ -53,11 +53,11 @@
       <div id="scanner" class="page display-none"
         style="background-color: transparent;display:flex;justify-content:center">
         <div
-          style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
-          Scan the QR code
+          style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px"
+          data-i18n="scan-qr-code">
         </div>
-        <button id="cancel-scanner" class="button button-fill color-red"
-          style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
+        <button id="cancel-scanner" class="button button-fill color-red" style="position:fixed;bottom: 18px;width: 60%;"
+          data-i18n="cancel"></button>
       </div>
       <div id="qrcode" class="page display-none" style="display:flex;justify-content:center">
         <div style="display:flex;flex-direction: column;justify-content: center;">
@@ -67,8 +67,8 @@
           style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
           Ask endorser to scan this QR code
         </div>
-        <button id="qrcode-cancel" class="button button-fill color-red"
-          style="position:fixed;bottom: 18px;width: 60%;">Cancel</button>
+        <button id="qrcode-cancel" class="button button-fill color-red" style="position:fixed;bottom: 18px;width: 60%;"
+          data-i18n="cancel"></button>
       </div>
       <div id="review" class="page display-none">
         <div class="navbar">
@@ -100,21 +100,22 @@
           </div>
           <div id="review-map" style="width:100%;height:400px"></div>
           <div class="block list margin-top-half">
-            <div class="item-subtitle text-align-center">Distance to me: <span id="distance"></span></div>
+            <div class="item-subtitle text-align-center"><span data-i18n="distance-to-me"></span><span
+                id="distance"></span></div>
             <ul id="review-checklist">
               <li id="review-choice-item" class="display-flex justify-content-center">
                 <label class="radio item-content">
                   <input type="radio" name="review-choice" value="endorse">
                   <i class="icon icon-radio"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">Endorse</div>
+                    <div class="item-title margin-left-half" data-i18n="endorse"></div>
                   </div>
                 </label>
                 <label class="radio item-content">
                   <input type="radio" name="review-choice" value="report">
                   <i class="icon icon-radio"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">Report</div>
+                    <div class="item-title margin-left-half" data-i18n="report" id="report-radio"></div>
                   </div>
                 </label>
               </li>
@@ -123,7 +124,7 @@
                   <input type="checkbox" id="review-former-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This is my former citizen card.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-former"></div>
                   </div>
                 </label>
               </li>
@@ -141,7 +142,7 @@
                   <input type="checkbox" id="review-adult-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person is an adult.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-adult"></div>
                   </div>
                 </label>
               </li>
@@ -150,7 +151,7 @@
                   <input type="checkbox" id="review-picture-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The ID picture is good.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-picture-ok"></div>
                   </div>
                 </label>
               </li>
@@ -159,7 +160,7 @@
                   <input type="checkbox" id="review-name-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The name is correct.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-name-ok"></div>
                   </div>
                 </label>
               </li>
@@ -168,7 +169,7 @@
                   <input type="checkbox" id="review-coords-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The address is correct.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-address-ok"></div>
                   </div>
                 </label>
               </li>
@@ -177,7 +178,7 @@
                   <input type="checkbox" id="review-moved-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person has moved.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-moved"></div>
                   </div>
                 </label>
               </li>
@@ -186,7 +187,7 @@
                   <input type="checkbox" id="review-renamed-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person was renamed.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-renamed"></div>
                   </div>
                 </label>
               </li>
@@ -195,7 +196,7 @@
                   <input type="checkbox" id="review-outdated-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This ID picture is outdated.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-outdated"></div>
                   </div>
                 </label>
               </li>
@@ -204,7 +205,7 @@
                   <input type="checkbox" id="review-died-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person died.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-died"></div>
                   </div>
                 </label>
               </li>
@@ -213,7 +214,7 @@
                   <input type="checkbox" id="review-report_ghost-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person does not exist.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-ghost"></div>
                   </div>
                 </label>
               </li>
@@ -222,7 +223,7 @@
                   <input type="checkbox" id="review-report_duplicate-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This is a duplicate citizen card.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-duplicate"></div>
                   </div>
                 </label>
               </li>
@@ -231,7 +232,7 @@
                   <input type="checkbox" id="review-report_dead-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">This person is dead.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-dead"></div>
                   </div>
                 </label>
               </li>
@@ -240,7 +241,7 @@
                   <input type="checkbox" id="review-report_address-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The address is wrong.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-address"></div>
                   </div>
                 </label>
               </li>
@@ -249,7 +250,7 @@
                   <input type="checkbox" id="review-report_name-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The name is wrong.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-name"></div>
                   </div>
                 </label>
               </li>
@@ -258,7 +259,7 @@
                   <input type="checkbox" id="review-report_picture-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">The picture is wrong.</div>
+                    <div class="item-title margin-left-half" data-i18n="review-picture"></div>
                   </div>
                 </label>
               </li>
@@ -267,13 +268,13 @@
                   <input type="checkbox" id="review-report_other-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
-                    <div class="item-title margin-left-half">Something else is wrong:</div>
+                    <div class="item-title margin-left-half" data-i18n="review-other"></div>
                   </div>
                 </label>
               </li>
               <li id="review-report_other-input-item" class="item-content item-input item-input-outline display-none">
                 <div class="item-inner">
-                  <div class="item-title item-label">Explain what's wrong here</div>
+                  <div class="item-title item-label" data-i18n="review-other-explain"></div>
                   <div class="item-input-wrap">
                     <input id="review-report_other-input" type="text">
                     <span class="input-clear-button"></span>
@@ -284,7 +285,8 @@
             <div class="display-flex margin-top-half">
               <button class="button button-fill color-red margin-right-half margin-left-half disabled"
                 id="review-confirm"></button>
-              <button class="button button-fill margin-right-half margin-left-half" id="review-cancel">Cancel</button>
+              <button class="button button-fill margin-right-half margin-left-half" id="review-cancel"
+                data-i18n="cancel"></button>
             </div>
             <div id="review-warning" class="item-label display-flex justify-content-center margin-top-half"
               style="width:100%">
