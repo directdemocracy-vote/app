@@ -189,5 +189,22 @@
   "trusted-x-days": "You should be trusted for more than %1 days.",
   "trusted-petition-message": "You are not trusted by the judge of this petition for long enough. ",
   "trusted-referendum-message": "You are not trusted by the judge of this referendum for long enough. ",
-  "too-early-trust": "Too early trust"
+  "too-early-trust": "Too early trust",
+  "voting": "Voting...",
+  "untrusted-message": "You are not trusted by the judge of this proposal.",
+  "untrusted-title": "Untrusted",
+  "distrusted-message": "You were distrusted by the judge of this proposal.",
+  "distrusted-title": "Distrusted",
+  "not-a-petition-message": "This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab",
+  "not-a-petition-title": "Not a Petition",
+  "not-a-referendum-message": "This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab",
+  "not-a-referendum-title": "Not a Referendum",
+  "wrong-petition-area": "You are not inside the area of this petition (which is <i>%1</i>). Therefore you cannot sign it.",
+  "wrong-referendum-area": "You are not inside the area of this referendum (which is <i>%1</i>). Therefore you cannot vote.",
+  "wrong-area": "Wrong Area",
+  "petition-deadline-passed": "The deadline for signing this petition has passed (it was %1). Therefore you cannot sign it.",
+  "referendum-deadline-passed": "The deadline for voting at this referendum has passed (it was %1). Therefore you cannot vote.",
+  "deadline-passed": "Deadline expired",
+  "already-petition": "You already have this petition.",
+  "already-referendum": "You already have this referendum."
 }

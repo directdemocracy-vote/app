@@ -1077,7 +1077,7 @@ function addProposal(proposal, type, open) {
       app.dialog.confirm(text, translator.translate('vote-confirm'), async function() {
         // prepare the vote aimed at blind signature
         disable(button);
-        app.dialog.preloader('Voting...');
+        app.dialog.preloader(translator.translate('voting'));
         const greenLight = await getGreenLightFromProposalJudge(proposal.judge, proposal.key, proposal.deadline, proposal.trust,
           'referendum');
         if (greenLight === false) {
@@ -1263,11 +1263,11 @@ async function getProposal(fingerprint, type) {
         return;
       }
       if (proposal.trusted === 0) {
-        app.dialog.alert('You are not trusted by the judge of this proposal.', 'Untrusted');
+        app.dialog.alert(translator.translate('untrusted-message'), translator.translate('untrusted-title'));
         return;
       }
       if (proposal.trusted === -1) {
-        app.dialog.alert('You were distrusted by the judge of this proposal.', 'Distrusted');
+        app.dialog.alert(translator.translate('distrusted-message'), translator.translate('distrusted-title'));
         return;
       }
       if (!testProposalTrust(proposal.trust, proposal.trusted, Math.round(Date.now() / 1000), proposal.type))
@@ -1283,28 +1283,20 @@ async function getProposal(fingerprint, type) {
       const outdated = (proposal.deadline * 1000 < new Date().getTime());
       const deadline = new Date(proposal.deadline * 1000).toLocaleString();
       const title = `<b>${proposal.title}</b><br><br>`;
-      if (type === 'petition' && proposal.secret) {
-        app.dialog.alert(
-          `${title}This proposal is a referendum, not a petition, please scan it from the <b>Vote</b> tab`,
-          'Not a petition'
-        );
-      } else if (type === 'referendum' && !proposal.secret) {
-        app.dialog.alert(
-          `${title}This proposal is a petition, not a referendum, please scan it from the <b>Sign</b> tab`,
-          'Not a referendum'
-        );
+      if (type === 'petition' && proposal.secret)
+        app.dialog.alert(title + translator.translate('not-a-petition-message'), translator.translate('not-a-petition-title'));
+      else if (type === 'referendum' && !proposal.secret) {
+        app.dialog.alert(title + translator.translate('not-a-referendum-message'),
+          translator.translate('not-a-referendum-title'));
       } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
-        const message = (type === 'petition')
-          ? `You are not inside the area of this petition (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-          'Therefore you cannot sign it.'
-          : `You are not inside the area of this referendum (which is <i>${proposal.areaName[0].split('=')[1]}</i>). ` +
-          'Therefore you cannot vote.';
-        app.dialog.alert(`${title}${message}`, 'Wrong area');
+        const areaName = proposal.areaName[0].split('=')[1];
+        const message = translator.translate(type === 'petition' ? 'wrong-petition-area' : 'wrong-referendum-area')
+          .replace('%1', areaName);
+        app.dialog.alert(`${title}${message}`, translator.translate('wrong-area'));
       } else if (outdated) {
-        const message = (type === 'petition')
-          ? `The deadline for signing this petition has passed. It was ${deadline}. Therefore you cannot sign it.`
-          : `The deadline for voting at this referendum has passed. It was ${deadline}. Therefore you cannot vote.`;
-        app.dialog.alert(`${title}${message}`, 'Deadline expired');
+        const message = translator.translate(type === 'petition' ? 'petition-deadline-passed' : 'referendum-deadline-passed')
+          .replace('%1', deadline);
+        app.dialog.alert(`${title}${message}`, translator.translate('deadline-passed'));
       } else {
         let already = false;
         let proposals = (type === 'petition') ? petitions : referendums;
@@ -1314,7 +1306,7 @@ async function getProposal(fingerprint, type) {
           const sha1 = Array.from(new Uint8Array(bytesArray), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
           if (sha1 === fingerprint) {
             if (p.id !== undefined) {
-              app.dialog.alert(`${title}You already have this ${type}.`);
+              app.dialog.alert(title + translator.translate(type === 'petition' ? 'already-petition' : 'already referendum'));
               app.accordion.open(document.getElementById(`${type}-${p.id}`));
             } else { // already there, insert at position 0 and restore the missing fields
               p.id = 0;
