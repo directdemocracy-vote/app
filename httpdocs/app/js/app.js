@@ -369,7 +369,7 @@ function transferred(answer) {
     transfer();
   else {
     app.dialog.close(); // preloader
-    app.dialog.alert('You successfully exported your citizen card.', 'Export Success');
+    app.dialog.alert(translator.translate('export-success-message'), translator.translate('export-success-title'));
     deleteCitizen();
   }
 }
@@ -428,25 +428,32 @@ async function publish(publication, signature, type) {
             hide('review');
             show('home');
             document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbor tab
-            app.dialog.alert(`You successfully endorsed ${review.givenNames} ${review.familyName}`,
-              'Endorsement Success', refreshEndorsements);
+            const message = translator.translate('endorsement-success-message')
+              .replace('%1', review.givenNames)
+              .replace('%2', review.familyName);
+            app.dialog.alert(message, translator.translate('endorsement-success-title'), refreshEndorsements);
           } else if (type === 'petition signature') {
-            app.dialog.alert(`You successfully signed the petition entitled "${petitionProposal.title}"`, 'Signed!');
-            petitionButton.textContent = 'Signed';
+            const message = translator.translate('petition-signed-message').replace('%1', petitionProposal.title);
+            app.dialog.alert(message, translator.translate('petition-signed-title'));
+            petitionButton.textContent = translator.translate('petition-signed-button');
             petitionProposal.signed = true;
             localStorage.setItem('petitions', JSON.stringify(petitions));
             disable(petitionButton);
           } else if (type === 'report') {
             const comment = certificateToPublish.comment;
             if (comment === 'deleted') {
-              app.dialog.alert('You successfully deleted your citizen card.', 'Delete Success');
+              app.dialog.alert(translator.translate('deleted-message'), translator.translate('deleted-title'));
               deleteCitizen();
             } else if (comment.startsWith('revoked+')) {
-              app.dialog.alert(`You successfully revoked ${review.givenNames} ${review.familyName}`,
-                'Revoke Success', refreshEndorsements);
+              const message = translator.translate('revoked-message')
+                .replace('%1', review.givenNames)
+                .replace('%2', review.familyName);
+              app.dialog.alert(message, translator.translate('revoke-success'), refreshEndorsements);
             } else { // report
-              app.dialog.alert(`You successfully reported ${review.givenNames} ${review.familyName}`,
-                'Report Success');
+              const message = translator.translate('report-message')
+                .replace('%1', review.givenNames)
+                .replace('%2', review.familyName);
+              app.dialog.alert(message, translator.translate('report-success'));
             }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);
@@ -468,8 +475,9 @@ async function publish(publication, signature, type) {
                 if (answer.hasOwnProperty('error'))
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
-                  app.dialog.alert(`You successfully voted to the referendum entitled "${referendumProposal.title}"`, 'Voted!');
-                  voteButton.textContent = 'Re-vote';
+                  const message = translator.translate('vote-message').replace('%1', referendumProposal.title);
+                  app.dialog.alert(message, translator.translate('vote-title'));
+                  voteButton.textContent = translator.translate('re-vote');
                   if (referendumProposal.deadline * 1000 < new Date().getTime())
                     enable(voteButton);
                   enable(verifyButton);
@@ -524,10 +532,10 @@ function publishCertificate(signature) {
 
 function welcome() {
   let dialog = app.dialog.create({
-    title: 'Welcome to directdemocracy!',
-    text: 'This app will allow you to vote securely and anonymously. Is it your first time with directdemocracy?',
+    title: translator.translate('welcome-title'),
+    text: translator.translate('welcome-question'),
     buttons: [{
-      text: 'No',
+      text: translator.translate('no'),
       onClick: function() {
         function importCitizen() {
           scan(function(error, contents) {
@@ -539,25 +547,18 @@ function welcome() {
           showPage('me');
         }
         let dialog = app.dialog.create({
-          title: 'Import Citizen Card',
-          text: 'It is recommended to import your citizen card from the phone containing it. ' +
-            'Do you have this phone on hand?',
+          title: translator.translate('import-title'),
+          text: translator.translate('import-question'),
           buttons: [{
-            text: 'Yes',
+            text: translator.translate('yes'),
             onClick: function() {
-              app.dialog.confirm('On the phone containing your citizen card, ' +
-                'go to the Settings in the Danger Zone, click the "Export Citizen Card" button and ' +
-                'following the instructions. Then, press OK to scan the export QR code.',
-              'Import Citizen Card', importCitizen, welcome);
+              app.dialog.confirm(translator.translate('import-explanation'), translator.translate('import-title'),
+                importCitizen, welcome);
             }
           }, {
-            text: 'No',
+            text: translator.translate('no'),
             onClick: function() {
-              app.dialog.confirm('If you lost access to your citizen card, ' +
-                'you will have to search your current citizen card from a notary database ' +
-                'and scan its QR code (or copy/paste its reference). ' +
-                'Then, you will have to get endorsed again by your neighbors.',
-              'Lost Citizen Card', lost, welcome);
+              app.dialog.confirm(translator.translate('lost-explanation'), translator.translate('lost-title'), lost, welcome);
             }
           }, {
             text: translator.translate('cancel'),
@@ -567,13 +568,12 @@ function welcome() {
         dialog.open();
       }
     }, {
-      text: 'Yes',
+      text: translator.translate('yes'),
       onClick: function() {
-        app.dialog.confirm('The first step to become a citizen of directdemocracy is to create your citizen card.',
-          'Become a Citizen', function() {
-            showPage('register');
-            disableDangerButtons();
-          }, welcome);
+        app.dialog.confirm(translator.translate('first-step'), translator.translate('become-a-citizen'), function() {
+          showPage('register');
+          disableDangerButtons();
+        }, welcome);
       }
     }]
   });
@@ -632,7 +632,7 @@ function showReportChecks() {
   document.getElementById('review-cancel').textContent = translator.translate('cancel');
   document.getElementById('review-title').textContent = translator.translate('report-a-citizen');
   document.getElementById('report-radio').textContent = translator.translate('report');
-  document.getElementById('review-warning').textContent = 'Warning: a wrong report may affect your reputation';
+  document.getElementById('review-warning').textContent = translator.translate('report-warning');
 }
 
 function updateChecksDisplay(action) {
@@ -904,7 +904,7 @@ function addProposal(proposal, type, open) {
   p = document.createElement('p');
   block.appendChild(p);
   let b = document.createElement('b');
-  b.textContent = 'Area: ';
+  b.textContent = translator.translate('area-header');
   p.appendChild(b);
   a = document.createElement('a');
   a.classList.add('link', 'external');
@@ -915,7 +915,7 @@ function addProposal(proposal, type, open) {
   p = document.createElement('p');
   block.appendChild(p);
   b = document.createElement('b');
-  b.textContent = 'Judge: ';
+  b.textContent = translator.translate('judge-header');
   p.appendChild(b);
   a = document.createElement('a');
   a.classList.add('link', 'external');
@@ -927,22 +927,22 @@ function addProposal(proposal, type, open) {
   block.appendChild(p);
   const deadline = new Date(proposal.deadline * 1000).toLocaleString();
   const outdated = (proposal.deadline * 1000 < new Date().getTime());
-  p.innerHTML = `<b>Deadline:</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
+  p.innerHTML = '<b>' + translator.translate('deadline-header') +
+  `</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
   let grid = document.createElement('div');
   block.appendChild(grid);
   grid.classList.add('grid', type === 'petition' ? 'grid-cols-2' : 'grid-cols-3', 'grid-gap');
   grid.appendChild(button);
   button.classList.add('button', 'button-fill');
   if (type === 'petition') {
-    button.textContent = proposal.signed ? 'Signed' : 'Sign';
+    button.textContent = translator.translate(proposal.signed ? 'petition-signed-button' : 'sign');
     if (proposal.signed || outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function() {
       app.dialog.confirm(
-        'Your name and signature will be published to show publicly your support to this petition.',
-        'Sign Petition?', async function() {
+        translator.translate('petition-explanation'), translator.translate('sign-question'), async function() {
           disable(button);
-          app.dialog.preloader('Signing...');
+          app.dialog.preloader(translator.translate('signing'));
           if (await getGreenLightFromProposalJudge(proposal.judge,
             proposal.key, proposal.deadline, proposal.trust, 'petition') === false) {
             enable(button);
@@ -973,7 +973,7 @@ function addProposal(proposal, type, open) {
     if (proposal.ballot === null)
       disable(vButton);
     vButton.addEventListener('click', async function(event) {
-      app.dialog.preloader(`Verifying Vote...`);
+      app.dialog.preloader(translator.translate('verifying-vote'));
       let result = '';
       let bits = Math.round(proposal.participants / 100);
       const b = base64ToByteArray(proposal.ballot);
@@ -1030,7 +1030,7 @@ function addProposal(proposal, type, open) {
       app.dialog.close(); // preloader
       vButton.classList.remove('color-orange');
       if (result === 'verified') {
-        app.dialog.alert('Your vote was successfully verified.', 'Vote Verified');
+        app.dialog.alert(translator.translate('vote-verified-message'), translator.translate('vote-verified-title'));
         vButton.innerHTML =
          '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verified';
         vButton.classList.add('color-green');
@@ -1050,7 +1050,7 @@ function addProposal(proposal, type, open) {
          '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Tampered';
         vButton.classList.add('color-red');
       } else if (result === 'not found') {
-        app.dialog.alert('Your vote was not found at the notary, please try again later.', 'Vote Not Found');
+        app.dialog.alert(translator.translate('vote-not-found-message'), translator.translate('vote-not-found-title'));
         vButton.innerHTML =
          '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_on_rectangle_angled</i>Verify';
         vButton.classList.add('color-orange');
@@ -1071,11 +1071,10 @@ function addProposal(proposal, type, open) {
     button.addEventListener('click', function(event) {
       const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
       const answer = checked ? checked.value : '';
-      const text = (checked ? `You are about to vote "${answer}" to this referendum. `
-        : 'You are about to abstain to vote to this referendum. ' +
-        'Your vote will be counted as an abstention in the results. ') +
-        'You will be able to change your vote until the deadline of the referendum.';
-      app.dialog.confirm(text, 'Vote?', async function() {
+      const explanation = translator.translate('vote-explanation').replace('%1', answer);
+      const text = (checked ? explanation : translator.translate('blank-explanation')) +
+       translator.translate('vote-change-explanation');
+      app.dialog.confirm(text, translator.translate('vote-confirm'), async function() {
         // prepare the vote aimed at blind signature
         disable(button);
         app.dialog.preloader('Voting...');
@@ -1135,37 +1134,37 @@ function addProposal(proposal, type, open) {
   trashButton.classList.add('button', 'button-tonal');
   trashButton.innerHTML = '<i class="icon f7-icons" style="font-size:150%">trash</i>';
   trashButton.addEventListener('click', function() {
-    app.dialog.confirm(
-      `This ${type} will be removed from your list, but you can fetch it again if needed.`,
-      `Remove ${capitalizeFirstLetter(type)}?`, function() {
-        document.getElementById(`${type}s`).removeChild(item);
-        if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
-          const index = proposals.indexOf(proposal);
-          proposals.splice(index, 1);
-          let i = 0;
-          proposals.forEach(function(p) {
-            p.id = i++;
-          });
-        } else { // remove useless fields, keep only signature, signed, number, ballot and answer
-          delete proposal.id; // hidden
-          delete proposal.key;
-          delete proposal.published;
-          delete proposal.participants;
-          delete proposal.title;
-          delete proposal.description;
-          delete proposal.areaName;
-          delete proposal.area;
-          delete proposal.deadline;
-          delete proposal.corpus;
-          delete proposal.participation;
-          delete proposal.answers;
-          delete proposal.question;
-          delete proposal.judge;
-          delete proposal.secret;
-          delete proposal.website;
-        }
-        localStorage.setItem(`${type}s`, JSON.stringify(proposals));
-      });
+    const message = translator.translate(type === 'petition' ? 'petition-removal-message' : 'referendum-removal-message');
+    const title = translator.translate(type === 'petition' ? 'petition-removal-title' : 'referendum-removal-title');
+    app.dialog.confirm(message, title, function() {
+      document.getElementById(`${type}s`).removeChild(item);
+      if ((!proposal.secret && !proposal.signed) || (proposal.secret && proposal.ballot === null)) { // actually remove it
+        const index = proposals.indexOf(proposal);
+        proposals.splice(index, 1);
+        let i = 0;
+        proposals.forEach(function(p) {
+          p.id = i++;
+        });
+      } else { // remove useless fields, keep only signature, signed, number, ballot and answer
+        delete proposal.id; // hidden
+        delete proposal.key;
+        delete proposal.published;
+        delete proposal.participants;
+        delete proposal.title;
+        delete proposal.description;
+        delete proposal.areaName;
+        delete proposal.area;
+        delete proposal.deadline;
+        delete proposal.corpus;
+        delete proposal.participation;
+        delete proposal.answers;
+        delete proposal.question;
+        delete proposal.judge;
+        delete proposal.secret;
+        delete proposal.website;
+      }
+      localStorage.setItem(`${type}s`, JSON.stringify(proposals));
+    });
   });
   if (open)
     app.accordion.open(item);
@@ -1230,19 +1229,22 @@ function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) 
     let details;
     if (proposalTrust > 315576000) {
       const date = new Date(proposalTrust * 1000).toISOString().replace('T', ' ').substring(0, 19);
-      details = `You should be trusted since ${date}`;
+      details = translator.translate('trusted-since').replace('%1', date);
     } else {
       const hours = Math.floor(proposalTrust / 3600);
       if (hours === 1)
-        details = `You should be trusted for more than one hour.`;
+        details = translator.translate('trusted-1-hour');
       else if (hours <= 24)
-        details = `You should be trusted for more than ${hours} hours.`;
+        details = translator.translate('trusted-x-hours').replace('%1', hours);
       else {
         const days = Math.ceil(hours / 24);
-        details = `You should be trusted for more than ${days} days.`;
+        details = translator.translate('trusted-x-days').replace('%1', days);
       }
     }
-    app.dialog.alert(`You are not trusted by the judge of this ${proposalType} for long enough. ${details}`, 'Too early trust');
+    const message = translator.translate(proposalType === 'petition'
+      ? 'trusted-petition-message'
+      : 'trusted-referendum-message');
+    app.dialog.alert(message + details, translator.translate('too-early-trust'));
     return false;
   }
   return true;
@@ -2675,7 +2677,6 @@ function updateEndorsements() {
         otherDay = false;
         icon = 'arrow_right_arrow_left';
       }
-      const name = `${endorsement.givenNames} ${endorsement.familyName}`;
       if (otherComment === 'remote')
         otherComment = 'endorsed-you-remotely';
       else if (otherComment === 'in-person')
