@@ -24,10 +24,10 @@ class Translator {
   set language(language) {
     if (this.language === language)
       return;
-    if (language === undefined)
+    if (language === undefined || language === null)
       language = navigator.languages ? navigator.languages[0] : navigator.language;
     if (!Object.keys(this.#languages).includes(language))
-      language = language.substr(0, 2);
+      language = language.substring(0, 2);
     if (!Object.keys(this.#languages).includes(language))
       language = 'en';
     if (document.documentElement.lang !== language)

@@ -460,16 +460,19 @@
                   </div>
                 </div>
               </div>
-              <div class="block-title margin-top">Meet your Neighbors to Increase your Reputation</div>
+              <div class="block-title margin-top" data-i18n="meet-your-neighbors"></div>
               <div class="block block-strong block-outline inset">
-                <div class="text-align-center">In-person endorsements are the best:</div>
+                <div class="text-align-center" data-i18n="in-person-are-best"></div>
                 <button id="show-qrcode" class="button color-green button-fill margin-top margin-bottom"><i
-                    class="icon f7-icons margin-right">qrcode</i>Show QR Code</button>
+                    class="icon f7-icons margin-right">qrcode</i><span data-i18n="show-qr-code"></span></button>
                 <button id="scan-qrcode" class="button color-green button-fill margin-bottom"><i
-                    class="icon f7-icons margin-right">qrcode_viewfinder</i>Scan QR Code</button>
-                <div class="text-align-center">Remote endorsements are also possible:</div>
+                    class="icon f7-icons margin-right">qrcode_viewfinder</i><span
+                    data-i18n="scan-qr-code"></span></button>
+                <div class="text-align-center" data-i18n="remote-endorsements"></div>
                 <button id="remote-endorsement" class="button button-fill margin-top margin-bottom"><i
-                    class="icon f7-icons margin-right">arrowshape_turn_up_right</i>Get Endorsed Remotely</button>
+                    class="icon f7-icons margin-right">arrowshape_turn_up_right</i>
+                  <scan data-i18n="get-endorsed-remotely"></scan>
+                </button>
               </div>
             </div>
           </swiper-slide>
@@ -480,14 +483,13 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Review a Neighbor</div>
+                        <div class="item-title item-label" data-i18n="review-a-neighbor"></div>
                         <div class="item-input-wrap">
                           <input id="enter-neighbor" type="text" size="40" maxlength="40"
-                            placeholder="Paste citizen reference here">
+                            data-i18n="paste-citizen-number-here">
                           <span class="input-clear-button"></span>
                         </div>
-                        <div class="item-input-info">
-                          Search neighbors <a id="search-neighbor" class="link external" target="_blank">online</a>
+                        <div class="item-input-info" data-i18n="search-neighbors-online">
                         </div>
                       </div>
                     </li>
@@ -508,14 +510,13 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Vote at a Referendum</div>
+                        <div class="item-title item-label" data-i18n="vote-in-a-referendum"></div>
                         <div class="item-input-wrap">
                           <input id="enter-referendum" type="text" size="40" maxlength="40"
-                            placeholder="Paste referendum reference here">
+                            data-i18n="paste-referendum-number-here">
                           <span class="input-clear-button"></span>
                         </div>
-                        <div class="item-input-info">
-                          Search referendums <a id="search-referendum" class="link external" target="_blank">online</a>
+                        <div class="item-input-info" data-i18n="search-referendums-online">
                         </div>
                       </div>
                     </li>
@@ -525,7 +526,7 @@
                   <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
-              <div class="no-margin-left no-margin-right block-title">Your Referendums</div>
+              <div class="no-margin-left no-margin-right block-title" data-i18n="your-referendums"></div>
               <div id="referendums"
                 class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
               </div>
@@ -538,14 +539,13 @@
                   <ul style="width:95%">
                     <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label">Sign a Petition</div>
+                        <div class="item-title item-label" data-i18n="sign-a-petition"></div>
                         <div class="item-input-wrap">
                           <input id="enter-petition" type="text" size="40" maxlength="40"
-                            placeholder="Paste petition reference here">
+                            data-i18n="paste-petition-number-here">
                           <span class="input-clear-button"></span>
                         </div>
-                        <div class="item-input-info">
-                          Search petitions <a id="search-petition" class="link external" target="_blank">online</a>
+                        <div class="item-input-info" data-i18n="search-petitions-online">
                         </div>
                       </div>
                     </li>
@@ -555,7 +555,7 @@
                   <i class="icon f7-icons">qrcode_viewfinder</i>
                 </button>
               </div>
-              <div class="no-margin-left no-margin-right block-title">Your Petitions</div>
+              <div class="no-margin-left no-margin-right block-title" data-i18n="your-petitions"></div>
               <div id="petitions"
                 class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
               </div>
@@ -613,15 +613,16 @@
                 </div>
               </div>
             </div>
-            <div class="block-title margin-top">Danger Zone</div>
+            <div class="block-title margin-top" data-i18n="danger-zone"></div>
             <div class="block block-strong block-outline inset">
               <button id="update" class="button button-fill color-red margin-bottom"><i
-                  class="icon f7-icons margin-right">square_pencil</i>Update Citizen Card</button>
+                  class="icon f7-icons margin-right">square_pencil</i><span
+                  data-i18n="update-citizen-card"></span></button>
               <button id="export" class="button button-fill color-red margin-bottom"><i
-                  class="icon f7-icons margin-right" style="transform:scale(-1,1)">square_arrow_left</i>Export Citizen
-                Card</button>
+                  class="icon f7-icons margin-right" style="transform:scale(-1,1)">square_arrow_left</i><span
+                  data-i18n="export-citizen-card"></span></button>
               <button id="delete" class="button button-fill color-red"><i
-                  class="icon f7-icons margin-right">trash</i>Delete Citizen Card</button>
+                  class="icon f7-icons margin-right">trash</i><span data-i18n="delete-citizen-card"></span></button>
             </div>
           </swiper-slide>
         </swiper-container>

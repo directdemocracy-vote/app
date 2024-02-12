@@ -31,7 +31,7 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let challenge = '';
 let challengeBytes = null;
-let translator = new Translator('i18n');
+let translator = new Translator('i18n', localStorage.getItem('language'));
 let citizen = {
   schema: '',
   key: '',
@@ -262,6 +262,7 @@ function setupLanguagePicker() {
     for (let key in translator.languages) {
       if (translator.languages[key] === value[0]) {
         if (translator.language !== key) {
+          localStorage['language'] = key;
           translator.language = key;
           updateProposalLink();
         }
@@ -274,6 +275,10 @@ function setupLanguagePicker() {
 translator.onready = function() {
   translatorIsReady = true;
   setupLanguagePicker();
+  if (!localStorage.getItem('registered'))
+    welcome();
+  else
+    downloadCitizen();
 };
 
 let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
@@ -1494,10 +1499,6 @@ function onDeviceReady() {
     localStorage.setItem('station', station);
   });
   showPage('splash');
-  if (!localStorage.getItem('registered'))
-    welcome();
-  else
-    downloadCitizen();
 
   function iUnderstandDialog(message, title, callback) {
     const iUnderstand = 'I understand';
@@ -2342,12 +2343,20 @@ function updateProposalLink() {
 }
 
 function updateSearchLinks() {
-  document.getElementById('search-me').setAttribute('href', `${notary}?tab=citizens&me=true`);
-  document.getElementById('search-neighbor').setAttribute('href', `${notary}?tab=citizens`);
-  document.getElementById('search-petition').setAttribute('href',
-    `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
-  document.getElementById('search-referendum').setAttribute('href',
-    `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  const searchMe = document.getElementById('search-me');
+  if (searchMe)
+    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true`);
+  const searchNeighbor = document.getElementById('search-neighbor');
+  if (searchNeighbor)
+    searchNeighbor.setAttribute('href', `${notary}?tab=citizens`);
+  const searchPetitions = document.getElementById('search-petition');
+  if (searchPetitions)
+    searchPetitions.setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  const searchReferendums = document.getElementById('search-referendum');
+  if (searchReferendums) {
+    searchReferendums.setAttribute('href',
+      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  }
 }
 
 function updateCitizenCard() {
@@ -2371,7 +2380,8 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  app.dialog.preloader('Downloading Citizen...');
+  console.log('tr: ' + translator.translate('downloading-citizen'));
+  app.dialog.preloader(translator.translate('downloading-citizen'));
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -2606,10 +2616,10 @@ function updateEndorsements() {
     list,
     'div',
     'block-title no-margin-left no-margin-right',
-    'Your Neighbors'
+    translator.translate('your-neighbors')
   );
-  newElement(list, 'div', 'no-margin-left no-margin-right',
-    `You are endorsed by ${endorsedYouCount} and endorsed ${endorsedCount}`).style.fontSize = '85%';
+  const info = translator.translate('you-are-endorsed-by').replace('%1', endorsedYouCount).replace('%2', endorsedCount);
+  newElement(list, 'div', 'no-margin-left no-margin-right', info).style.fontSize = '85%';
   let medias = newElement(list, 'div', 'list media-list margin-top-half');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
