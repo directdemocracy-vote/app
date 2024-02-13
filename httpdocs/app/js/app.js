@@ -86,10 +86,6 @@ let currentLongitude = 6.629111;
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
 
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 function encodeBase128(byteArray) { // Uint8Array
   function toBin(byteArray) {
     let end = '';
@@ -345,7 +341,7 @@ async function challengeResponseHandler(answer, type, id, key, signature) {
     hide('qrcode');
     show('home');
     showPage('splash');
-    app.dialog.preloader('Exporting...');
+    app.dialog.preloader(translator.translate('exporting'));
     transfer();
   } else if (type === 'endorse challenge')
     getCitizen(otherKey, 'endorse');
@@ -442,7 +438,7 @@ async function publish(publication, signature, type) {
           } else if (type === 'report') {
             const comment = certificateToPublish.comment;
             if (comment === 'deleted') {
-              app.dialog.alert(translator.translate('deleted-message'), translator.translate('deleted-title'));
+              app.dialog.alert(translator.translate('deleted-message'), translator.translate('deleted-success'));
               deleteCitizen();
             } else if (comment.startsWith('revoked+')) {
               const message = translator.translate('revoked-message')
@@ -476,7 +472,7 @@ async function publish(publication, signature, type) {
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
                   const message = translator.translate('vote-message').replace('%1', referendumProposal.title);
-                  app.dialog.alert(message, translator.translate('vote-title'));
+                  app.dialog.alert(message, translator.translate('vote-success'));
                   voteButton.textContent = translator.translate('re-vote');
                   if (referendumProposal.deadline * 1000 < new Date().getTime())
                     enable(voteButton);
@@ -1065,7 +1061,7 @@ function addProposal(proposal, type, open) {
         }
       }
     });
-    button.textContent = proposal.ballot === null ? 'Vote' : 'Re-vote';
+    button.textContent = translator.translate(proposal.ballot === null ? 'vote' : 're-vote');
     if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function(event) {
@@ -1251,7 +1247,8 @@ function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) 
 }
 
 async function getProposal(fingerprint, type) {
-  app.dialog.preloader(`Getting ${capitalizeFirstLetter(type)}...`);
+  const message = translator.translate(type === 'petition' ? 'getting-petition' : 'getting-referendum');
+  app.dialog.preloader(message);
   fetch(`${notary}/api/proposal.php?fingerprint=${fingerprint}&citizen=${encodeURIComponent(citizen.signature)}`)
     .then(response => response.json())
     .then(async proposal => {
@@ -1414,7 +1411,7 @@ function sendChallenge(otherAppUrl, challengeId, key, signature, action) {
       challenge = '';
       let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, bytes, challengeArrayBuffer);
       if (!verify) {
-        app.dialog.alert('Cannot verify challenge signature', 'Error verifying challenge');
+        app.dialog.alert(translator.translate('cannot-verify-challenge'), translator.translate('verification-error'));
         return;
       }
       getCitizen(key, action);
@@ -1498,9 +1495,9 @@ function onDeviceReady() {
   showPage('splash');
 
   function iUnderstandDialog(message, title, callback) {
-    const iUnderstand = 'I understand';
+    const iUnderstand = translator.translate('i-understand');
     const iUnderstandBold = `<b>${iUnderstand}</b>`;
-    const pleaseType = `Please type ${iUnderstandBold} here:`;
+    const pleaseType = translator.translate('please-type').replace('%1', iUnderstandBold);
     const text = `<p class="text-align-left">${message}</p><p>${pleaseType}</p>`;
     app.dialog.create({
       title,
@@ -1548,7 +1545,7 @@ function onDeviceReady() {
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
-      document.getElementById('tab-me-title').textContent = 'Update Citizen Card';
+      document.getElementById('tab-me-title').textContent = translator.translate('update-citizen-card');
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
@@ -1558,14 +1555,9 @@ function onDeviceReady() {
       showPage('register');
       disableDangerButtons();
     }
-    if (endorsements.length > 0) {
-      iUnderstandDialog('Updating your citizen card is needed only if you move or need to change your name (got married?). ' +
-        "Your referendum and petition lists will be emptied so you won't be able to change any vote that you already cast. " +
-        'Also, you will loose your endorsements and have to get endorsed again to be able to vote and sign again. ' +
-        'Note that your updated citizen card should still refer to you and not to someone else. ' +
-        'Do you really want to update your citizen card?',
-      'Update Citizen Card?', updateCard);
-    } else
+    if (endorsements.length > 0)
+      iUnderstandDialog(translator.translate('update-explanation'), translator.translate('update-title'), updateCard);
+    else
       updateCard();
   });
 
@@ -1575,21 +1567,17 @@ function onDeviceReady() {
       challengeBytes = new Uint8Array(20);
       crypto.getRandomValues(challengeBytes);
       challenge = encodeBase128(challengeBytes);
-      document.getElementById('qrcode-message').textContent = 'Scan this code';
+      document.getElementById('qrcode-message').textContent = translator.translate('scan-this-qr-code');
       Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
         publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'transfer challenge');
       }, keystoreFailure);
     }
-    app.dialog.confirm('If you export your citizen card to another phone, it will be deleted from this phone. ' +
-      'You need to have another phone on which you installed the directdemocracy app and deleted any citizen card from it. ' +
-      'On this other phone, follow the instructions of the initial setup dialog to import your citizen card. ' +
-      'Then, press OK to display the export QR code.',
-    'Export Citizen Card?', exportCard);
+    app.dialog.confirm(translator.translate('export-explanation'), translator.translate('export-title'), exportCard);
   });
 
   document.getElementById('delete').addEventListener('click', function(event) {
     function deleteCard() {
-      app.dialog.preloader('Deleting...');
+      app.dialog.preloader(translator.translate('deleting'));
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
         key: citizen.key,
@@ -1603,10 +1591,7 @@ function onDeviceReady() {
       };
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     }
-    app.dialog.confirm("You should not delete your citizen card unless you don't want to be a citizen any more. " +
-      'If possible, you should rather update it or transfer it to another phone. ' +
-      'Are you sure want to delete your citizen card? There is no way back!',
-    'Delete Citizen Card?', deleteCard);
+    app.dialog.confirm(translator.translate('delete-explanation'), translator.translate('delete-title'), deleteCard);
   });
 
   function choiceChange(event) {
@@ -1756,7 +1741,7 @@ function onDeviceReady() {
 
   document.getElementById('review-confirm').addEventListener('click', function(event) {
     if (certificateComment === 'in-person' || certificateComment === 'remote') { // endorse
-      app.dialog.preloader('Endorsing...');
+      app.dialog.preloader(translator.translate('endorsing'));
       certificateToPublish = {
         schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
         key: citizen.key,
@@ -1771,77 +1756,75 @@ function onDeviceReady() {
       certificateComment = '';
       Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
     } else if (certificateComment === 'revoked') {
-      app.dialog.confirm('Revoking a neighbor may impact their reputation, are you sure you want to proceed?',
-        'Revoke Neighbor?', function() {
-          app.dialog.preloader('Revoking...');
-          if (document.getElementById('review-died-check').checked)
-            certificateComment += '+died';
-          else {
-            if (document.getElementById('review-moved-check').checked)
-              certificateComment += '+address';
-            if (document.getElementById('review-renamed-check').checked)
-              certificateComment += '+name';
-            if (document.getElementById('review-outdated-check').checked)
-              certificateComment += '+picture';
-          }
-          certificateToPublish = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-            key: citizen.key,
-            signature: '',
-            published: Math.trunc(new Date().getTime() / 1000),
-            appKey: appKey,
-            appSignature: '',
-            type: 'report',
-            publication: review.signature,
-            comment: certificateComment
-          };
-          certificateComment = '';
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-        });
+      app.dialog.confirm(translator.translate('revoke-explanation'), translator.translate('revoke-title'), function() {
+        app.dialog.preloader(translator.translate('revoking'));
+        if (document.getElementById('review-died-check').checked)
+          certificateComment += '+died';
+        else {
+          if (document.getElementById('review-moved-check').checked)
+            certificateComment += '+address';
+          if (document.getElementById('review-renamed-check').checked)
+            certificateComment += '+name';
+          if (document.getElementById('review-outdated-check').checked)
+            certificateComment += '+picture';
+        }
+        certificateToPublish = {
+          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+          key: citizen.key,
+          signature: '',
+          published: Math.trunc(new Date().getTime() / 1000),
+          appKey: appKey,
+          appSignature: '',
+          type: 'report',
+          publication: review.signature,
+          comment: certificateComment
+        };
+        certificateComment = '';
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+      });
     } else if (certificateComment === 'reported') {
-      app.dialog.confirm('Reporting a neighbor may impact their reputation, are you sure you want to proceed?',
-        'Report Neighbor?', function() {
-          app.dialog.preloader('Reporting...');
-          if (document.getElementById('review-report_ghost-check').checked)
-            certificateComment = 'ghost';
-          else if (document.getElementById('review-report_duplicate-check').checked)
-            certificateComment = 'duplicate';
-          else if (document.getElementById('review-report_dead-check').checked)
-            certificateComment = 'died';
-          else if (document.getElementById('review-report_other-check').checked)
-            certificateComment = 'other';
-          else {
-            certificateComment = '';
-            if (document.getElementById('review-report_address-check').checked)
-              certificateComment += '+address';
-            if (document.getElementById('review-report_name-check').checked)
-              certificateComment += '+name';
-            if (document.getElementById('review-report_picture-check').checked)
-              certificateComment += '+picture';
-            certificateComment = certificateComment.substring(1); // remove the first char ('+')
-          }
-          const input = document.getElementById('review-report_other-input').value.trim();
-          if (input !== '')
-            certificateComment += ':' + input;
-          certificateToPublish = {
-            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-            key: citizen.key,
-            signature: '',
-            published: Math.trunc(new Date().getTime() / 1000),
-            appKey: appKey,
-            appSignature: '',
-            type: 'report',
-            publication: review.signature,
-            comment: certificateComment
-          };
+      app.dialog.confirm(translator.translate('report-explanation'), translator.translate('report-title'), function() {
+        app.dialog.preloader(translator.translate('reporting'));
+        if (document.getElementById('review-report_ghost-check').checked)
+          certificateComment = 'ghost';
+        else if (document.getElementById('review-report_duplicate-check').checked)
+          certificateComment = 'duplicate';
+        else if (document.getElementById('review-report_dead-check').checked)
+          certificateComment = 'died';
+        else if (document.getElementById('review-report_other-check').checked)
+          certificateComment = 'other';
+        else {
           certificateComment = '';
-          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-        });
+          if (document.getElementById('review-report_address-check').checked)
+            certificateComment += '+address';
+          if (document.getElementById('review-report_name-check').checked)
+            certificateComment += '+name';
+          if (document.getElementById('review-report_picture-check').checked)
+            certificateComment += '+picture';
+          certificateComment = certificateComment.substring(1); // remove the first char ('+')
+        }
+        const input = document.getElementById('review-report_other-input').value.trim();
+        if (input !== '')
+          certificateComment += ':' + input;
+        certificateToPublish = {
+          schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+          key: citizen.key,
+          signature: '',
+          published: Math.trunc(new Date().getTime() / 1000),
+          appKey: appKey,
+          appSignature: '',
+          type: 'report',
+          publication: review.signature,
+          comment: certificateComment
+        };
+        certificateComment = '';
+        Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+      });
     } else {
       if (certificateComment === 'replaced')
-        app.dialog.preloader('Replacing...');
+        app.dialog.preloader(translator.translate('replacing'));
       else if (certificateComment === 'transferred')
-        app.dialog.preloader('Importing...');
+        app.dialog.preloader(translator.translate('importing'));
       else {
         console.error('Unsupport certificateComment in review-confirm button click: "' + certificateComment + '"');
         return;
@@ -2056,11 +2039,11 @@ function onDeviceReady() {
   });
 
   document.getElementById('show-qrcode').addEventListener('click', function() {
-    app.dialog.preloader('Preparing QR Code...');
+    app.dialog.preloader(translator.translate('preparing-qr-code'));
     challengeBytes = new Uint8Array(20);
     crypto.getRandomValues(challengeBytes);
     challenge = encodeBase128(challengeBytes);
-    document.getElementById('qrcode-message').textContent = translator.translate('ask-cizien-to-scan-this-code');
+    document.getElementById('qrcode-message').textContent = translator.translate('ask-citizen-to-scan-this-code');
     Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
       publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'endorse challenge');
     }, keystoreFailure);
@@ -2413,7 +2396,7 @@ function downloadCitizen() {
 }
 
 function refreshEndorsements() {
-  app.dialog.preloader('Updating Neighbors...');
+  app.dialog.preloader(translator.translate('updating-neighbors'));
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -2504,21 +2487,27 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   }
   const timeDifference = Math.round(Date.now() / 1000) - answer.timestamp;
   if (Math.abs(timeDifference) > 60) {
-    app.dialog.alert(`The app time differs from the judge time by ${timeDifference} seconds`, 'Time mismatch');
+    app.dialog.alert(translator.translate('time-difference').replace('%1', timeDifference),
+      translator.translate('time-mismatch'));
     return false;
   }
   if (answer.timestamp >= proposalDeadline) {
-    app.dialog.alert(`The deadline of the ${type} has passed.`, 'Deadline passed');
+    app.dialog.alert(translator.translate(type === 'petition'
+      ? 'petition-deadline-passed-short'
+      : 'referendum-deadline-passed-short'
+    ), translator.translate('deadline-passed'));
     return false;
   }
   const reputation = parseFloat(answer.reputation);
   if (answer.trusted === 0) {
-    app.dialog.alert(`You are not trusted by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
-      'Not trusted');
+    app.dialog.alert(translator.translate('untrusted-message') + ' ' +
+    translator.translate('reputation-message').replace('%1', reputation),
+    translator.translate('untrusted-title'));
     return false;
   } else if (answer.trusted === -1) {
-    app.dialog.alert(`You were distrusted by the judge of this ${type}. Your reputation from this judge is ${reputation}`,
-      'Distrusted');
+    app.dialog.alert(translator.translate('distrusted-message') + ' ' +
+    translator.translate('reputation-message').replace('%1', reputation),
+    translator.translate('distrusted-title'));
     return false;
   }
   const issued = parseInt(answer.issued);
