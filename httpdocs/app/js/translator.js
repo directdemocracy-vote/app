@@ -67,7 +67,7 @@ class Translator {
       if (element.nodeName === 'INPUT')
         element.placeholder = this.translate(key, parameter);
       else
-        element.innerHTML = this.translate(key);
+        element.innerHTML = this.translate(key, parameter);
     });
   }
   translateElement(element, key, parameter) {
@@ -87,6 +87,7 @@ class Translator {
         return this.#dictionary[key];
       if (parameter instanceof Array) {
         let translation = this.#dictionary['key'];
+        console.log(translation);
         for (let i = 0; i < parameter.length; i++)
           translation = translation.replace('%' + (i + 1), parameter[i]);
         return translation;
