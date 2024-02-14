@@ -73,8 +73,11 @@ class Translator {
   translateElement(element, key, parameter) {
     element.setAttribute('data-i18n', key);
     if (parameter instanceof Array) {
-      for (let i = 0; i < parameter.lenght; i++)
+      console.log('array');
+      for (let i = 0; i < parameter.lenght; i++) {
         element.setAttribute(`data-i18n-${i + 1}`, parameter[i]);
+        console.log(`Setting data-i18n-${i + 1} to ${parameter[i]}`);
+      }
     } else if (parameter !== undefined)
       element.setAttribute('data-i18n-1', parameter);
     element.innerHTML = this.translate(key, parameter);
