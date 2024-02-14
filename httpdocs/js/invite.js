@@ -25,6 +25,6 @@ window.onload = function() {
       }
       document.getElementById('picture').src = answer.picture;
       const invite = document.getElementById('invite');
-      translator.translateElement(invite, 'invite', [answer.givenNames, answer.familyName]);
+      translator.translateElement(invite, 'invite', [answer.givenNames, answer.familyName, fingerprint]);
     });
 };
