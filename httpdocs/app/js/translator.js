@@ -77,7 +77,7 @@ class Translator {
         element.setAttribute(`data-i18n-${i + 1}`, parameter[i]);
     } else if (parameter !== undefined)
       element.setAttribute('data-i18n-1', parameter);
-    translate(key, parameter);
+    this.translate(key, parameter);
   }
   translate(key, parameter) {
     if (this.#dictionary === undefined)
