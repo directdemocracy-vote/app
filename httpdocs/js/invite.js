@@ -24,9 +24,7 @@ window.onload = function() {
         return;
       }
       document.getElementById('picture').src = answer.picture;
-      document.getElementById('introduction').innerHTML =
-        `${answer.givenNames} ${answer.familyName} would like to be endorsed by you.<br>` +
-        'If you agree, install the app on your phone and click the <b>Review</b> link on this ' +
-        `<a target="_blank" href="https://notary.directdemocracy.vote/citizen.html?fingerprint=${fingerprint}">citizen page</a>.`;
+      const invite = document.getElementById('invite');
+      translator.translateElement(invite, 'invite', [answer.givenNames, answer.familyName]);
     });
 };
