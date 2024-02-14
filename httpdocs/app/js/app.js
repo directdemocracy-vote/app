@@ -424,12 +424,10 @@ async function publish(publication, signature, type) {
             hide('review');
             show('home');
             document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbor tab
-            const message = translator.translate('endorsement-success-message')
-              .replace('%1', review.givenNames)
-              .replace('%2', review.familyName);
+            const message = translator.translate('endorsement-success-message', [review.givenNames, review.familyName]);
             app.dialog.alert(message, translator.translate('endorsement-success-title'), refreshEndorsements);
           } else if (type === 'petition signature') {
-            const message = translator.translate('petition-signed-message').replace('%1', petitionProposal.title);
+            const message = translator.translate('petition-signed-message', petitionProposal.title);
             app.dialog.alert(message, translator.translate('petition-signed-title'));
             petitionButton.textContent = translator.translate('petition-signed-button');
             petitionProposal.signed = true;
@@ -441,14 +439,10 @@ async function publish(publication, signature, type) {
               app.dialog.alert(translator.translate('deleted-message'), translator.translate('deleted-success'));
               deleteCitizen();
             } else if (comment.startsWith('revoked+')) {
-              const message = translator.translate('revoked-message')
-                .replace('%1', review.givenNames)
-                .replace('%2', review.familyName);
+              const message = translator.translate('revoked-message', [review.givenNames, review.familyName]);
               app.dialog.alert(message, translator.translate('revoke-success'), refreshEndorsements);
             } else { // report
-              const message = translator.translate('report-message')
-                .replace('%1', review.givenNames)
-                .replace('%2', review.familyName);
+              const message = translator.translate('report-message', [review.givenNames, review.familyName]);
               app.dialog.alert(message, translator.translate('report-success'));
             }
           } else if (type === 'participation') {
@@ -471,9 +465,9 @@ async function publish(publication, signature, type) {
                 if (answer.hasOwnProperty('error'))
                   app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
                 else {
-                  const message = translator.translate('vote-message').replace('%1', referendumProposal.title);
+                  const message = translator.translate('vote-message', referendumProposal.title);
                   app.dialog.alert(message, translator.translate('vote-success'));
-                  voteButton.textContent = translator.translate('re-vote');
+                  translator.translateElement(voteButton, 're-vote');
                   if (referendumProposal.deadline * 1000 < new Date().getTime())
                     enable(voteButton);
                   enable(verifyButton);
@@ -593,42 +587,40 @@ function showChecks(checks) {
 }
 
 function showEndorseChecks(inPerson, warning) {
-  document.getElementById('review-know-text').textContent = inPerson
-    ? translator.translate('review-standing')
-    : translator.translate('review-know');
+  translator.translateElement(document.getElementById('review-know-text'), inPerson ? 'review-standing' : 'review-know');
   showChecks(['know', 'adult', 'picture', 'name', 'coords']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = translator.translate('endorse');
+  translator.translateElement(reviewConfirm, 'endorse');
   certificateComment = inPerson ? 'in-person' : 'remote';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = translator.translate('cancel');
-  document.getElementById('review-title').textContent = translator.translate('endorse-a-citizen');
-  document.getElementById('review-warning').textContent = warning || translator.translate('endorsement-warning');
+  translator.translateElement(document.getElementById('review-cancel'), 'cancel');
+  translator.translateElement(document.getElementById('review-title'), 'endorse-a-citizen');
+  translator.translateElement(document.getElementById('review-warning'), 'endorsement-warning');
 }
 
 function showRevokeChecks() {
   showChecks(['outdated', 'renamed', 'moved', 'died']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = translator.translate('revoke');
+  translator.translateElement(reviewConfirm, 'revoke');
   certificateComment = 'revoked';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = translator.translate('cancel');
-  document.getElementById('review-title').textContent = translator.translate('revoke-a-citizen');
-  document.getElementById('report-radio').textContent = translator.translate('revoke');
-  document.getElementById('review-warning').textContent = translator.translate('revoke-warning');
+  translator.translateElement(document.getElementById('review-cancel'), 'cancel');
+  translator.translateElement(document.getElementById('review-title'), 'revoke-a-citizen');
+  translator.translateElement(document.getElementById('report-radio'), 'revoke');
+  translator.translateElement(document.getElementById('review-warning'), 'revoke-warning');
 }
 
 function showReportChecks() {
   showChecks(['report_ghost', 'report_duplicate', 'report_dead', 'report_address',
     'report_name', 'report_picture', 'report_other']);
   const reviewConfirm = document.getElementById('review-confirm');
-  reviewConfirm.textContent = translator.translate('report');
+  translator.translateElement(reviewConfirm, 'report');
   certificateComment = 'reported';
   reviewConfirm.classList.remove('display-none');
-  document.getElementById('review-cancel').textContent = translator.translate('cancel');
-  document.getElementById('review-title').textContent = translator.translate('report-a-citizen');
-  document.getElementById('report-radio').textContent = translator.translate('report');
-  document.getElementById('review-warning').textContent = translator.translate('report-warning');
+  translator.translateElement(document.getElementById('review-cancel'), 'cancel');
+  translator.translateElement(document.getElementById('review-title'), 'report-a-citizen');
+  translator.translateElement(document.getElementById('report-radio'), 'report');
+  translator.translateElement(document.getElementById('review-warning'), 'report-warning');
 }
 
 function updateChecksDisplay(action) {
@@ -738,7 +730,7 @@ function reviewCitizen(publication, action) {
   });
   const distance = distanceAsText(citizen.latitude, citizen.longitude, publication.latitude, publication.longitude);
   document.getElementById('distance').textContent = distance;
-  document.getElementById('report-radio').textContent = translator.translate(action === 'review' ? 'report' : 'revoke');
+  translator.translateElement(document.getElementById('report-radio'), action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
   fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`)
     .then(response => response.json())
@@ -900,7 +892,7 @@ function addProposal(proposal, type, open) {
   p = document.createElement('p');
   block.appendChild(p);
   let b = document.createElement('b');
-  b.textContent = translator.translate('area-header');
+  translator.translateElement(b, 'area-header');
   p.appendChild(b);
   a = document.createElement('a');
   a.classList.add('link', 'external');
@@ -911,7 +903,7 @@ function addProposal(proposal, type, open) {
   p = document.createElement('p');
   block.appendChild(p);
   b = document.createElement('b');
-  b.textContent = translator.translate('judge-header');
+  translator.translateElement(b, 'judge-header');
   p.appendChild(b);
   a = document.createElement('a');
   a.classList.add('link', 'external');
@@ -923,7 +915,7 @@ function addProposal(proposal, type, open) {
   block.appendChild(p);
   const deadline = new Date(proposal.deadline * 1000).toLocaleString();
   const outdated = (proposal.deadline * 1000 < new Date().getTime());
-  p.innerHTML = '<b>' + translator.translate('deadline-header') +
+  p.innerHTML = '<b data-i18n="deadline-header">' + translator.translate('deadline-header') +
   `</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
   let grid = document.createElement('div');
   block.appendChild(grid);
@@ -931,7 +923,7 @@ function addProposal(proposal, type, open) {
   grid.appendChild(button);
   button.classList.add('button', 'button-fill');
   if (type === 'petition') {
-    button.textContent = translator.translate(proposal.signed ? 'petition-signed-button' : 'sign');
+    translator.translateElement(button, proposal.signed ? 'petition-signed-button' : 'sign');
     if (proposal.signed || outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function() {
@@ -1061,13 +1053,13 @@ function addProposal(proposal, type, open) {
         }
       }
     });
-    button.textContent = translator.translate(proposal.ballot === null ? 'vote' : 're-vote');
+    translator.translateElement(button, proposal.ballot === null ? 'vote' : 're-vote');
     if (outdated || (proposal.judge === judge && !iAmTrustedByJudge))
       disable(button);
     button.addEventListener('click', function(event) {
       const checked = document.querySelector(`input[name="answer-${proposal.id}"]:checked`);
       const answer = checked ? checked.value : '';
-      const explanation = translator.translate('vote-explanation').replace('%1', answer);
+      const explanation = translator.translate('vote-explanation', answer);
       const text = (checked ? explanation : translator.translate('blank-explanation')) +
        translator.translate('vote-change-explanation');
       app.dialog.confirm(text, translator.translate('vote-confirm'), async function() {
@@ -1225,16 +1217,16 @@ function testProposalTrust(proposalTrust, certificateIssued, now, proposalType) 
     let details;
     if (proposalTrust > 315576000) {
       const date = new Date(proposalTrust * 1000).toISOString().replace('T', ' ').substring(0, 19);
-      details = translator.translate('trusted-since').replace('%1', date);
+      details = translator.translate('trusted-since', date);
     } else {
       const hours = Math.floor(proposalTrust / 3600);
       if (hours === 1)
         details = translator.translate('trusted-1-hour');
       else if (hours <= 24)
-        details = translator.translate('trusted-x-hours').replace('%1', hours);
+        details = translator.translate('trusted-x-hours', hours);
       else {
         const days = Math.ceil(hours / 24);
-        details = translator.translate('trusted-x-days').replace('%1', days);
+        details = translator.translate('trusted-x-days', days);
       }
     }
     const message = translator.translate(proposalType === 'petition'
@@ -1287,12 +1279,13 @@ async function getProposal(fingerprint, type) {
           translator.translate('not-a-referendum-title'));
       } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
         const areaName = proposal.areaName[0].split('=')[1];
-        const message = translator.translate(type === 'petition' ? 'wrong-petition-area' : 'wrong-referendum-area')
-          .replace('%1', areaName);
+        const message = translator.translate(type === 'petition' ? 'wrong-petition-area' : 'wrong-referendum-area', areaName);
         app.dialog.alert(`${title}${message}`, translator.translate('wrong-area'));
       } else if (outdated) {
-        const message = translator.translate(type === 'petition' ? 'petition-deadline-passed' : 'referendum-deadline-passed')
-          .replace('%1', deadline);
+        const message = translator.translate(type === 'petition'
+          ? 'petition-deadline-passed'
+          : 'referendum-deadline-passed',
+        deadline);
         app.dialog.alert(`${title}${message}`, translator.translate('deadline-passed'));
       } else {
         let already = false;
@@ -1497,7 +1490,7 @@ function onDeviceReady() {
   function iUnderstandDialog(message, title, callback) {
     const iUnderstand = translator.translate('i-understand');
     const iUnderstandBold = `<b>${iUnderstand}</b>`;
-    const pleaseType = translator.translate('please-type').replace('%1', iUnderstandBold);
+    const pleaseType = translator.translate('please-type', iUnderstandBold);
     const text = `<p class="text-align-left">${message}</p><p>${pleaseType}</p>`;
     app.dialog.create({
       title,
@@ -1545,7 +1538,7 @@ function onDeviceReady() {
       const button = document.getElementById('register-button');
       button.textContent = 'Update';
       disable(button);
-      document.getElementById('tab-me-title').textContent = translator.translate('update-citizen-card');
+      translator.translateElement(document.getElementById('tab-me-title'), 'update-citizen-card');
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
@@ -1567,7 +1560,7 @@ function onDeviceReady() {
       challengeBytes = new Uint8Array(20);
       crypto.getRandomValues(challengeBytes);
       challenge = encodeBase128(challengeBytes);
-      document.getElementById('qrcode-message').textContent = translator.translate('scan-this-qr-code');
+      translator.translateElement(document.getElementById('qrcode-message'), 'scan-this-qr-code');
       Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
         publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'transfer challenge');
       }, keystoreFailure);
@@ -1978,11 +1971,10 @@ function onDeviceReady() {
     disable('register-button');
     const button = document.getElementById('register-button');
     const action = certificateComment === 'updated' ? 'updating' : 'registering';
-    button.textContent = translator.translate(action);
-    button.setAttribute('data-i18n', action);
+    translator.translateElement(button, action);
     app.dialog.preloader(button.textContent);
     if (action === 'updating') {
-      document.getElementById('tab-me-title').textContent = translator.translate('become-citizen');
+      translator.translateElement(document.getElementById('tab-me-title'), 'become-citizen');
       localStorage.removeItem('registered');
       localStorage.removeItem('citizenFingerprint');
       localStorage.removeItem('publicKey');
@@ -2043,7 +2035,7 @@ function onDeviceReady() {
     challengeBytes = new Uint8Array(20);
     crypto.getRandomValues(challengeBytes);
     challenge = encodeBase128(challengeBytes);
-    document.getElementById('qrcode-message').textContent = translator.translate('ask-citizen-to-scan-this-code');
+    translator.translateElement(document.getElementById('qrcode-message'), 'ask-citizen-to-scan-this-code');
     Keystore.sign(PRIVATE_KEY_ALIAS, challenge, function(signature) {
       publish({ key: citizen.key, signature: '', appKey: appKey }, signature, 'endorse challenge');
     }, keystoreFailure);
@@ -2359,7 +2351,6 @@ function updateCitizenCard() {
 }
 
 function downloadCitizen() {
-  console.log('tr: ' + translator.translate('downloading-citizen'));
   app.dialog.preloader(translator.translate('downloading-citizen'));
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
@@ -2487,7 +2478,7 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   }
   const timeDifference = Math.round(Date.now() / 1000) - answer.timestamp;
   if (Math.abs(timeDifference) > 60) {
-    app.dialog.alert(translator.translate('time-difference').replace('%1', timeDifference),
+    app.dialog.alert(translator.translate('time-difference', timeDifference),
       translator.translate('time-mismatch'));
     return false;
   }
@@ -2501,12 +2492,12 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   const reputation = parseFloat(answer.reputation);
   if (answer.trusted === 0) {
     app.dialog.alert(translator.translate('untrusted-message') + ' ' +
-    translator.translate('reputation-message').replace('%1', reputation),
+    translator.translate('reputation-message', reputation),
     translator.translate('untrusted-title'));
     return false;
   } else if (answer.trusted === -1) {
     app.dialog.alert(translator.translate('distrusted-message') + ' ' +
-    translator.translate('reputation-message').replace('%1', reputation),
+    translator.translate('reputation-message', reputation),
     translator.translate('distrusted-title'));
     return false;
   }
@@ -2602,9 +2593,13 @@ function updateEndorsements() {
     'div',
     'block-title no-margin-left no-margin-right',
     translator.translate('your-neighbors')
-  );
-  const info = translator.translate('you-are-endorsed-by').replace('%1', endorsedYouCount).replace('%2', endorsedCount);
-  newElement(list, 'div', 'no-margin-left no-margin-right', info).style.fontSize = '85%';
+  ).setAttribute('data-i18n', 'your-neighbors');
+  const infoText = translator.translate('you-are-endorsed-by', [endorsedYouCount, endorsedCount]);
+  const info = newElement(list, 'div', 'no-margin-left no-margin-right', infoText);
+  info.style.fontSize = '85%';
+  info.setAttribute('data-i18n', 'you-are-endorsed-by');
+  info.setAttribute('data-i18n-1', endorsedYouCount);
+  info.setAttribute('data-i18n-2', endorsedCount);
   let medias = newElement(list, 'div', 'list media-list margin-top-half');
   let ul = newElement(medias, 'ul');
   endorsements.forEach(function(endorsement) {
@@ -2680,11 +2675,6 @@ function updateEndorsements() {
         otherComment = 'revoked-died';
       else if (otherComment)
         console.error('Unsupported other comment: ' + otherComment);
-      if (otherComment) {
-        otherComment = translator.translate(otherComment)
-          .replace('%1', endorsement.givenNames)
-          .replace('%2', endorsement.familyName);
-      }
       if (comment === 'remote')
         comment = 'you-endorsed-remotely';
       else if (comment === 'in-person')
@@ -2707,8 +2697,6 @@ function updateEndorsements() {
         comment = 'you-revoked-died';
       else if (comment)
         console.error('Unsupported comment: ' + comment);
-      if (comment)
-        comment = translator.translate(comment).replace('%1', endorsement.givenNames).replace('%2', endorsement.familyName);
 
       let other = otherDay
         ? `<i class="icon f7-icons" style="font-size:150%;font-weight:bold;color:${otherColor}">${otherIcon}</i> ${otherDay}` +
@@ -2721,12 +2709,16 @@ function updateEndorsements() {
       message.style.fontSize = '82.353%';
       if (other !== '') {
         newElement(message, 'span', '', other, true).addEventListener('click', function(event) {
-          app.dialog.alert(icon === 'arrow_right_arrow_left' ? otherComment + '\n' + comment : otherComment);
+          const c = comment ? translator.translate(comment, [endorsement.givenNames, endorsement.familyName]) : '';
+          const oc = otherComment ? translator.translate(otherComment, [endorsement.givenNames, endorsement.familyName]) : '';
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? oc + '\n' + c : oc);
         });
       }
       if (main !== '') {
         newElement(message, 'span', '', main, true).addEventListener('click', function(event) {
-          app.dialog.alert(icon === 'arrow_right_arrow_left' ? comment + '\n' + otherComment : comment);
+          const c = comment ? translator.translate(comment, [endorsement.givenNames, endorsement.familyName]) : '';
+          const oc = otherComment ? translator.translate(otherComment, [endorsement.givenNames, endorsement.familyName]) : '';
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? c + '\n' + oc : c);
         });
       }
     }
