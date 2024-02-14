@@ -64,7 +64,7 @@ class Translator {
         parameter.push(element.getAttribute(`data-i18n-${i}`));
         i++;
       }
-      if (element.nodeName === 'INPUT')
+      if (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')
         element.placeholder = this.translate(key, parameter);
       else
         element.innerHTML = this.translate(key, parameter);
