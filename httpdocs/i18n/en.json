@@ -1,5 +1,6 @@
 {
   "a-smartphone-app": "a smartphone app allowing you to vote",
   "introduction": "<p>This web site is the home of the sample <i>directdemocracy</i> app. Currently, this app is under development.</p><p>The app runs on both iOS and Android. It requires a genuine operating system (not rooted).</p>",
-  "more-info": "More information is available from <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>."
+  "more-info": "More information is available from <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.",
+  "invite": "%1 %2 would like to be endorsed by you.<br>If you agree, install the app on your phone and click the <b>Review</b> link on this <a target=\"_blank\" href=\"https://notary.directdemocracy.vote/citizen.html?fingerprint=%3\">citizen page</a>."
 }
