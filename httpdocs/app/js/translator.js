@@ -74,7 +74,7 @@ class Translator {
     element.setAttribute('data-i18n', key);
     if (parameter instanceof Array) {
       console.log('array');
-      for (let i = 0; i < parameter.lenght; i++) {
+      for (let i = 0; i < parameter.length; i++) {
         element.setAttribute(`data-i18n-${i + 1}`, parameter[i]);
         console.log(`Setting data-i18n-${i + 1} to ${parameter[i]}`);
       }
