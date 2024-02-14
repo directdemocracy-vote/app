@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
           translator.language = language;
           document.getElementById(`language-${previous}`).classList.remove('is-disabled');
           document.getElementById(`language-${language}`).classList.add('is-disabled');
-          document.getElementById('language').innerHTML = '<img src="/images/flags/' + flags[language] + '.svg" width="24">';
+          document.getElementById('language').innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flags[language] + '.svg" width="24">';
         }
         flags = content;
         let first = true;
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
           a.classList.add('navbar-item');
           if (first) {
             a.classList.add('is-disabled');
-            language.innerHTML = '<img src="/images/flags/' + flag + '.svg" width="24">';
+            language.innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flag + '.svg" width="24">';
             first = false;
           }
           a.setAttribute('id', `language-${country}`);
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('navbar-burger').classList.remove('is-active');
           });
           let img = document.createElement('img');
-          img.src = '/images/flags/' + flag + '.svg';
+          img.src = 'https://directdemocracy.vote/images/flags/' + flag + '.svg';
           img.width = '24';
           img.style.marginRight = '6px';
           a.appendChild(img);
