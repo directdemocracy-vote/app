@@ -1,3 +1,5 @@
 {
-  "a-smartphone-app": "a smartphone app allowing you to vote"
+  "a-smartphone-app": "a smartphone app allowing you to vote",
+  "introduction": "<p>This web site is the home of the sample <i>directdemocracy</i> app. Currently, this app is under development.</p><p>The app runs on both iOS and Android. It requires a genuine operating system (not rooted).</p>",
+  "more-info": "More information is available from <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>."
 }
