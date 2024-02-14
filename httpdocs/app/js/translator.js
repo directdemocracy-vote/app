@@ -67,7 +67,7 @@ class Translator {
       if (element.nodeName === 'INPUT')
         element.placeholder = this.translate(key, parameter);
       else
-        element.innerHTML = this.translate(key, parameter);
+        element.innerHTML = this.translate(key);
     });
   }
   translateElement(element, key, parameter) {
