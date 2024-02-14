@@ -60,7 +60,7 @@ class Translator {
       const key = element.dataset.i18n;
       let i = 1;
       let parameter = [];
-      while (element.hasAttribute(`data-i18n-${i}`) {
+      while (element.hasAttribute(`data-i18n-${i}`)) {
         parameter.push(element.getAttribute(`data-i18n-${i}`);
         i++;
       }
