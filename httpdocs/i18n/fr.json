@@ -1,3 +1,5 @@
 {
-  "a-smartphone-app": "une application mobile pour voter"
+  "a-smartphone-app": "une application mobile pour voter",
+  "introduction": "<p>Ce site web héberge l'app de direct<b>democracy</b>. Elle est actuellement en développement.</p><p>L'app fonctionne sous iOS et Android. Elle nécessite un système d'exploitation authentique (non rooté).</p>",
+  "more-info": "Pour plus d'informations, veuillez consulter <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>."
 }
