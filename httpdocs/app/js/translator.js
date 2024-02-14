@@ -85,7 +85,7 @@ class Translator {
     if (key in this.#dictionary) {
       if (parameter === undefined)
         return this.#dictionary[key];
-      if (paramerer instanceof Array) {
+      if (parameter instanceof Array) {
         let translation = this.#dictionary['key'];
         for (let i = 0; i < parameter.length; i++)
           translation = translation.replace('%' + (i + 1), parameter[i]);
