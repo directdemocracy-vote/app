@@ -30,15 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
           document.getElementById('language').innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flags[language] + '.svg" width="24">';
         }
         flags = content;
-        let first = true;
         for (const [country, flag] of Object.entries(flags)) {
           let a = document.createElement('a');
           a.classList.add('navbar-item');
-          if (first) {
-            a.classList.add('is-disabled');
-            language.innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flag + '.svg" width="24">';
-            first = false;
-          }
           a.setAttribute('id', `language-${country}`);
           a.addEventListener('click', function(event) {
             setLanguage(country);
@@ -67,5 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
       el.classList.toggle('is-active');
       target.classList.toggle('is-active');
     });
+  });
+  document.getElementById('main-menu').addEventListener('click', function() {
+    window.location.href = 'https://directdemocracy.vote';
   });
 });
