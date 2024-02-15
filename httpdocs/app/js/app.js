@@ -971,9 +971,9 @@ function addProposal(proposal, type, open) {
         let fromBin = '';
         for (let i = 0; i < bits; i++)
           fromBin += bin[i];
-        fromBin += '0'.repeat(32 * 8 - bits);
+        fromBin += '0'.repeat(256 - bits);
         let from = '';
-        for (let i = 0; i < 32 * 8; i += 8) {
+        for (let i = 0; i < 256; i += 8) {
           const v = parseInt(fromBin.substring(i, i + 8), 2);
           from += v.toString(16);
         }
@@ -993,8 +993,9 @@ function addProposal(proposal, type, open) {
         if (answer.error) {
           console.error(answer.error);
           result = answer.error;
-          break;
-        } else {
+        } else if (answer.length === 0)
+          result = 'not found';
+        else {
           for (vote of answer) {
             if (!await verifySignature(vote)) { // bad station signature
               result = 'station';
@@ -1009,10 +1010,21 @@ function addProposal(proposal, type, open) {
               break;
             }
           }
+          const last = answer[answer.length - 1];
+          const lb = base64ToByteArray(last.ballot);
+          let lastBin = '';
+          for (let i = 0; i < lb.length; i++)
+            lastBin += lb[i].toString(2).padStart(8, '0');
+          if (lastBin > bin)
+            result = 'not found';
         }
         if (result)
           break;
-        bits++;
+        do
+          bits++;
+        while (bits !== 256 && bin[bits - 1] === '0');
+        if (bits === 256)
+          break;
       } while (true);
       app.dialog.close(); // preloader
       vButton.classList.remove('color-orange');
@@ -2361,9 +2373,17 @@ function downloadCitizen() {
   })
     .then(response => response.json())
     .then(answer => {
-      if (answer.error)
-        app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
-      else {
+      app.dialog.close(); // preloader
+      if (answer.error) {
+        if (answer.error === 'citizen not found') {
+          app.dialog.confirm(translator.translate('citizen-card-not-found'),
+            translator.translate('citizen-card-not-found-title'), function() {
+              window.localStorage.removeItem('registered');
+              welcome();
+            });
+        } else
+          app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+      } else {
         citizen = answer.citizen;
         citizen.key = localStorage.getItem('publicKey');
         endorsements = answer.endorsements;
@@ -2376,7 +2396,6 @@ function downloadCitizen() {
         let swiper = document.getElementById('swiper-container');
         swiper.setAttribute('speed', '300');
         swiper.swiper.allowTouchMove = true;
-        app.dialog.close(); // preloader
       }
     })
     .catch((error) => {

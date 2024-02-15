@@ -238,5 +238,7 @@
   "enter-citizen-card": "Remplissez votre carte de citoyen",
   "search-me-online": "Rechercher ma carte de citoyen <a id=\"search-me\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "getting-petition": "Téléchargement de la pétition...",
-  "getting-referendum": "Téléchargement du référendum..."
+  "getting-referendum": "Téléchargement du référendum...",
+  "citizen-card-not-found": "Your citizen card was not found on your notary server. If you believe the notary is corrupted and want to change it, click Cancel, change the notary from the Settings, quit the app and restart it, otherwise, click OK and you will be able to create a new citizien card.",
+  "citizen-card-not-found-title": "Citizen Card Not Found"
 }
