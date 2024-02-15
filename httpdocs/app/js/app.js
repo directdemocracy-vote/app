@@ -31,7 +31,7 @@ let homePageIsReady = false;
 let translatorIsReady = false;
 let challenge = '';
 let challengeBytes = null;
-let translator = new Translator('i18n', localStorage.getItem('language'));
+let translator = new Translator('i18n');
 let citizen = {
   schema: '',
   key: '',
@@ -258,7 +258,6 @@ function setupLanguagePicker() {
     for (let key in translator.languages) {
       if (translator.languages[key] === value[0]) {
         if (translator.language !== key) {
-          localStorage['language'] = key;
           translator.language = key;
           updateProposalLink();
         }
