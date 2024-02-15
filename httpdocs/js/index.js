@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
           }
           translator.language = language;
+          console.log('previous = ' + previous);
+          console.log('language = ' + language);
           document.getElementById(`language-${previous}`).classList.remove('is-disabled');
           document.getElementById(`language-${language}`).classList.add('is-disabled');
           document.getElementById('language').innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flags[language] + '.svg" width="24">';
