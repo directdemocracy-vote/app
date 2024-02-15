@@ -1010,13 +1010,15 @@ function addProposal(proposal, type, open) {
               break;
             }
           }
-          const last = answer[answer.length - 1];
-          const lb = base64ToByteArray(last.ballot);
-          let lastBin = '';
-          for (let i = 0; i < lb.length; i++)
-            lastBin += lb[i].toString(2).padStart(8, '0');
-          if (lastBin > bin)
-            result = 'not found';
+          if (!result) {
+            const last = answer[answer.length - 1];
+            const lb = base64ToByteArray(last.ballot);
+            let lastBin = '';
+            for (let i = 0; i < lb.length; i++)
+              lastBin += lb[i].toString(2).padStart(8, '0');
+            if (lastBin > bin)
+              result = 'not found';
+          }
         }
         if (result)
           break;
