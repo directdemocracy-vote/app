@@ -25,19 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
           }
           translator.language = language;
-          console.log('previous = ' + previous);
-          console.log('language = ' + language);
           document.getElementById(`language-${previous}`).classList.remove('is-disabled');
           document.getElementById(`language-${language}`).classList.add('is-disabled');
           document.getElementById('language').innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flags[language] + '.svg" width="24">';
         }
         flags = content;
-        let first = true;
+        let first = false;
         for (const [country, flag] of Object.entries(flags)) {
           let a = document.createElement('a');
           a.classList.add('navbar-item');
           if (first) {
-            // a.classList.add('is-disabled');
             language.innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flag + '.svg" width="24">';
             first = false;
           }
