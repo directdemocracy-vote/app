@@ -4,9 +4,9 @@
     "signature": "",
     "published": "",
     "area": "",
-    "area_name": "lat=46.5261672&lon=6.5620735",
-    "title": "Pour des rues du village plus sûres à Écublens",
-    "description": "Ce referendum demande l'introduction d'une limitation de vitesse à 30 km/h dans les rues du village d'Écublens afin d'assurer davantage de sécurité pour les piétons et les cyclistes. Le budget nécessaire à ce projet sera pris sur les finances municipales. Si le référendum est accepté, une telle limitation doit être mise en place avant le 1er juin 2024.",
+    "area_name": "lat=43.937291&lon=6.284658",
+    "title": "Pour des rues du village plus sûres au Poil",
+    "description": "Ce referendum demande l'introduction d'une limitation de vitesse à 30 km/h dans les rues du village du Poil afin d'assurer davantage de sécurité pour les piétons et les cyclistes. Le budget nécessaire à ce projet sera pris sur les finances municipales. Si le référendum est accepté, une telle limitation doit être mise en place avant le 1er juin 2024.",
     "question": "Souhaitez vous limiter la vitesse à 30km/h dans les rues du village comme décrit dans ce référendum ?",
     "answers": [
         "Oui",
@@ -14,6 +14,6 @@
     ],
     "type": "referendum",
     "secret": true,
-    "deadline": "2024-02-06T13:00:00+01:00",
+    "deadline": "2024-02-15T15:00:00+01:00",
     "trust": 0
 }
