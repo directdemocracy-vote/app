@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let a = document.createElement('a');
           a.classList.add('navbar-item');
           if (first) {
-            a.classList.add('is-disabled');
+            // a.classList.add('is-disabled');
             language.innerHTML = '<img src="https://directdemocracy.vote/images/flags/' + flag + '.svg" width="24">';
             first = false;
           }
