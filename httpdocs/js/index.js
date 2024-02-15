@@ -68,4 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
       target.classList.toggle('is-active');
     });
   });
+  document.getElementById('main-menu').addEventListener('click', function() {
+    window.location.href = 'https://directdemocracy.vote';
+  });
 });
