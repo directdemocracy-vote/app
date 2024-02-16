@@ -176,7 +176,9 @@ def generate_proposals():
             elif not isinstance(proposal['published'], int):
                 proposal['published'] = datetime.datetime.fromisoformat(
                     proposal['published']).timestamp()
-            if not isinstance(proposal['deadline'], int):
+            if proposal['deadline'] == '':
+                proposal['deadline'] = 3600 * int((time.time() + 3600) / 3600)
+            elif not isinstance(proposal['deadline'], int):
                 proposal['deadline'] = datetime.datetime.fromisoformat(
                     proposal['deadline']).timestamp()
             answer = requests.post('https://judge.directdemocracy.vote/api/publish_proposal.php', json=proposal).json()

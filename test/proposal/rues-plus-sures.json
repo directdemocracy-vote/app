@@ -14,6 +14,6 @@
     ],
     "type": "referendum",
     "secret": true,
-    "deadline": "2024-02-15T15:00:00+01:00",
+    "deadline": "",
     "trust": 0
 }

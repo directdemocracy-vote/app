@@ -9,6 +9,6 @@
     "description": "Cette pétition demande la démission immédiate du Maire du Poil, suite aux accusations de détournements de fonds publics publiées dans le journal de Castellane le 12 janvier 2024.",
     "type": "petition",
     "secret": false,
-    "deadline": "2024-02-15T15:00:00+01:00",
+    "deadline": "",
     "trust": 3600
 }
