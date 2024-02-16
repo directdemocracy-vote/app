@@ -48,6 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
           dropdown.appendChild(a);
         }
         setLanguage(translator.language);
+        if (location.hash) {
+          let requested_hash = location.hash.slice(1);
+          location.hash = '';
+          location.hash = requested_hash;
+        }
       })
       .catch((error) => {
         console.error('Could not load "i18n/flags.json".');
