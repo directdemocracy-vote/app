@@ -280,8 +280,10 @@ translator.onready = function() {
   setupLanguagePicker();
   if (!localStorage.getItem('registered'))
     welcome();
-  else
-    downloadCitizen();
+  else {
+    app.dialog.preloader(translator.translate('downloading-citizen'));
+    downloadCitizen(true);
+  }
 };
 
 let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
@@ -419,6 +421,7 @@ async function publish(publication, signature, type) {
         else {
           if (type === 'citizen card') {
             updateCitizenCard();
+            showPage('card');
             app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
             localStorage.setItem('registered', true);
             enableDangerButtons();
@@ -428,11 +431,11 @@ async function publish(publication, signature, type) {
               review = null;
             }
           } else if (type === 'endorse') {
-            hide('review');
-            show('home');
             document.getElementById('swiper-container').swiper.slideTo(1, 0, false); // show neighbor tab
             const message = translator.translate('endorsement-success-message', [review.givenNames, review.familyName]);
             app.dialog.alert(message, translator.translate('endorsement-success-title'), refreshEndorsements);
+            hide('review');
+            show('home');
           } else if (type === 'petition signature') {
             const message = translator.translate('petition-signed-message', petitionProposal.title);
             app.dialog.alert(message, translator.translate('petition-signed-title'));
@@ -2387,7 +2390,6 @@ function updateSearchLinks() {
 }
 
 function updateCitizenCard() {
-  showPage('card');
   document.getElementById('citizen-picture').setAttribute('src', citizen.picture);
   document.getElementById('register-picture').setAttribute('src', citizen.picture);
   document.getElementById('citizen-given-names').textContent = citizen.givenNames;
@@ -2406,8 +2408,7 @@ function updateCitizenCard() {
   updateEndorsements();
 }
 
-function downloadCitizen() {
-  app.dialog.preloader(translator.translate('downloading-citizen'));
+function downloadCitizen(initial) {
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -2438,9 +2439,12 @@ function downloadCitizen() {
         updateEndorsements();
         updateProposalLink();
         updateSearchLinks();
-        let swiper = document.getElementById('swiper-container');
-        swiper.setAttribute('speed', '300');
-        swiper.swiper.allowTouchMove = true;
+        if (initial) {
+          showPage('card');
+          let swiper = document.getElementById('swiper-container');
+          swiper.setAttribute('speed', '300');
+          swiper.swiper.allowTouchMove = true;
+        }
       }
     })
     .catch((error) => {
@@ -2451,6 +2455,9 @@ function downloadCitizen() {
 
 function refreshEndorsements() {
   app.dialog.preloader(translator.translate('updating-neighbors'));
+  downloadCitizen(false);
+  // FIXME: remove this
+  /*
   fetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -2468,8 +2475,6 @@ function refreshEndorsements() {
         if (endorsements.error)
           app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
         updateEndorsements();
-        hide('review');
-        show('home');
         app.dialog.close(); // preloader
       }
     })
@@ -2477,20 +2482,21 @@ function refreshEndorsements() {
       app.dialog.alert('Cannot connect to the notary.<br>Please try again.', 'Neighbors Update Error');
       console.error(error);
     });
+    */
 }
+document.getElementById('reload').addEventListener('click', function(event) {
+  app.dialog.preloader(translator.translate('reloading'));
+  downloadCitizen(false);
+});
 
 function updateReputation(reputationValue, endorsed) {
   let reputation = document.getElementById('citizen-reputation');
-  let badge = document.getElementById('reputation-badge');
   const span = document.createElement('span');
   const color = endorsed ? 'blue' : 'red';
   span.setAttribute('style', `font-weight:bold;color:${color}`);
   span.textContent = Math.round(reputationValue * 100) + '%';
   reputation.innerHTML = '';
   reputation.appendChild(span);
-  badge.classList.remove(`color-red`);
-  badge.classList.remove(`color-blue`);
-  badge.classList.add(`color-${color}`);
   updateProposals(petitions);
   updateProposals(referendums);
 }
@@ -2635,13 +2641,9 @@ function distanceInMeter(lat1, lon1, lat2, lon2) {
 
 function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
-  let badge = document.getElementById('reputation-badge');
   list.innerHTML = '';
-  if (endorsements.length === 0) {
-    badge.style.background = 'red';
-    badge.innerHTML = '!';
+  if (endorsements.length === 0)
     return;
-  }
   let endorsedYouCount = 0;
   let endorsedCount = 0;
   for (const endorsement of endorsements) {
@@ -2650,7 +2652,6 @@ function updateEndorsements() {
     if (endorsement.hasOwnProperty('endorsed'))
       endorsedCount++;
   }
-  badge.textContent = endorsedYouCount;
   newElement(
     list,
     'div',

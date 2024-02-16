@@ -243,5 +243,6 @@
   "citizen-card-not-found-title": "Citizen Card Not Found",
   "verify": "Verify",
   "verified": "Verified",
-  "error": "Error"
+  "error": "Error",
+  "reloading": "Reloading..."
 }

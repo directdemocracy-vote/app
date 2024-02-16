@@ -243,5 +243,6 @@
   "citizen-card-not-found-title": "Carte de citoyen introuvable",
   "verify": "Vérifier",
   "verified": "Vérifié",
-  "error": "Erreur"
+  "error": "Erreur",
+  "reloading": "Rechargement..."
 }
