@@ -9,7 +9,8 @@ const TESTING = false;
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
 const DIRECTDEMOCRACY_VERSION_BUILD = '51';
-const DEBUGING = 1;
+const BETA = true; // set the location to test villages (e.g., Le Poil for french locale and Bodie for english locale)
+const DEBUGING = true;
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -268,6 +269,13 @@ function setupLanguagePicker() {
 }
 
 translator.onready = function() {
+  if (translator.language === 'fr') { // French beta test in Le Poil, France
+    currentLatitude = 43.9371;
+    currentLongitude = 6.2847;
+  } else { // English beta test in Bodie, USA
+    currentLatitude = 38.2115;
+    currentLongitude = -119.0126;
+  }
   translatorIsReady = true;
   setupLanguagePicker();
   if (!localStorage.getItem('registered'))
@@ -812,6 +820,44 @@ async function getCitizen(reference, action) {
 }
 
 function addProposal(proposal, type, open) {
+  function setVerifyButton(button) {
+    if (proposal.ballot === null)
+      disable(button);
+    let icon;
+    let text;
+    if (!proposal.hasOwnProperty('verified')) {
+      icon = 'rectangle';
+      text = 'verify';
+    } else if (proposal.verified === 'verified') {
+      icon = 'rectangle_badge_checkmark';
+      text = 'verified';
+      button.classList.remove('color-orange');
+      button.classList.remove('color-red');
+      button.classList.add('color-green');
+    } else if (proposal.verified === 'not found') {
+      icon = 'rectangle_on_rectangle_angled';
+      text = 'verify';
+      button.classList.remove('color-green');
+      button.classList.remove('color-red');
+      button.classList.add('color-orange');
+    } else { // 'app', 'station', 'tampered', 'missing', '' (unknown error)
+      icon = 'rectangle_badge_xmark';
+      text = 'error';
+      button.classList.remove('color-green');
+      button.classList.remove('color-orange');
+      button.classList.add('color-red');
+    }
+    button.innerHTML = '';
+    const i = document.createElement('i');
+    button.appendChild(i);
+    i.classList.add('icon', 'f7-icons', 'margin-right-half');
+    i.style.fontSize = '150%';
+    i.textContent = icon;
+    const span = document.createElement('span');
+    button.appendChild(span);
+    translator.translateElement(span, text);
+  }
+
   let proposals = (type === 'petition') ? petitions : referendums;
   let item = document.createElement('div');
   document.getElementById(`${type}s`).prepend(item);
@@ -956,9 +1002,11 @@ function addProposal(proposal, type, open) {
     const vButton = document.createElement('button');
     grid.appendChild(vButton);
     vButton.classList.add('button', 'button-fill');
-    vButton.innerHTML = '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle</i>Verify';
-    if (proposal.ballot === null)
-      disable(vButton);
+    setVerifyButton(vButton);
+    // FIXM: clean this up
+    // vButton.innerHTML = '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle</i>Verify';
+    // if (proposal.ballot === null)
+    //  disable(vButton);
     vButton.addEventListener('click', async function(event) {
       app.dialog.preloader(translator.translate('verifying-vote'));
       let result = '';
@@ -1029,41 +1077,26 @@ function addProposal(proposal, type, open) {
           break;
       } while (true);
       app.dialog.close(); // preloader
-      vButton.classList.remove('color-orange');
-      if (result === 'verified') {
+      if (result === 'not found' && outdated)
+        result = 'missing';
+      proposal.verified = result;
+      localStorage.setItem('referendums', JSON.stringify(referendums));
+      setVerifyButton(vButton);
+      if (result === 'verified')
         app.dialog.alert(translator.translate('vote-verified-message'), translator.translate('vote-verified-title'));
-        vButton.innerHTML =
-         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_checkmark</i>Verified';
-        vButton.classList.add('color-green');
-      } else if (result === 'app') {
+      else if (result === 'app')
         app.dialog.alert('The votes returned by the notary are corrupted: wrong app signature', 'Votes Corrupted');
-        vButton.innerHTML =
-         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
-        vButton.classList.add('color-red');
-      } else if (result === 'station') {
+      else if (result === 'station')
         app.dialog.alert('The votes returned by the notary are corrupted: wrong station signature.', 'Votes Corrupted');
-        vButton.innerHTML =
-         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
-        vButton.classList.add('color-red');
-      } else if (result === 'tampered') {
+      else if (result === 'tampered')
         app.dialog.alert('Your vote was tampered (your answer to the question was modified).', 'Vote Tampered');
-        vButton.innerHTML =
-         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Tampered';
-        vButton.classList.add('color-red');
-      } else if (result === 'not found') {
+      else if (result === 'not found')
         app.dialog.alert(translator.translate('vote-not-found-message'), translator.translate('vote-not-found-title'));
-        vButton.innerHTML =
-         '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_on_rectangle_angled</i>Verify';
-        vButton.classList.add('color-orange');
-      } else {
-        if (result === '') {
-          result = 'unknown error';
-          app.dialog.alert(`An error occurred while verifying your vote: ${result}. please try again later.`,
-            'Vote Verification Error');
-          vButton.innerHTML =
-           '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle_badge_xmark</i>Error';
-          vButton.classList.add('color-red');
-        }
+      else if (result === 'missing')
+        app.dialog.alert('Your vote is missing after the expiry of the deadline.', 'Vote Missing');
+      else if (result === '') {
+        app.dialog.alert('An unknown error occurred while verifying your vote. please try again later.',
+          'Vote Verification Error');
       }
     });
     translator.translateElement(button, proposal.ballot === null ? 'vote' : 're-vote');
@@ -1146,15 +1179,17 @@ function addProposal(proposal, type, open) {
         proposals.forEach(function(p) {
           p.id = i++;
         });
-      } else { // remove useless fields, keep only signature, signed, number, ballot and answer
+      } else { // remove useless fields, keep only signature, signed, number, ballot, answer and verified
         delete proposal.id; // hidden
         delete proposal.key;
         delete proposal.published;
         delete proposal.participants;
         delete proposal.title;
         delete proposal.description;
+        delete proposal.areaLocal;
         delete proposal.areaName;
-        delete proposal.area;
+        delete proposal.areaSignature;
+        delete proposal.areas;
         delete proposal.deadline;
         delete proposal.corpus;
         delete proposal.participation;
@@ -1163,6 +1198,10 @@ function addProposal(proposal, type, open) {
         delete proposal.judge;
         delete proposal.secret;
         delete proposal.website;
+        delete proposal.trust;
+        delete proposal.trusted;
+        delete proposal.type;
+        delete proposal.results;
       }
       localStorage.setItem(`${type}s`, JSON.stringify(proposals));
     });
@@ -1906,9 +1945,11 @@ function onDeviceReady() {
 
           function getGeolocationPosition(position) {
             geolocation = true;
-            currentLatitude = roundGeo(position.coords.latitude);
-            currentLongitude = roundGeo(position.coords.longitude);
-            registerMap.setView([currentLatitude, currentLongitude], 12);
+            if (!BETA) {
+              currentLatitude = roundGeo(position.coords.latitude);
+              currentLongitude = roundGeo(position.coords.longitude);
+            }
+            registerMap.setView([currentLatitude, currentLongitude], 18);
             setTimeout(function() {
               registerMarker.setLatLng([currentLatitude, currentLongitude]);
               updateLocation();
@@ -1930,8 +1971,10 @@ function onDeviceReady() {
                 console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
               } else {
                 const coords = answer.split(',');
-                currentLatitude = parseFloat(coords[0]);
-                currentLongitude = parseFloat(coords[1]);
+                if (!BETA) {
+                  currentLatitude = parseFloat(coords[0]);
+                  currentLongitude = parseFloat(coords[1]);
+                }
               }
               getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
             })
