@@ -95,7 +95,7 @@ def generate_citizens():
             print('')
 
 
-def generate_endorsements(folder=None):
+def generate_endorsements(rate, folder=None):
     with open('key/app/id_rsa', 'r') as file:
         app_key = RSA.importKey(file.read())
     for citizen_filename in os.listdir('output/citizen'):
@@ -108,6 +108,8 @@ def generate_endorsements(folder=None):
             if folder is None:
                 folder = 'output/citizen'
             for endorsed_filename in os.listdir(folder):
+                if random.randrange(100) / 100 > rate:
+                    continue
                 if endorsed_filename.endswith('.json') and endorsed_filename != citizen_filename:
                     endorsed_name = endorsed_filename[:-5]
                     endorsed_file = os.path.join(folder, endorsed_filename)
@@ -122,6 +124,7 @@ def generate_endorsements(folder=None):
                     endorsement['appSignature'] = ''
                     endorsement['type'] = 'endorse'
                     endorsement['publication'] = endorsed['signature']
+                    endorsement['comment'] = 'remote' if random.randrange(2) == 1 else 'in-person'
                     message = json.dumps(endorsement, ensure_ascii=False, separators=(',', ':')).encode('utf8')
                     h = SHA256.new(message)
                     key_file = os.path.join('key', 'citizen', citizen_name + '.pem')
@@ -320,8 +323,8 @@ def generate_signatures_and_votes(rate):
 
 
 #generate_citizens()
-#generate_endorsements()
-generate_endorsements('output/other')
-#generate_trusts()
-#generate_proposals()
-#generate_signatures_and_votes(1)
+generate_endorsements(0.9)
+generate_endorsements(0.9, 'output/other')
+generate_trusts()
+generate_proposals()
+generate_signatures_and_votes(0.9)
