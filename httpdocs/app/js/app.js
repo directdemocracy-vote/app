@@ -1007,10 +1007,6 @@ function addProposal(proposal, type, open) {
     grid.appendChild(vButton);
     vButton.classList.add('button', 'button-fill');
     setVerifyButton(vButton);
-    // FIXM: clean this up
-    // vButton.innerHTML = '<i class="icon f7-icons margin-right-half" style="font-size:150%">rectangle</i>Verify';
-    // if (proposal.ballot === null)
-    //  disable(vButton);
     vButton.addEventListener('click', async function(event) {
       app.dialog.preloader(translator.translate('verifying-vote'));
       let result = '';
@@ -2696,11 +2692,11 @@ function updateEndorsements() {
       color = endorsement.endorsedComment === 'in-person' ? 'green' : 'blue';
       icon = 'arrow_left';
       comment = endorsement.endorsedComment;
-    } else if (endorsement.hasOwnProperty('reported')) {
-      day = new Date(endorsement.reported * 1000).toISOString().slice(0, 10);
+    } else if (endorsement.hasOwnProperty('revoked')) {
+      day = new Date(endorsement.revoked * 1000).toISOString().slice(0, 10);
       color = 'red';
       icon = 'arrow_left';
-      comment = endorsement.reportedComment;
+      comment = endorsement.revokedComment;
     } else
       day = false;
     if (endorsement.hasOwnProperty('endorsedYou')) {
@@ -2708,11 +2704,11 @@ function updateEndorsements() {
       otherColor = endorsement.endorsedYouComment === 'in-person' ? 'green' : 'blue';
       otherIcon = 'arrow_right';
       otherComment = endorsement.endorsedYouComment;
-    } else if (endorsement.hasOwnProperty('reportedYou')) {
-      otherDay = new Date(endorsement.reportedYou * 1000).toISOString().slice(0, 10);
+    } else if (endorsement.hasOwnProperty('revokedYou')) {
+      otherDay = new Date(endorsement.revokedYou * 1000).toISOString().slice(0, 10);
       otherColor = 'red';
       otherIcon = 'arrow_right';
-      otherComment = endorsement.reportedYouComment;
+      otherComment = endorsement.revokedYouComment;
     } else
       otherDay = false;
     if (day !== false || otherDay !== false) {
@@ -2778,33 +2774,34 @@ function updateEndorsements() {
         newElement(message, 'span', '', other, true).addEventListener('click', function(event) {
           const c = comment ? translator.translate(comment, [endorsement.givenNames, endorsement.familyName]) : '';
           const oc = otherComment ? translator.translate(otherComment, [endorsement.givenNames, endorsement.familyName]) : '';
-          app.dialog.alert(icon === 'arrow_right_arrow_left' ? oc + '\n' + c : oc);
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? oc + '<br>' + c : oc);
         });
       }
       if (main !== '') {
         newElement(message, 'span', '', main, true).addEventListener('click', function(event) {
           const c = comment ? translator.translate(comment, [endorsement.givenNames, endorsement.familyName]) : '';
           const oc = otherComment ? translator.translate(otherComment, [endorsement.givenNames, endorsement.familyName]) : '';
-          app.dialog.alert(icon === 'arrow_right_arrow_left' ? c + '\n' + oc : c);
+          app.dialog.alert(icon === 'arrow_right_arrow_left' ? c + '<br>' + oc : c);
         });
       }
     }
     div = newElement(li, 'div', 'item-inner display-flex flex-direction-column');
     div.style.width = '28px';
     a = newElement(div, 'a', 'link');
+    let trustIcon;
     if (endorsement.hasOwnProperty('trusted')) {
       if (endorsement.trusted === 1) {
-        icon = 'checkmark_seal_fill';
+        trustIcon = 'checkmark_seal_fill';
         color = 'green';
       } else {
-        icon = 'xmark_seal_fill';
+        trustIcon = 'xmark_seal_fill';
         color = 'red';
       }
     } else {
-      icon = 'checkmark_seal';
+      trustIcon = 'checkmark_seal';
       color = 'grey';
     }
-    let i = newElement(a, 'i', 'f7-icons', icon);
+    let i = newElement(a, 'i', 'f7-icons', trustIcon);
     i.style.color = color;
     let d = newElement(div, 'div', 'display-none', '...');
     d.style.width = '28px';
@@ -2850,8 +2847,8 @@ function updateEndorsements() {
     newElement(a, 'i', 'f7-icons', 'doc_text_search');
     a.addEventListener('click', function() {
       let action;
-      if (endorsement.hasOwnProperty('reportedComment'))
-        action = endorsement.reportedComment.replace('revoke+', 'revoked+');
+      if (endorsement.hasOwnProperty('revokedComment'))
+        action = endorsement.revokedComment.replace('revoke+', 'revoked+');
       else if (endorsement.hasOwnProperty('endorsed'))
         action = 'endorsed';
       else
