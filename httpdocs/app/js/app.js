@@ -446,11 +446,15 @@ async function publish(publication, signature, type) {
               app.dialog.alert(translator.translate('deleted-message'), translator.translate('deleted-success'));
               deleteCitizen();
             } else if (comment.startsWith('revoked+')) {
-              const message = translator.translate('revoked-message', [review.givenNames, review.familyName]);
+              const message = translator.translate('revoke-message', [review.givenNames, review.familyName]);
               app.dialog.alert(message, translator.translate('revoke-success'), refreshEndorsements);
+              hide('review');
+              show('home');
             } else { // report
               const message = translator.translate('report-message', [review.givenNames, review.familyName]);
               app.dialog.alert(message, translator.translate('report-success'));
+              hide('review');
+              show('home');
             }
           } else if (type === 'participation') {
             const binaryAppKey = await importKey(appKey);

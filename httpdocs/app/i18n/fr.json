@@ -173,7 +173,7 @@
   "verifying-vote": "Vérification du vote...",
   "vote-verified-message": "Votre vote a été vérifié avec succès.",
   "vote-verified-title": "Vote vérifié",
-  "vote-not-found-message": "Votre vote n'est actuellement pas publié par du notaire, veuillez ré-essayer plus tard.",
+  "vote-not-found-message": "Votre vote n'est actuellement pas publié par votre notaire, veuillez ré-essayer plus tard.",
   "vote-not-found-title": "Vote pas trouvé",
   "vote-explanation": "Vous vous apprétez à voter \"%1\" à ce référendum. ",
   "blank-explanation": "Vous vous apprétez à voter blanc. Votre vote sera comptabilité comme blanc dans les résultats. ",
