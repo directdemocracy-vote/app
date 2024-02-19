@@ -106,7 +106,7 @@
   "revoked-name-picture": "%1 %2 revoked you because they believe your name changed and your picture is outdated.",
   "revoked-address-name-picture": "%1 %2 revoked you because they believe your name changed, you moved and your picture is outdated.",
   "revoked-died": "%1 %2 revoked you because they believe you died.",
-  "scan-qr-code": "Scan the QR Code",
+  "scan-qr-code": "Scan QR Code",
   "search-neighbors-online": "Search neighbors <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">online</a>",
   "search-referendums-online": "Search referendums <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">online</a>",
   "search-petitions-online": "Search petitions <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">online</a>",
