@@ -239,7 +239,7 @@
   "search-me-online": "Rechercher ma carte de citoyen <a id=\"search-me\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "getting-petition": "Téléchargement de la pétition...",
   "getting-referendum": "Téléchargement du référendum...",
-  "citizen-card-not-found": "Votre carte de citoyen est introuvable sur le serveur de votre notaire. Si vous pensez que ce notaire est corrompu et voulez en changer, cliquez sur Annuler, changer de notaire dans les Options, quittez et redémarrez l'app. Sinon cliquez OK et créez une nouvelle carte de citoyen.",
+  "citizen-card-not-found": "Votre carte de citoyen est introuvable sur le serveur de votre notaire. Si vous pensez que ce notaire est corrompu et voulez en changer, cliquez sur Annuler, changez de notaire dans les Options et cliquez sur le bouton de rechargement. Sinon cliquez OK et créez une nouvelle carte de citoyen.",
   "citizen-card-not-found-title": "Carte de citoyen introuvable",
   "verify": "Vérifier",
   "verified": "Vérifié",

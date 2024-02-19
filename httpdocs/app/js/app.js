@@ -4,23 +4,21 @@ import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
-const TESTING = false;
+const TESTING = false; // if true, enforce the use of the test key for the app
+const BETA = true; // if true, set the location to test villages (e.g., Le Poil for french locale and Bodie for english locale)
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '51';
-const BETA = true; // set the location to test villages (e.g., Le Poil for french locale and Bodie for english locale)
-const DEBUGING = true;
+const DIRECTDEMOCRACY_VERSION_BUILD = '54';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
   'z69PnvBjt8tt8L8+0NRGOpKkmswzaX4ON3iplBx46yEn00DQ9W2Qzl2EwaIPlYNhkEs24Rt5zQeGUxMGHy1eSR+mR4Ngqp1LXCyGxbXJ8B/B5hV4QI' +
   'or7U2raCVFSy7sNl080xNLuY0kjHCV+HN0h4EaRdR2FSw9vMyw5UJmWpCFHyQla42Eg1Fxwk9IkHhNe/WobOT1Jiy3Uxz9nUeoCQa5AONAXOaO2wtQ';
 const PRODUCTION_APP_KEY = // public key of the genuine app
-  DEBUGING ? TEST_APP_KEY
-    : 'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
-    'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
-    '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
+  'vD20QQ18u761ean1+zgqlDFo6H2Emw3mPmBxeU24x4o1M2tcGs+Q7G6xASRf4LmSdO1h67ZN0sy1tasNHH8Ik4CN63elBj4ELU70xZeYXIMxxxDqis' +
+  'FgAXQO34lc2EFt+wKs+TNhf8CrDuexeIV5d4YxttwpYT/6Q2wrudTm5wjeK0VIdtXHNU5V01KaxlmoXny2asWIejcAfxHYSKFhzfmkXiVqFrQ5BHAf' +
+  '+/ReYnfc+x7Owrm6E0N51vUHSxVyN/TCUoA02h5UsuvMKR4OtklZbsJjerwz+SjV7578H5FTh0E0sa7zYJuHaYqPevvwReXuggEsfytP/j2B3IgarQ';
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
@@ -261,6 +259,8 @@ function setupLanguagePicker() {
         if (translator.language !== key) {
           translator.language = key;
           updateProposalLink();
+          if (BETA)
+            setBetaCoordinates();
         }
         break;
       }
@@ -268,7 +268,7 @@ function setupLanguagePicker() {
   });
 }
 
-translator.onready = function() {
+function setBetaCoordinates() {
   if (translator.language === 'fr') { // French beta test in Le Poil, France
     currentLatitude = 43.9371;
     currentLongitude = 6.2847;
@@ -276,6 +276,11 @@ translator.onready = function() {
     currentLatitude = 38.2115;
     currentLongitude = -119.0126;
   }
+}
+
+translator.onready = function() {
+  if (BETA)
+    setBetaCoordinates();
   translatorIsReady = true;
   setupLanguagePicker();
   if (!localStorage.getItem('registered'))

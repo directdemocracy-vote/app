@@ -239,7 +239,7 @@
   "search-me-online": "Search your citizen card <a id=\"search-me\" class=\"link external\" target=\"_blank\">online</a>",
   "getting-petition": "Downloading Petition...",
   "getting-referendum": "Downloading Referendum...",
-  "citizen-card-not-found": "Your citizen card was not found on your notary server. If you believe the notary is corrupted and want to change it, click Cancel, change the notary from the Settings, quit and restart the app. Otherwise, click OK and create a new citizien card.",
+  "citizen-card-not-found": "Your citizen card was not found on your notary server. If you believe the notary is corrupted and want to change it, click Cancel, change the notary from the Settings and click on the Reload button. Otherwise, click OK and create a new citizien card.",
   "citizen-card-not-found-title": "Citizen Card Not Found",
   "verify": "Verify",
   "verified": "Verified",
