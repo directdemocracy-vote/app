@@ -754,7 +754,7 @@ function reviewCitizen(publication, action) {
         reputation.textContent = 'N/A';
         reputation.style.color = 'red';
       } else {
-        reputation.textContent = answer.reputation;
+        reputation.textContent = formatReputation(answer.reputation);
         reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
       }
     })
@@ -2489,12 +2489,21 @@ document.getElementById('reload').addEventListener('click', function(event) {
   downloadCitizen(false);
 });
 
+function formatReputation(reputation) {
+  if (reputation !== 'N/A') {
+    const percent = Math.round(100 * parseFloat(reputation));
+    if (percent >= 0 && percent <= 100)
+      return percent + '%';
+  }
+  return 'N/A';
+}
+
 function updateReputation(reputationValue, endorsed) {
   let reputation = document.getElementById('citizen-reputation');
   const span = document.createElement('span');
   const color = endorsed ? 'blue' : 'red';
   span.setAttribute('style', `font-weight:bold;color:${color}`);
-  span.textContent = Math.round(reputationValue * 100) + '%';
+  span.textContent = formatReputation(reputationValue);
   reputation.innerHTML = '';
   reputation.appendChild(span);
   updateProposals(petitions);
@@ -2558,7 +2567,7 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
     ), translator.translate('deadline-passed'));
     return false;
   }
-  const reputation = parseFloat(answer.reputation);
+  const reputation = formatReputation(answer.reputation);
   if (answer.trusted === 0) {
     app.dialog.alert(translator.translate('untrusted-message') + ' ' +
     translator.translate('reputation-message', reputation),
@@ -2822,13 +2831,8 @@ function updateEndorsements() {
           if (answer.hasOwnProperty('error'))
             console.error(answer.error);
           else {
-            if (answer.hasOwnProperty('reputation')) {
-              const reputation = Math.round(100 * parseFloat(answer.reputation));
-              if (reputation >= 0 && reputation <= 100)
-                d.textContent = reputation + '%';
-              else
-                d.textContent = 'N/A';
-            }
+            if (answer.hasOwnProperty('reputation'))
+              d.textContent = formatReputation(answer.reputation);
             if (answer.hasOwnProperty('trusted')) {
               if (answer.trusted === 1) { // trusted
                 d.style.color = 'green';
