@@ -234,7 +234,7 @@ async function verifyBlind(vote) {
   return verify;
 }
 
-function setupLanguagePicker() {
+function readyToGo() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
   let values = [];
@@ -266,6 +266,12 @@ function setupLanguagePicker() {
       }
     }
   });
+  if (!localStorage.getItem('registered'))
+    welcome();
+  else {
+    app.dialog.preloader(translator.translate('downloading-citizen'));
+    downloadCitizen(true);
+  }
 }
 
 function setBetaCoordinates() {
@@ -282,13 +288,7 @@ translator.onready = function() {
   if (BETA)
     setBetaCoordinates();
   translatorIsReady = true;
-  setupLanguagePicker();
-  if (!localStorage.getItem('registered'))
-    welcome();
-  else {
-    app.dialog.preloader(translator.translate('downloading-citizen'));
-    downloadCitizen(true);
-  }
+  readyToGo();
 };
 
 let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }] });
@@ -297,7 +297,7 @@ app.on('pageInit', function(page) {
   if (page.name !== 'home')
     return;
   homePageIsReady = true;
-  setupLanguagePicker();
+  readyToGo();
 });
 
 app.on('pageBeforeRemove', function(page) {
