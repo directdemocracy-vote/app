@@ -33,15 +33,27 @@
   <platform name="ios">
     <preference name="scheme" value="app" />
     <preference name="hostname" value="localhost" />
-    <splash src="resources/ios/Default@2x~universal~anyany.png" />
+    <splash src="resources/ios/splash.png" />
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="FadeSplashScreen" value="true"/>
-    <icon src="resources/ios/AppIcon~ipad.png" width="76" height="76" />
-    <icon src="resources/ios/AppIcon-40@2x.png" width="80" height="80" />
-    <icon src="resources/ios/AppIcon-60@2x~car.png" width="120" height="120" />
-    <icon src="resources/ios/AppIcon-83.5@2x~ipad.png" width="167" height="167" />
-    <icon src="resources/ios/AppIcon-60@3x~car.png" width="180" height="180" />
-    <icon src="resources/ios/AppIcon~ios-marketing.png" width="1024" height="1024" />
+    <icon src="resources/ios/29.png" width="29" height="29" />
+    <icon src="resources/ios/40.png" width="40" height="40" />
+    <icon src="resources/ios/50.png" width="50" height="50" />
+    <icon src="resources/ios/57.png" width="57" height="57" />
+    <icon src="resources/ios/58.png" width="58" height="58" />
+    <icon src="resources/ios/72.png" width="72" height="72" />
+    <icon src="resources/ios/76.png" width="76" height="76" />
+    <icon src="resources/ios/80.png" width="80" height="80" />
+    <icon src="resources/ios/87.png" width="87" height="87" />
+    <icon src="resources/ios/100.png" width="100" height="100" />
+    <icon src="resources/ios/114.png" width="114" height="114" />
+    <icon src="resources/ios/120.png" width="120" height="120" />
+    <icon src="resources/ios/144.png" width="144" height="144" />
+    <icon src="resources/ios/152.png" width="152" height="152" />
+    <icon src="resources/ios/167.png" width="167" height="167" />
+    <icon src="resources/ios/180.png" width="180" height="180" />
+    <icon src="resources/ios/512.png" width="512" height="512" />
+    <icon src="resources/ios/1024.png" width="1024" height="1024" />
     <preference name="AllowNewWindows" value="false" />
     <preference name="MediaPlaybackAllowsAirPlay" value="true" />
     <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
