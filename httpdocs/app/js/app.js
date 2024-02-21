@@ -291,7 +291,12 @@ translator.onready = function() {
   readyToGo();
 };
 
-let app = new Framework7({ el: '#app', name: 'directdemocracy', routes: [{ path: '/', pageName: 'home' }], navbar: {iosCenterTitle: false}});
+let app = new Framework7({
+  el: '#app',
+  name: 'directdemocracy',
+  routes: [{ path: '/', pageName: 'home' }],
+  navbar: {iosCenterTitle: false}
+});
 
 app.on('pageInit', function(page) {
   if (page.name !== 'home')
