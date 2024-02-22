@@ -794,11 +794,21 @@ async function getCitizen(reference, action) {
     .then(response => response.json())
     .then(async publication => {
       app.dialog.close(); // preloader
-      document.getElementById('enter-me').value = '';
+      const meField = document.getElementById('enter-me');
+      meField.value = '';
+      app.input.checkEmptyState(meField);
+      enable(meField);
       enable('scan-me');
-      enable('enter-me');
+      const neighborField = document.getElementById('enter-neighbor');
+      neighborField.value = '';
+      app.input.checkEmptyState(neighborField);
+      enable(neighborField);
+      enable('scan-neighbor');
       if (publication.error) {
-        app.dialog.alert(publication.error, 'Citizen search error');
+        if (publication.error === 'publication not found')
+          app.dialog.alert(translator.translate('citizen-not-found'), translator.translate('citizen-search-error'));
+        else
+          app.dialog.alert(publication.error, 'Citizen search error');
         return;
       }
       if (reference.length === 40) {
@@ -810,6 +820,10 @@ async function getCitizen(reference, action) {
         }
       } else if (reference !== publication.key) {
         app.dialog.alert('Key mismatch.', 'Citizen search error');
+        return;
+      }
+      if (publication.key === citizen.key) {
+        app.dialog.alert(translator.translate('cannot-review-myself'), translator.translate('cannot-review-myself-title'));
         return;
       }
       const signature = publication.signature;
@@ -1311,9 +1325,15 @@ async function getProposal(fingerprint, type) {
     .then(async proposal => {
       app.dialog.close(); // preloader
       enable(`scan-${type}`);
-      enable(`enter-${type}`);
+      const field = document.getElementById(`enter-${type}`);
+      enable(field);
+      field.value = '';
+      app.input.checkEmptyState(field);
       if (proposal.error) {
-        app.dialog.alert(proposal.error, 'Proposal search error');
+        if (proposal.error === 'Proposal not found')
+          app.dialog.alert(translator.translate(`${type}-not-found`), translator.translate(`${type}-search-error`));
+        else
+          app.dialog.alert(proposal.error, 'Proposal search error');
         return;
       }
       if (proposal.trusted === 0) {
@@ -2470,34 +2490,8 @@ function downloadCitizen(initial) {
 function refreshEndorsements() {
   app.dialog.preloader(translator.translate('updating-neighbors'));
   downloadCitizen(false);
-  // FIXME: remove this
-  /*
-  fetch(`${notary}/api/citizen.php`, {
-    method: 'POST',
-    headers: {
-      'directdemocracy-version': directDemocracyVersion,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
-  })
-    .then(response => response.json())
-    .then(answer => {
-      if (answer.error)
-        app.dialog.alert(answer.error + '.<br>Please try again.', 'Neighbors Update Error');
-      else {
-        endorsements = answer.endorsements;
-        if (endorsements.error)
-          app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
-        updateEndorsements();
-        app.dialog.close(); // preloader
-      }
-    })
-    .catch((error) => {
-      app.dialog.alert('Cannot connect to the notary.<br>Please try again.', 'Neighbors Update Error');
-      console.error(error);
-    });
-    */
 }
+
 document.getElementById('reload').addEventListener('click', function(event) {
   app.dialog.preloader(translator.translate('reloading'));
   downloadCitizen(false);

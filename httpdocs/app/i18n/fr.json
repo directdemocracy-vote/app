@@ -244,5 +244,13 @@
   "verify": "Vérifier",
   "verified": "Vérifié",
   "error": "Erreur",
-  "reloading": "Rechargement..."
+  "reloading": "Rechargement...",
+  "cannot-review-myself-title": "L'auto-examen n'est pas autorisé",
+  "cannot-review-myself": "Il n'est pas possible de signaler ou d'assermenter sa propre carte de citoyen.",
+  "referendum-search-error": "Référendum pas trouvé",
+  "referendum-not-found": "Ce référendum n'existe pas dans la base de données de votre notaire.",
+  "petition-search-error": "Pétition pas trouvée",
+  "petition-not-found": "Cette pétition n'existe pas dans la base de données de votre notaire.",
+  "citizen-search-error": "Citoyen pas trouvé",
+  "citizen-not-found": "Ce citoyen n'existe pas dans la base de données de votre notaire."
 }

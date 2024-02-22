@@ -244,5 +244,13 @@
   "verify": "Verify",
   "verified": "Verified",
   "error": "Error",
-  "reloading": "Reloading..."
+  "reloading": "Reloading...",
+  "cannot-review-myself-title": "Self-Review Not Allowed",
+  "cannot-review-myself": "You cannot report or endorse your own citizen card.",
+  "referendum-search-error": "Referendum Not Found",
+  "referendum-not-found": "This referendum was not found in the database of your notary.",
+  "petition-search-error": "Petition Not Found",
+  "petition-not-found": "This petition was not found in the database of your notary.",
+  "citizen-search-error": "Citizen Not Found",
+  "citizen-not-found": "This citizen was not found in the database of your notary."
 }
