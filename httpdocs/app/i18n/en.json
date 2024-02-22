@@ -109,7 +109,7 @@
   "scan-qr-code": "Scan QR Code",
   "search-neighbors-online": "Search neighbors <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">online</a>",
   "search-referendums-online": "Search referendums <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">online</a>",
-  "search-petitions-online": "Search petitions <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">online</a>",
+  "search-petitions-online": "Search petitions <a id=\"search-petition\" class=\"link external\" target=\"_blank\">online</a>",
   "select-home-location": "Select your home location",
   "settings": "Settings",
   "show-qr-code": "Show QR Code",

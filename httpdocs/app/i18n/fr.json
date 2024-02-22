@@ -108,7 +108,7 @@
   "scan-qr-code": "Scanner le code QR",
   "search-neighbors-online": "Recherchez des voisin <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "search-referendums-online": "Recherchez des référendums <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">en ligne</a>",
-  "search-petitions-online": "Recherchez des pétitions <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">en ligne</a>",
+  "search-petitions-online": "Recherchez des pétitions <a id=\"search-petition\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "select-home-location": "Sélectionnez votre adresse",
   "settings": "Options",
   "show-qr-code": "Afficher le code QR",

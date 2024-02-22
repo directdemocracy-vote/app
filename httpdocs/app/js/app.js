@@ -2390,12 +2390,16 @@ function updateSearchLinks() {
   if (searchNeighbor)
     searchNeighbor.setAttribute('href', `${notary}?tab=citizens`);
   const searchPetitions = document.getElementById('search-petition');
-  if (searchPetitions)
-    searchPetitions.setAttribute('href', `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+  if (searchPetitions) {
+    searchPetitions.setAttribute('href',
+      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}` +
+      '&referendum=false&petition=true&open=true&closed=false&search=true');
+  }
   const searchReferendums = document.getElementById('search-referendum');
   if (searchReferendums) {
     searchReferendums.setAttribute('href',
-      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}` +
+      '&referendum=true&petition=false&open=true&closed=false&search=true');
   }
 }
 
