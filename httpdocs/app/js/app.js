@@ -5,11 +5,10 @@ import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
 const TESTING = false; // if true, enforce the use of the test key for the app
-const BETA = true; // if true, set the location to test villages (e.g., Le Poil for french locale and Bodie for english locale)
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '55';
+const DIRECTDEMOCRACY_VERSION_BUILD = '56';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -22,8 +21,11 @@ const PRODUCTION_APP_KEY = // public key of the genuine app
 
 const PRIVATE_KEY_ALIAS = 'DirectDemocracyApp';
 
-let directDemocracyVersion =
+const DIRECTDEMOCRACY_VERSION =
   `${DIRECTDEMOCRACY_VERSION_MAJOR}.${DIRECTDEMOCRACY_VERSION_MINOR}.${DIRECTDEMOCRACY_VERSION_BUILD}`;
+
+let directDemocracyVersion = DIRECTDEMOCRACY_VERSION;
+
 let appKey = '';
 let languagePicker;
 let homePageIsReady = false;
@@ -81,6 +83,7 @@ let certificateComment = ''; // 'in-person', 'remote', 'deleted', 'replaced', 'u
 let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
+let beta = false;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -234,7 +237,7 @@ async function verifyBlind(vote) {
   return verify;
 }
 
-function readyToGo() {
+async function readyToGo() {
   if (languagePicker || !homePageIsReady || !translatorIsReady)
     return;
   let values = [];
@@ -259,7 +262,7 @@ function readyToGo() {
         if (translator.language !== key) {
           translator.language = key;
           updateProposalLink();
-          if (BETA)
+          if (beta)
             setBetaCoordinates();
         }
         break;
@@ -269,6 +272,28 @@ function readyToGo() {
   if (!localStorage.getItem('registered'))
     welcome();
   else {
+    app.dialog.preloader(translator.translate('checking-update'));
+    const response = await fetch('https://app.directdemocracy.vote/api/update.php');
+    app.dialog.close(); // preloader
+    if (!response.ok) {
+      app.dialog.alert(`bad response (${response.status}) from server`);
+      return;
+    }
+    let answer;
+    try {
+      answer = await response.json();
+    } catch (e) {
+      app.dialog.alert(`bad response (${e.message}) from server`);
+      return;
+    }
+    if (answer.version !== DIRECTDEMOCRACY_VERSION) {
+      app.dialog.alert(translator.translate('newer-version', [answer.version, DIRECTDEMOCRACY_VERSION]),
+        translator.translate('update-needed'));
+      return;
+    }
+    beta = answer.beta;
+    if (beta)
+      setBetaCoordinates();
     app.dialog.preloader(translator.translate('downloading-citizen'));
     downloadCitizen(true);
   }
@@ -285,8 +310,6 @@ function setBetaCoordinates() {
 }
 
 translator.onready = function() {
-  if (BETA)
-    setBetaCoordinates();
   translatorIsReady = true;
   readyToGo();
 };
@@ -1978,7 +2001,7 @@ function onDeviceReady() {
 
           function getGeolocationPosition(position) {
             geolocation = true;
-            if (!BETA) {
+            if (!beta) {
               currentLatitude = roundGeo(position.coords.latitude);
               currentLongitude = roundGeo(position.coords.longitude);
             }
@@ -2004,7 +2027,7 @@ function onDeviceReady() {
                 console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
               } else {
                 const coords = answer.split(',');
-                if (!BETA) {
+                if (!beta) {
                   currentLatitude = parseFloat(coords[0]);
                   currentLongitude = parseFloat(coords[1]);
                 }

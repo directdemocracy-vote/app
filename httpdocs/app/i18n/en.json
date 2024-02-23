@@ -252,5 +252,8 @@
   "petition-search-error": "Petition Not Found",
   "petition-not-found": "This petition was not found in the database of your notary.",
   "citizen-search-error": "Citizen Not Found",
-  "citizen-not-found": "This citizen was not found in the database of your notary."
+  "citizen-not-found": "This citizen was not found in the database of your notary.",
+  "checking-update": "Checking Update",
+  "newer-version": "A newer version of the app is available: %1. You are currently using version %2. Please update it.",
+  "update-needed": "Update Needed"
 }

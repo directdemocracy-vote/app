@@ -252,5 +252,8 @@
   "petition-search-error": "Pétition pas trouvée",
   "petition-not-found": "Cette pétition n'existe pas dans la base de données de votre notaire.",
   "citizen-search-error": "Citoyen pas trouvé",
-  "citizen-not-found": "Ce citoyen n'existe pas dans la base de données de votre notaire."
+  "citizen-not-found": "Ce citoyen n'existe pas dans la base de données de votre notaire.",
+  "checking-update": "Vérification des mises à jour",
+  "newer-version": "Une version plus récente de l'app est disponible : %1. Vous utilisez actuellement la version %2. Merci de la mettre à jour.",
+  "update-needed": "Mise à jour nécessaire"
 }
