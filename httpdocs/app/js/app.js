@@ -1535,6 +1535,10 @@ async function scanQRCode(error, contents, type, action = '') {
   }
   if (type === 'challenge') { // transfer or endorse
     const contentsArray = contents.split(':');
+    if (contentsArray.length !== 3) {
+      app.dialog.alert(translator.translate('wrong-scan-message'), translator.translate('wrong-scan'));
+      return;
+    }
     const otherAppUrl = contentsArray[0];
     const challengeId = parseInt(contentsArray[1]);
     challenge = contentsArray[2];

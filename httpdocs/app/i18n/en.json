@@ -255,5 +255,7 @@
   "citizen-not-found": "This citizen was not found in the database of your notary.",
   "checking-update": "Checking Update",
   "newer-version": "A newer version of the app is available: %1. You are currently using version %2. Please update it.",
-  "update-needed": "Update Needed"
+  "update-needed": "Update Needed",
+  "wrong-scan": "Wrong Scan",
+  "wrong-scan-message": "You should scan the QR code displayed in DirectDemocracy on the phone of the person you want to endorse."
 }
