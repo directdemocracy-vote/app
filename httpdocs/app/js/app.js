@@ -8,7 +8,7 @@ const TESTING = false; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '57';
+const DIRECTDEMOCRACY_VERSION_BUILD = '58';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -269,31 +269,34 @@ async function readyToGo() {
       }
     }
   });
+  app.dialog.preloader(translator.translate('checking-update'));
+  const response = await fetch('https://app.directdemocracy.vote/api/update.php');
+  app.dialog.close(); // preloader
+  if (!response.ok) {
+    app.dialog.alert(`bad response (${response.status}) from server`);
+    return;
+  }
+  let answer;
+  try {
+    answer = await response.json();
+  } catch (e) {
+    app.dialog.alert(`bad response (${e.message}) from server`);
+    return;
+  }
+  const version = answer.version.split('.');
+  if (DIRECTDEMOCRACY_VERSION_MAJOR < version[0] ||
+        DIRECTDEMOCRACY_VERSION_MINOR < version[1] ||
+        DIRECTDEMOCRACY_VERSION_BUILD < version[2]) {
+    app.dialog.alert(translator.translate('newer-version', [answer.version, DIRECTDEMOCRACY_VERSION]),
+      translator.translate('update-needed'));
+    return;
+  }
+  beta = answer.beta;
+  if (beta)
+    setBetaCoordinates();
   if (!localStorage.getItem('registered'))
     welcome();
   else {
-    app.dialog.preloader(translator.translate('checking-update'));
-    const response = await fetch('https://app.directdemocracy.vote/api/update.php');
-    app.dialog.close(); // preloader
-    if (!response.ok) {
-      app.dialog.alert(`bad response (${response.status}) from server`);
-      return;
-    }
-    let answer;
-    try {
-      answer = await response.json();
-    } catch (e) {
-      app.dialog.alert(`bad response (${e.message}) from server`);
-      return;
-    }
-    if (answer.version !== DIRECTDEMOCRACY_VERSION) {
-      app.dialog.alert(translator.translate('newer-version', [answer.version, DIRECTDEMOCRACY_VERSION]),
-        translator.translate('update-needed'));
-      return;
-    }
-    beta = answer.beta;
-    if (beta)
-      setBetaCoordinates();
     app.dialog.preloader(translator.translate('downloading-citizen'));
     downloadCitizen(true);
   }
@@ -2312,7 +2315,7 @@ function onDeviceReady() {
     if (familyName === '')
       return;
     const picture = document.getElementById('register-picture').src;
-    if (picture === 'images/default-picture.png')
+    if (picture.endsWith('images/default-picture.png'))
       return;
     const location = document.getElementById('register-location').value;
     if (location === '')
