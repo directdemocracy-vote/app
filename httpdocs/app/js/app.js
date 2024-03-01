@@ -1652,7 +1652,7 @@ function onDeviceReady() {
       previousSignature = citizen.signature;
       certificateComment = 'updated';
       const button = document.getElementById('register-button');
-      button.textContent = 'Update';
+      button.textContent = translator.translate('update');
       disable(button);
       translator.translateElement(document.getElementById('tab-me-title'), 'update-citizen-card');
       document.getElementById('register-given-names').value = citizen.givenNames;
