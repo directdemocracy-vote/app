@@ -345,6 +345,7 @@ app.views.create('.view-main', { iosDynamicNavbar: false });
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function keystoreFailure(e) {
+  app.dialog.close();
   app.dialog.alert(e, 'Keystore failure');
 }
 
@@ -2102,7 +2103,9 @@ function onDeviceReady() {
       endorsements = [];
       updateEndorsements();
     }
+    // console.log('creating key pair');
     Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
+      // console.log('keypair created');
       citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
       citizen.key = publicKey.slice(44, -6);
       citizen.published = Math.trunc(new Date().getTime() / 1000);
@@ -2435,10 +2438,10 @@ function updateProposalLink() {
 function updateSearchLinks() {
   const searchMe = document.getElementById('search-me');
   if (searchMe)
-    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true`);
+    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   const searchNeighbor = document.getElementById('search-neighbor');
   if (searchNeighbor)
-    searchNeighbor.setAttribute('href', `${notary}?tab=citizens`);
+    searchNeighbor.setAttribute('href', `${notary}?tab=citizens&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
   const searchPetitions = document.getElementById('search-petition');
   if (searchPetitions) {
     searchPetitions.setAttribute('href',
