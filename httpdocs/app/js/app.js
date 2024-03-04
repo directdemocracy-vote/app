@@ -270,7 +270,9 @@ async function readyToGo() {
     }
   });
   app.dialog.preloader(translator.translate('checking-update'));
-  const response = await fetch('https://app.directdemocracy.vote/api/update.php');
+  const response = await fetch('https://app.directdemocracy.vote/api/update.php').catch((error) => {
+    console.log('Error fetching update' + error);
+  });
   app.dialog.close(); // preloader
   if (!response.ok) {
     app.dialog.alert(`bad response (${response.status}) from server`);
@@ -304,11 +306,11 @@ async function readyToGo() {
 
 function setBetaCoordinates() {
   if (translator.language === 'fr') { // French beta test in Le Poil, France
-    currentLatitude = 43.9371;
-    currentLongitude = 6.2847;
+    currentLatitude = 43.925 + 0.035 * Math.random();
+    currentLongitude = 6.260 + 0.045 * Math.random();
   } else { // English beta test in Bodie, USA
-    currentLatitude = 38.2115;
-    currentLongitude = -119.0126;
+    currentLatitude = 38.2095 + 0.007 * Math.random();
+    currentLongitude = -119.0075 - 0.009 * Math.random();
   }
 }
 
@@ -2103,9 +2105,9 @@ function onDeviceReady() {
       endorsements = [];
       updateEndorsements();
     }
-    // console.log('creating key pair');
+    console.log('creating key pair');
     Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-      // console.log('keypair created');
+      console.log('keypair created');
       citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
       citizen.key = publicKey.slice(44, -6);
       citizen.published = Math.trunc(new Date().getTime() / 1000);
