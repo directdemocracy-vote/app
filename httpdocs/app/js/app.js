@@ -8,7 +8,7 @@ const TESTING = false; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '58';
+const DIRECTDEMOCRACY_VERSION_BUILD = '59';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -347,6 +347,7 @@ app.views.create('.view-main', { iosDynamicNavbar: false });
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function keystoreFailure(e) {
+  console.error(e);
   app.dialog.close();
   app.dialog.alert(e, 'Keystore failure');
 }
@@ -1955,7 +1956,7 @@ function onDeviceReady() {
         citizen.appSignature = '';
         localStorage.setItem('publicKey', citizen.key);
         Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(citizen), publishCitizen, keystoreFailure);
-      });
+      }, keystoreFailure);
     }
   });
 
@@ -2105,9 +2106,7 @@ function onDeviceReady() {
       endorsements = [];
       updateEndorsements();
     }
-    console.log('creating key pair');
     Keystore.createKeyPair(PRIVATE_KEY_ALIAS, function(publicKey) {
-      console.log('keypair created');
       citizen.schema = `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/citizen.schema.json`;
       citizen.key = publicKey.slice(44, -6);
       citizen.published = Math.trunc(new Date().getTime() / 1000);
