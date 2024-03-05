@@ -261,5 +261,8 @@
   "wrong-scan-message": "Vous devez scanner le code QR affiché dans DirectDemocracy sur le téléphone de la personne que vous voulez assermenter.",
   "no-petition": "Vous n'avez encore aucune pétition à signer. Vous pouvez suivre le lien \"en ligne\" ci-dessus pour chercher des pétitions dans votre région. Utilisez alors le bouton bleu en haut à droite de cette page pour scanner le code QR de la pétition ou bien copiez-collez son numéro.",
   "no-referendum": "Vous n'avez encore aucun référendum sur lequel voter. Vous pouvez suivre le lien \"en ligne\" ci-dessus pour chercher des référendums dans votre région. Utilisez alors le bouton bleu en haut à droite de cette page pour scanner le code QR du référendum ou bien copiez-collez son numéro.",
-  "no-neighbor": "Vous n'avez ni assermenté ni été assermenté par aucun voisin. Depuis l'onglet \"Moi\", vous pouvez vous faire assermenter et assermenter vos voisins. Les assermentations en présentiel sont préférables parce qu'elles créent des liens plus puissants qui vous conférent une meilleure réputation. Les assermentations à distance sont moins efficaces. Depuis l'onglet \"Voisins\", il est possible d'examiner un voisin et de signaler si vous pensez que sa carte de citoyen n'est pas valable."
+  "no-neighbor": "Vous n'avez ni assermenté ni été assermenté par aucun voisin. Depuis l'onglet \"Moi\", vous pouvez vous faire assermenter et assermenter vos voisins. Les assermentations en présentiel sont préférables parce qu'elles créent des liens plus puissants qui vous conférent une meilleure réputation. Les assermentations à distance sont moins efficaces. Depuis l'onglet \"Voisins\", il est possible d'examiner un voisin et de signaler si vous pensez que sa carte de citoyen n'est pas valable.",
+  "network-error": "Une erreur réseau est survenue : %1.\nVoulez-vous réessayer&nbsp;?",
+  "network-error-title": "Erreur réseau",
+  "retrying": "Nouvel essai..."
 }

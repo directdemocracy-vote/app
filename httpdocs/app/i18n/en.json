@@ -261,5 +261,8 @@
   "wrong-scan-message": "You should scan the QR code displayed in DirectDemocracy on the phone of the person you want to endorse.",
   "no-petition": "You do not have yet any petition to sign. Follow the above \"online\" link to search petitions in your area. Use the blue button in the top right corner of this page to scan the QR code of the petition or copy and paste its number.",
   "no-referendum": "You do not have yet any referendum to vote for. Follow the above \"online\" link to search referendums in your area. Use the blue button in the top right corner of this page to scan the QR code of the referendum or copy and paste its number.",
-  "no-neighbor": "You neither endorsed nor were endorsed by any neighbor yet. From the \"Me\" tab, you can get endorsed by and endorse your neighbors. In-person endorsements are better because they create strong links to increase your reputation. Remote endorsements are less efficient. From the \"Neighbors\" tab, it is possible to review a neighbor and report if you believe their citizen card is invalid."
+  "no-neighbor": "You neither endorsed nor were endorsed by any neighbor yet. From the \"Me\" tab, you can get endorsed by and endorse your neighbors. In-person endorsements are better because they create strong links to increase your reputation. Remote endorsements are less efficient. From the \"Neighbors\" tab, it is possible to review a neighbor and report if you believe their citizen card is invalid.",
+  "network-error": "A network error occured: %1.\nDo you want to retry?",
+  "network-error-title": "Network Error",
+  "retrying": "Retrying..."
 }
