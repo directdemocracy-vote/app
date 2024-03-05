@@ -258,10 +258,10 @@ async function syncFetch(url, data) {
   return r;
 }
 
-async function syncJsonFetch(url, data, error) {
+async function syncJsonFetch(url, data) {
   const response = await syncFetch(url, data);
   if (!response)
-    return {'error': translator.translate('network-error', 'Download failed.')};
+    return {'error': translator.translate('network-error', 'Download failed')};
   const answer = await response.json();
   return answer;
 }
@@ -467,6 +467,7 @@ async function publish(publication, signature, type) {
       },
       body: JSON.stringify(publication)
     });
+    app.dialog.close(); // preloader
     if (answer.hasOwnProperty('error'))
       app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
     else {
@@ -1993,22 +1994,6 @@ function onDeviceReady() {
           function roundGeo(v) {
             return Math.round(v * 1000000) / 1000000;
           }
-          if (navigator.geolocation)
-            navigator.geolocation.getCurrentPosition(getGeolocationPosition);
-          const answer = await syncJsonFetch('https://ipinfo.io/loc');
-          if (geolocation)
-            return;
-          if (answer.startsWith('{')) {
-            const json = JSON.parse(answer);
-            console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
-          } else {
-            const coords = answer.split(',');
-            if (!beta) {
-              currentLatitude = parseFloat(coords[0]);
-              currentLongitude = parseFloat(coords[1]);
-            }
-          }
-          getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
           let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -2034,6 +2019,23 @@ function onDeviceReady() {
             registerMarker.setLatLng([currentLatitude, currentLongitude]);
             updateLocation();
           });
+          const response = await syncFetch('https://ipinfo.io/loc');
+          const answer = await response.text();
+          if (navigator.geolocation)
+            navigator.geolocation.getCurrentPosition(getGeolocationPosition);
+          if (geolocation)
+            return;
+          if (answer.startsWith('{')) {
+            const json = JSON.parse(answer);
+            console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
+          } else {
+            const coords = answer.split(',');
+            if (!beta) {
+              currentLatitude = parseFloat(coords[0]);
+              currentLongitude = parseFloat(coords[1]);
+            }
+          }
+          getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
         },
         close: function() {
           document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
