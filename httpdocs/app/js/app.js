@@ -2294,21 +2294,46 @@ function onDeviceReady() {
     }
   }
 
+  function updateProposalsText(type, count) {
+    const proposal = document.getElementById(type + 's');
+    if (count === 0) {
+      proposal.removeAttribute('class');
+      translator.translateElement(proposal, 'no-' + type);
+    } else {
+      proposal.classList.add(
+        'no-margin-left',
+        'no-margin-right',
+        'list',
+        'list-strong',
+        'list-outline-ios',
+        'list-dividers-ios',
+        'inset-md',
+        'accordion-list');
+    }
+  }
+
   referendums = JSON.parse(localStorage.getItem('referendums'));
   if (referendums == null)
     referendums = [];
+  let count = 0;
   referendums.forEach(function(referendum) {
-    if (referendum.id !== undefined)
+    if (referendum.id !== undefined) {
       addProposal(referendum, 'referendum', false);
+      count++;
+    }
   });
-
+  updateProposalsText('referendum', count);
   petitions = JSON.parse(localStorage.getItem('petitions'));
   if (petitions == null)
     petitions = [];
+  count = 0;
   petitions.forEach(function(petition) {
-    if (petition.id !== undefined)
+    if (petition.id !== undefined) {
       addProposal(petition, 'petition', false);
+      count++;
+    }
   });
+  updateProposalsText('petition', count);
 
   function validateRegistration() {
     disable('register-button');
@@ -2693,8 +2718,11 @@ function distanceInMeter(lat1, lon1, lat2, lon2) {
 function updateEndorsements() {
   let list = document.getElementById('endorsements-list');
   list.innerHTML = '';
-  if (endorsements.length === 0)
+  if (endorsements.length === 0) {
+    translator.translateElement(list, 'no-neighbor');
     return;
+  }
+  list.removeAttribute('data-i18n');
   let endorsedYouCount = 0;
   let endorsedCount = 0;
   for (const endorsement of endorsements) {
@@ -2703,12 +2731,6 @@ function updateEndorsements() {
     if (endorsement.hasOwnProperty('endorsed'))
       endorsedCount++;
   }
-  newElement(
-    list,
-    'div',
-    'block-title no-margin-left no-margin-right',
-    translator.translate('your-neighbors')
-  ).setAttribute('data-i18n', 'your-neighbors');
   const infoText = translator.translate('you-are-endorsed-by', [endorsedYouCount, endorsedCount]);
   const info = newElement(list, 'div', 'no-margin-left no-margin-right', infoText);
   info.style.fontSize = '85%';

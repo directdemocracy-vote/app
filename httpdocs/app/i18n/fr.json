@@ -53,9 +53,9 @@
   "neighbors": "Voisins",
   "notary": "Notaire",
   "outdated-picture": "photo pas à jour",
-  "paste-citizen-number-here": "Copiez un numéro de citoyen ici",
-  "paste-referendum-number-here": "Copiez un numéro de référendum ici",
-  "paste-petition-number-here": "Copiez un numéro de pétition ici",
+  "paste-citizen-number-here": "Collez un numéro de citoyen ici",
+  "paste-referendum-number-here": "Collez un numéro de référendum ici",
+  "paste-petition-number-here": "Collez un numéro de pétition ici",
   "picture": "Photo :",
   "please-wait-for-key": "Veuillez patienter...",
   "polling-station": "Bureau de vote",
@@ -106,7 +106,7 @@
   "revoked-address-name-picture": "%1 %2 vous a révoqué(e) pensant que votre adresse et votre nom ont changé et que votre photo d'identité n'est plus à jour.",
   "revoked-died": "%1 %2 vous a révoqué(e) pensant que vous êtes décédé(e).",
   "scan-qr-code": "Scanner le code QR",
-  "search-neighbors-online": "Recherchez des voisin <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">en ligne</a>",
+  "search-neighbors-online": "Recherchez vos voisin <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "search-referendums-online": "Recherchez des référendums <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "search-petitions-online": "Recherchez des pétitions <a id=\"search-petition\" class=\"link external\" target=\"_blank\">en ligne</a>",
   "select-home-location": "Sélectionnez votre adresse",
@@ -258,5 +258,8 @@
   "newer-version": "Une version plus récente de l'app est disponible : %1. Vous utilisez actuellement la version %2. Merci de la mettre à jour.",
   "update-needed": "Mise à jour nécessaire",
   "wrong-scan": "Mauvais scan",
-  "wrong-scan-message": "Vous devez scanner le code QR affiché dans DirectDemocracy sur le téléphone de la personne que vous voulez assermenter."
+  "wrong-scan-message": "Vous devez scanner le code QR affiché dans DirectDemocracy sur le téléphone de la personne que vous voulez assermenter.",
+  "no-petition": "Vous n'avez encore aucune pétition à signer. Vous pouvez suivre le lien \"en ligne\" ci-dessus pour chercher des pétitions dans votre région. Utilisez alors le bouton bleu en haut à droite de cette page pour scanner le code QR de la pétition ou bien copiez-collez son numéro.",
+  "no-referendum": "Vous n'avez encore aucun référendum sur lequel voter. Vous pouvez suivre le lien \"en ligne\" ci-dessus pour chercher des référendums dans votre région. Utilisez alors le bouton bleu en haut à droite de cette page pour scanner le code QR du référendum ou bien copiez-collez son numéro.",
+  "no-neighbor": "Vous n'avez ni assermenté ni été assermenté par aucun voisin. Depuis l'onglet \"Moi\", vous pouvez vous faire assermenter et assermenter vos voisins. Les assermentations en présentiel sont préférables parce qu'elles créent des liens plus puissants qui vous conférent une meilleure réputation. Les assermentations à distance sont moins efficaces. Depuis l'onglet \"Voisins\", il est possible d'examiner un voisin et de signaler si vous pensez que sa carte de citoyen n'est pas valable."
 }

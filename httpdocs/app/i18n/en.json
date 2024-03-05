@@ -107,7 +107,7 @@
   "revoked-address-name-picture": "%1 %2 revoked you because they believe your name changed, you moved and your picture is outdated.",
   "revoked-died": "%1 %2 revoked you because they believe you died.",
   "scan-qr-code": "Scan QR Code",
-  "search-neighbors-online": "Search neighbors <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">online</a>",
+  "search-neighbors-online": "Search your neighbors <a id=\"search-neighbor\" class=\"link external\" target=\"_blank\">online</a>",
   "search-referendums-online": "Search referendums <a id=\"search-referendum\" class=\"link external\" target=\"_blank\">online</a>",
   "search-petitions-online": "Search petitions <a id=\"search-petition\" class=\"link external\" target=\"_blank\">online</a>",
   "select-home-location": "Select your home location",
@@ -258,5 +258,8 @@
   "newer-version": "A newer version of the app is available: %1. You are currently using version %2. Please update it.",
   "update-needed": "Update Needed",
   "wrong-scan": "Wrong Scan",
-  "wrong-scan-message": "You should scan the QR code displayed in DirectDemocracy on the phone of the person you want to endorse."
+  "wrong-scan-message": "You should scan the QR code displayed in DirectDemocracy on the phone of the person you want to endorse.",
+  "no-petition": "You do not have yet any petition to sign. Follow the above \"online\" link to search petitions in your area. Use the blue button in the top right corner of this page to scan the QR code of the petition or copy and paste its number.",
+  "no-referendum": "You do not have yet any referendum to vote for. Follow the above \"online\" link to search referendums in your area. Use the blue button in the top right corner of this page to scan the QR code of the referendum or copy and paste its number.",
+  "no-neighbor": "You neither endorsed nor were endorsed by any neighbor yet. From the \"Me\" tab, you can get endorsed by and endorse your neighbors. In-person endorsements are better because they create strong links to increase your reputation. Remote endorsements are less efficient. From the \"Neighbors\" tab, it is possible to review a neighbor and report if you believe their citizen card is invalid."
 }
