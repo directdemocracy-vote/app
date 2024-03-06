@@ -81,5 +81,11 @@
     <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
       <string>Access to your camera is needed to capture your ID picture when registering your citizen card.</string>
     </config-file>
+    <config-file target="*-Info.plist" parent="ITSAppUsesNonExemptEncryption">
+      <string>YES</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="ITSEncryptionExportComplianceCode">
+      <string>40258adc-d155-4fb8-847f-a2d8db22066d</string>
+    </config-file>
   </platform>
 </widget>
