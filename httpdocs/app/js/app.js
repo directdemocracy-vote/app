@@ -329,6 +329,8 @@ function setBetaCoordinates() {
     currentLatitude = 38.2095 + 0.007 * Math.random();
     currentLongitude = -119.0075 - 0.009 * Math.random();
   }
+  currentLatitude = Math.round(currentLatitude * 1000000) / 1000000;
+  currentLongitude = Math.round(currentLongitude * 1000000) / 1000000;
 }
 
 translator.onready = function() {
