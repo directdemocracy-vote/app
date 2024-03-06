@@ -290,7 +290,7 @@ async function readyToGo() {
       if (translator.languages[key] === value[0]) {
         if (translator.language !== key) {
           translator.language = key;
-          updateProposalLink();
+          updateProposeLink();
           if (beta)
             setBetaCoordinates();
         }
@@ -2242,7 +2242,7 @@ function onDeviceReady() {
     localStorage.setItem('notary', notary);
     document.getElementById('notary').value = notary;
     updateSearchLinks();
-    updateProposalLink();
+    updateProposeLink();
   }
 
   function searchFingerprint(type) {
@@ -2418,10 +2418,10 @@ function onDeviceReady() {
   }
 };
 
-function updateProposalLink() {
-  let proposal = document.getElementById('proposal');
-  if (proposal)
-    proposal.setAttribute('href', `${notary}/proposal.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+function updateProposeLink() {
+  let propose = document.getElementById('propose');
+  if (propose)
+    propose.setAttribute('href', `${judge}/propose.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
 }
 
 function updateSearchLinks() {
@@ -2490,7 +2490,7 @@ async function downloadCitizen(initial) {
       app.dialog.alert(endorsements.error, 'Citizen Endorsement Error');
     updateCitizenCard();
     updateEndorsements();
-    updateProposalLink();
+    updateProposeLink();
     updateSearchLinks();
     if (initial) {
       showPage('card');
