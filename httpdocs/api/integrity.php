@@ -99,18 +99,17 @@ if ($os === 'Android') {
     if ($deviceRecognitionVerdict === null)
       error('No device recognition verdict');
     $s = sizeof($deviceRecognitionVerdict);
-    if ($s === 0)
-      error('Empty device recognition verdicy');
-    if ($s === 1)
-      error('Insufficient device integrity: '.$deviceRecognitionVerdict[0]);
-    if ($s === 2) {
-      error('Insufficent device integrity:\n❌'.$deviceRecognitionVerdict[0].'\n❌'.$deviceRecognitionVerdict[1]);
-    }
+    $failed = false;
+    $message = '';
     foreach(array('MEETS_BASIC_INTEGRITY', 'MEETS_DEVICE_INTEGRITY', 'MEETS_STRONG_INTEGRITY') as &$check) {
-      if (!in_array($check, $deviceRecognitionVerdict, true))
-        error("Missing $check, found: ".$deviceRecognitionVerdict[0].', '.$deviceRecognitionVerdict[1].' and '.
-              $deviceRecognitionVerdict[2]);
+      if (!in_array($check, $deviceRecognitionVerdict, true)) {
+        $failed = true;
+        $message .= '❌ '.$check.'\n'; 
+      } else
+        $message .= '✔️ '.$check.'\n';
     }
+    if ($failed)
+      error('Failed device integrity:\n'.$message);
   }
 } else { # $os === 'iOS'
   if ($token === 'N/A' && $folder ==='')
