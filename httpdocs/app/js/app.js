@@ -803,7 +803,9 @@ async function reviewCitizen(publication, action) {
     reputation.textContent = formatReputation(answer.reputation);
     reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
   }
+  app.dialog.preloader('downloading-map');
   answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
+  app.dialog.close();
   const address = answer.display_name;
   reviewMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
   review = publication;
