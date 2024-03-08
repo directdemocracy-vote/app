@@ -796,7 +796,7 @@ async function reviewCitizen(publication, action) {
   const reputation = document.getElementById('review-reputation');
   let answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`);
   if (answer.error) {
-    app.dialog.close();
+    app.dialog.close(); // preloader
     app.dialog.alert(answer.error, 'Could not get reputation from judge.');
     reputation.textContent = 'N/A';
     reputation.style.color = 'red';
@@ -876,7 +876,7 @@ async function getCitizen(reference, action) {
     app.dialog.alert('Failed to verify app signature', 'Citizen search error');
     return;
   }
-  reviewCitizen(publication, action);
+  await reviewCitizen(publication, action);
   app.dialog.close(); // preloader
 }
 
