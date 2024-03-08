@@ -8,6 +8,7 @@
   <allow-intent href="http://*/*" />
   <allow-intent href="https://*/*" />
   <platform name="android">
+    <preference name="android-minSdkVersion" value="24" />
     <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/android/res/drawable/ic_cdv_splashscreen.xml" />
     <icon density="mdpi" src="resources/android/res/mipmap-mdpi/ic_launcher.png"
       ic_launcher_monochrome="resources/android/res/mipmap-mdpi/ic_launcher_monochrome.png"
