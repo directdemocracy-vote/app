@@ -1,0 +1,5 @@
+SetEnvIf Origin "^https://[a-zA-Z0-9-]*\.directdemocracy\.vote|https://directdemocracy\.vote$" ORIGIN=$0
+Header set Access-Control-Allow-Origin *
+Header set Access-Control-Allow-Methods "GET"
+Header set Access-Control-Allow-Headers "Content-Type"
+Header set Cache-Control no-cache

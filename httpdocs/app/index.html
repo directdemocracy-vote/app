@@ -1,386 +1,634 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>directdemocracy</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/framework7@8.2.0/framework7-bundle.min.css">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/framework7-icons@5.0.5/css/framework7-icons.css">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="css/croppie.css">
-    <link rel="stylesheet" href="css/app.css">
-  </head>
-  <body>
-    <div id="app">
-      <div class="view view-main">
-        <div class='corner-ribbon' data-i18n="beta"></div>
-        <div class="popup info-popup">
-          <div class="page">
-            <div class="navbar">
-              <div class="navbar-bg"></div>
-              <div class="navbar-inner">
-                <div class="title">
-                  <i class="f7-icons" style="font-size:140%;rotate:-90deg">hand_point_right</i>
-                  <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span style="font-weight:normal">.vote</span>
-                </div>
-                <div class="right"><a class="link popup-close">Close</a></div>
-              </div>
-            </div>
-            <div class="page-content">
-              <div class="block-title block-title-medium" data-i18n="world"></div>
-              <div class="block" data-i18n="initiative"></div>
-              <div class="block-title block-title-medium" data-i18n="how"></div>
-              <div class="block" data-i18n="features"></div>
-              <div class="block-title block-title-medium" data-i18n="privacy-title"></div>
-              <div class="block" data-i18n="privacy"></div>
-              <div class="block-title block-title-medium" data-i18n="contribute-title"></div>
-              <div class="block" data-i18n="contribute"></div>
-              <div class="block">
-                <a class="button button-fill button-large link external" href="https://github.com/directdemocracy-vote/www/wiki/White-Paper" target="_blank" data-i18n="more-information"></a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div data-name="home" class="page">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>directdemocracy</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="css/framework7-bundle.min.css">
+  <link rel="stylesheet" href="css/framework7-icons.css">
+  <link rel="stylesheet" href="css/leaflet.css">
+  <link rel="stylesheet" href="css/croppie.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="view view-main">
+      <!-- <div class='corner-ribbon' data-i18n="beta"></div> -->
+      <div class="popup info-popup">
+        <div class="page">
           <div class="navbar">
             <div class="navbar-bg"></div>
             <div class="navbar-inner">
               <div class="title">
-                <i class="f7-icons" style="font-size:140%;rotate:-90deg">hand_point_right</i>
-                <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span style="font-weight:normal">.vote</span>
+                <i class="f7-icons margin-right-half"
+                  style="font-size:140%;transform:rotate(-90deg)">hand_point_right</i>
+                <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span
+                  style="font-weight:normal">.vote</span>
               </div>
-              <div class="right"><a class="popup-open" data-popup=".info-popup"><i class="icon f7-icons">info_circle_fill</i></a></div>
+              <div class="right"><a class="link popup-close"><i class="icon f7-icons">xmark</i></a></div>
             </div>
           </div>
-          <div id='tabbar' class="toolbar tabbar tabbar-icons toolbar-bottom">
-            <div class="toolbar-inner">
-              <a href="#" class="tab-link tab-link-active" data-tab="#tab-card" id="tabbar-card">
-                <i class="icon f7-icons">person_fill<span id="endorsed-badge" class="badge"></span></i>
-                <span class="tabbar-label" data-i18n="card"></span>
-              </a>
-              <a href="#" class="tab-link disabled" data-tab="#tab-endorse" id="tabbar-endorse">
-                <i class="icon f7-icons">viewfinder<span id="endorse-badge" class="badge color-blue display-none"></span></i>
-                <span class="tabbar-label" data-i18n="endorse"></span>
-              </a>
-              <a href="#" class="tab-link disabled" data-tab="#tab-vote" id="tabbar-vote">
-                <i class="icon f7-icons">square_arrow_down<span id="vote-badge" class="badge color-green display-none"></span></i>
-                <span class="tabbar-label" data-i18n="vote"></span>
-              </a>
-              <a href="#" class="tab-link disabled" data-tab="#tab-sign" id="tabbar-sign">
-                <i class="icon f7-icons">signature<span id="sign-badge" class="badge color-green display-none"></span></i>
-                <span class="tabbar-label" data-i18n="sign"></span>
-              </a>
-              <a href="#" class="tab-link" data-tab="#tab-settings" id="tabbar-settings">
-                <i class="icon f7-icons">gear_alt_fill</i>
-                <span class="tabbar-label" data-i18n="settings"></span>
-              </a>
+          <div class="page-content">
+            <div class="block-title block-title-medium" data-i18n="world"></div>
+            <div class="block" data-i18n="initiative"></div>
+            <div class="block-title block-title-medium" data-i18n="how"></div>
+            <div class="block" data-i18n="features"></div>
+            <div class="block-title block-title-medium" data-i18n="privacy-title"></div>
+            <div class="block" data-i18n="privacy"></div>
+            <div class="block-title block-title-medium" data-i18n="contribute-title"></div>
+            <div class="block" data-i18n="contribute"></div>
+            <div class="block margin-bottom-half">
+              <a class="button button-fill button-large link external" href="https://directdemocracy.vote"
+                target="_blank" data-i18n="more-information"></a>
+            </div>
+            <div class="block text-align-center no-margin-top" style="font-size:80%" id="version"></div>
+          </div>
+        </div>
+      </div>
+      <div id="scanner" class="page display-none"
+        style="background-color: transparent;display:flex;justify-content:center">
+        <div
+          style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px"
+          data-i18n="scan-qr-code">
+        </div>
+        <button id="cancel-scanner" class="button button-fill color-red" style="position:fixed;bottom: 18px;width: 60%;"
+          data-i18n="cancel"></button>
+      </div>
+      <div id="qrcode" class="page display-none" style="display:flex;justify-content:center">
+        <div style="display:flex;flex-direction: column;justify-content: center;">
+          <img id="qrcode-image" style="width: 95%;height:fit-content;align-self:center;margin-bottom:92px">
+        </div>
+        <div id="qrcode-message"
+          style="position:fixed;bottom:0;width:100%;height:92px;opacity:0.65;background-color:black; color:white; display:flex;justify-content:center;font-size:x-large;font-weight:bold;padding:20px">
+        </div>
+        <button id="qrcode-cancel" class="button button-fill color-red" style="position:fixed;bottom: 18px;width: 60%;"
+          data-i18n="cancel"></button>
+      </div>
+      <div id="review" class="page display-none">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div id="review-title" class="title"></div>
+          </div>
+        </div>
+        <div id="review-page" class="page-content">
+          <div class="block display-flex margin-top-half margin-bottom-half">
+            <img id="review-picture" style="width:150px;height:200px">
+            <div class="margin-left">
+              <div data-i18n="given-names"></div>
+              <div style="font-size:120%"><b id="review-given-names"></b></div>
+              <div data-i18n="family-name"></div>
+              <div style="font-size:120%"><b id="review-family-name"></b></div>
+              <div data-i18n="latitude-longitude-header"></div>
+              <div><b id="review-coords"></b></div>
+              <div><span data-i18n="created"></span><b id="review-published"></b></div>
+              <div class="display-flex justify-content-space-between">
+                <div>
+                  <span data-i18n="reputation"></span><b id="review-reputation">...</b>
+                </div>
+                <div>
+                  <a id="review-online" class="link external"><i class="icon f7-icons">arrow_up_right_square</i></a>
+                </div>
+              </div>
             </div>
           </div>
-          <swiper-container class="tabs" id='swiper-container' allow-touch-move='false' speed='0'>
-            <swiper-slide class="tab tab-active page-content" id="tab-card">
-              <div id="register-page" class="display-none">
-                <div class="block-title" id="tab-card-title" data-i18n="become-citizen"></div>
-                <div class="list">
-                  <ul>
-                    <li class="item-content item-input">
+          <div id="review-map" style="width:100%;height:400px"></div>
+          <div class="block list margin-top-half">
+            <div class="item-subtitle text-align-center"><span data-i18n="distance-to-me"></span><span
+                id="distance"></span></div>
+            <ul id="review-checklist">
+              <li id="review-choice-item" class="display-flex justify-content-center">
+                <label class="radio item-content">
+                  <input type="radio" name="review-choice" value="endorse" checked="checked">
+                  <i class="icon icon-radio"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="endorse"></div>
+                  </div>
+                </label>
+                <label class="radio item-content">
+                  <input type="radio" name="review-choice" value="report">
+                  <i class="icon icon-radio"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="report" id="report-radio"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-former-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-former-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-former"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-know-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-know-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" id="review-know-text"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-adult-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-adult-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-adult"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-picture-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-picture-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-picture-ok"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-name-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-name-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-name-ok"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-coords-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-coords-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-address-ok"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-moved-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-moved-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-moved"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-renamed-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-renamed-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-renamed"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-outdated-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-outdated-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-outdated"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-died-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-died-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-died"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_ghost-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_ghost-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-ghost"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_duplicate-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_duplicate-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-duplicate"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_dead-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_dead-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-dead"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_address-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_address-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-address"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_name-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_name-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-name"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_picture-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_picture-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-picture"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_other-check-item" class="display-none">
+                <label class="checkbox no-ripple item-content">
+                  <input type="checkbox" id="review-report_other-check">
+                  <i class="icon icon-checkbox"></i>
+                  <div class="item-inner">
+                    <div class="item-title margin-left-half" data-i18n="review-other"></div>
+                  </div>
+                </label>
+              </li>
+              <li id="review-report_other-input-item" class="item-content item-input item-input-outline display-none">
+                <div class="item-inner">
+                  <div class="item-title item-label" data-i18n="review-other-explain"></div>
+                  <div class="item-input-wrap">
+                    <input id="review-report_other-input" type="text">
+                    <span class="input-clear-button"></span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <div class="display-flex margin-top-half">
+              <button class="button button-fill color-red margin-right-half margin-left-half disabled"
+                id="review-confirm"></button>
+              <button class="button button-fill margin-right-half margin-left-half" id="review-cancel"
+                data-i18n="cancel"></button>
+            </div>
+            <div id="review-warning" class="item-label display-flex justify-content-center margin-top-half"
+              style="width:100%">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="home" data-name="home" class="page">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div class="title">
+              <i class="f7-icons" style="font-size:140%;transform:rotate(-90deg)">hand_point_right</i>
+              <span style="font-weight:normal">direct</span><span style="font-weight:bold">democracy</span><span
+                style="font-weight:normal">.vote</span>
+            </div>
+            <div class="right">
+              <a id="reload" class="margin-right-half"><i class="icon f7-icons">arrow_clockwise</i></a>
+              <a class="popup-open" data-popup=".info-popup"><i class="icon f7-icons">info_circle_fill</i></a>
+            </div>
+          </div>
+        </div>
+        <div id='tabbar' class="toolbar tabbar tabbar-icons toolbar-bottom">
+          <div class="toolbar-inner">
+            <a href="#" class="tab-link tab-link-active" data-tab="#tab-me" id="tabbar-me">
+              <i class="icon f7-icons">person_fill</i>
+              <span class="tabbar-label" data-i18n="me"></span>
+            </a>
+            <a href="#" class="tab-link disabled" data-tab="#tab-neighbor" id="tabbar-neighbor">
+              <i class="icon f7-icons">person_2_fill</i>
+              <span class="tabbar-label" data-i18n="neighbors"></span>
+            </a>
+            <a href="#" class="tab-link disabled" data-tab="#tab-vote" id="tabbar-vote">
+              <i class="icon f7-icons">square_arrow_down</i>
+              <span class="tabbar-label" data-i18n="vote"></span>
+            </a>
+            <a href="#" class="tab-link disabled" data-tab="#tab-sign" id="tabbar-sign">
+              <i class="icon f7-icons">signature</i>
+              <span class="tabbar-label" data-i18n="sign"></span>
+            </a>
+            <a href="#" class="tab-link" data-tab="#tab-settings" id="tabbar-settings">
+              <i class="icon f7-icons">gear_alt_fill</i>
+              <span class="tabbar-label" data-i18n="settings"></span>
+            </a>
+          </div>
+        </div>
+        <swiper-container class="tabs" id='swiper-container' allow-touch-move='false' speed='0'>
+          <swiper-slide class="tab tab-active page-content" id="tab-me">
+            <div id="me-page" class="display-none">
+              <div class="block" style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
                       <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="given-names"></div>
+                        <div class="item-title item-label" data-i18n="enter-citizen-card"></div>
                         <div class="item-input-wrap">
-                          <input type="url" id="register-given-names" data-i18n="enter-given-names" required>
+                          <input id="enter-me" type="text" size="40" maxlength="40"
+                            placeholder="Paste your citizen card reference here">
                           <span class="input-clear-button"></span>
                         </div>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="family-name"></div>
-                        <div class="item-input-wrap">
-                          <input type="url" id="register-family-name" data-i18n="enter-family-name" required>
-                          <span class="input-clear-button"></span>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="picture"></div>
-                        <div class="item-input-wrap display-flex">
-                          <img id="register-picture" src="images/default-picture.png">
-                          <input class="custom-file-input display-none" type="file" id="register-picture-upload" accept="image/*" required>
-                          <div>
-                            <div class="item-title item-label margin-left margin-bottom padding-bottom" data-i18n="provide-picture"></div>
-                            <button class="button" id="register-upload-button"><i class="icon f7-icons">camera_fill</i></button>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="home-location"></div>
-                        <div class="item-input-wrap display-flex">
-                          <input type="text" style="width:200%" id="register-location" data-i18n="latitude-longitude-text" disabled required>
-                          <button class="button" id="register-location-button"><i class="icon f7-icons">placemark_fill</i></button>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <label class="checkbox display-flex"><input type="checkbox" id="register-adult">
-                          <i class="icon-checkbox margin-right-half"></i>
-                          <div class="item-label" data-i18n="adult-confirm"></div>
-                        </label>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <label class="checkbox display-flex"><input type="checkbox" id="register-confirm">
-                          <i class="icon-checkbox margin-right-half"></i>
-                          <div class="item-label" data-i18n="citizen-confirm"></div>
-                        </label>
-                      </div>
-                    </li>
-                    <li class="item-content item-input">
-                      <div class="item-inner">
-                        <button class="button button-fill disabled" id="register-button"><div id="register-button-text" data-i18n="generating-cryptographic-key"></div><div id="register-button-preloader" class="preloader text-color-white padding-left"></div></button>
-                        <div id="registration-button-message" class="item-label display-flex justify-content-center" style="width:100%"></div>
+                        <div class="item-input-info" data-i18n="search-me-online"></div>
                       </div>
                     </li>
                   </ul>
                 </div>
+                <button id="scan-me" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
+                </button>
               </div>
-              <div id="splash-page" class="text-align-center display-none"><i class="f7-icons" style="font-size:2000%;rotate:-90deg;margin-top:40%">hand_point_right</i></div>
-              <div id="card-page" class="display-none">
-                <div class="block margin-top-half">
-                  <div class="display-flex">
-                    <img id="citizen-picture" style="width:150px;height:200px">
-                    <div class="margin-left">
-                      <div data-i18n="given-names"></div>
-                      <div style="font-size:120%"><b id="citizen-given-names"></b></div>
-                      <div data-i18n="family-name"></div>
-                      <div style="font-size:120%"><b id="citizen-family-name"></b></div>
-                      <div data-i18n="latitude-longitude-header"></div>
-                      <div><b id="citizen-coords"></b></div>
-                      <div><span data-i18n="created"></span><b id="citizen-published"></b></div>
-                      <div><span data-i18n="reputation"></span><span id="citizen-reputation">...</span></div>
-                    </div>
-                  </div>
-                  <div id="citizen-endorsements-list"></div>
-                  <div>
-                    <!-- FIXME: add `disabled` attribute on the button below -->
-                    <button class="button button-fill" id="endorse-me-button" data-i18n="endorse-me"></button>
-                    <div id="endorse-me-message" class="item-label display-flex justify-content-center" style="width:100%" data-i18n="airplane-mode"></div>
-                  </div>
-                </div>
+              <div class="block">
+                <button class="button button-fill color-red" id="cancel-me" data-i18n="cancel"></button>
               </div>
-              <div id="endorse-me-page" class="display-none">
-                <div style="overflow:hidden">
-                  <video muted playsinline id="challenge-video"></video>
-                </div>
-                <div class="block no-margin-top text-align-center">Scan the QR code on the phone of your endorser.
-                  <button class="button button-fill margin-top-half" id="cancel-endorse-me-button">Cancel</button>
-                </div>
-              </div>
-            </swiper-slide>
-            <swiper-slide class="tab page-content" id="tab-endorse">
-              <div id="endorse-page" class="block margin-top">
-                <button class="button button-fill" id="endorse-button" data-i18n="endorse-button"></button>
-                <div id="endorse-message" class="item-label display-flex justify-content-center" style="width:100%" data-i18n="endorse-message"></div>
-              </div>
-              <div id="endorse-scanner" class="display-none">
-                <div style="overflow:hidden">
-                  <video muted playsinline id="answer-video"></video>
-                </div>
-                <div class="block no-margin-top text-align-center">Scan the QR code on the phone of your fellow citizen.
-                  <button class="button button-fill margin-top-half" id="cancel-endorse-button">Cancel</button>
-                </div>
-              </div>
-              <div id="endorse-citizen" class="display-none">
-                <div class="block display-flex margin-top-half margin-bottom-half">
-                  <img id="endorse-picture" style="width:150px;height:200px">
-                  <div class="margin-left">
-                    <div data-i18n="given-names"></div>
-                    <div style="font-size:120%"><b id="endorse-given-names"></b></div>
-                    <div data-i18n="family-name"></div>
-                    <div style="font-size:120%"><b id="endorse-family-name"></b></div>
-                    <div data-i18n="latitude-longitude-header"></div>
-                    <div><b id="endorse-coords"></b></div>
-                    <div><span data-i18n="created"></span><b id="endorse-published"></b></div>
-                    <div><span data-i18n="reputation"></span><span id="citizen-reputation">...</span></div>
-                  </div>
-                </div>
-                <div id="endorse-map" style="width:100%;height:400px"></div>
-                <div class="block list margin-top-half">
-                  <ul>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input type="checkbox" id="endorse-picture-check">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">This person standing in front of me.</div>
-                        </div>
-                      </label>
-                    </li>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input type="checkbox" id="endorse-adult-check">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">This person is an adult.</div>
-                        </div>
-                      </label>
-                    </li>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input type="checkbox" id="endorse-name-check">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">The name is correct.</div>
-                        </div>
-                      </label>
-                    </li>
-                    <li>
-                      <label class="item-checkbox item-content">
-                        <input type="checkbox" id="endorse-coords-check">
-                        <i class="icon icon-checkbox"></i>
-                        <div class="item-inner">
-                          <div class="item-title">The address is correct.</div>
-                        </div>
-                      </label>
-                    </li>
-                  </ul>
-                  <div class="grid grid-cols-2 grid-gap margin-top-half">
-                    <button class="button button-fill disabled" id="endorse-confirm">Endorse<div id="endorse-button-preloader display-none" class="preloader text-color-white padding-left display-none"></div></button>
-                    <button class="button button-fill color-red" id="endorse-cancel-confirm">Cancel</button>
-                  </div>
-                  <div class="item-label display-flex justify-content-center margin-top-half" style="width:100%">Warning: wrongly endorsing a citizen is likely to affect your own endorsements by judges.</div>
-                </div>
-              </div>
-              <div id="endorsements-list">
-              </div>
-            </swiper-slide>
-            <swiper-slide class="tab page-content" id="tab-vote">
-              <div class="block margin-top" id="referendum-page">
-                <div style="width:100%;display:flex;align-items:center;" >
-                  <div class="list" style="margin:0">
-                    <ul style="width:95%">
-                      <li class="item-content item-input item-input-outline" style="margin:0">
-                        <div class="item-inner">
-                          <div class="item-title item-label">Enter Referendum</div>
-                          <div class="item-input-wrap">
-                            <input id="enter-referendum" type="text" size="40" maxlength="40" placeholder="Paste referendum reference here">
-                            <span class="input-clear-button"></span>
-                          </div>
-                          <div class="item-input-info">Search referendums <a id="search-referendum" class="link external" target="_blank">online</a></div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                  <button id="scan-referendum" class="button" style="width:5%"><i class="icon f7-icons">viewfinder</i></button>
-                </div>
-                <div class="no-margin-left no-margin-right block-title">Your Referendums</div>
-                <div id="referendums" class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
-                </div>
-              </div>
-              <div id="referendum-scanner" class="display-none">
-                <div style="overflow:hidden">
-                  <video muted playsinline id="referendum-video"></video>
-                </div>
-                <div class="block no-margin-top text-align-center">Scan the QR code of the referendum.
-                  <button class="button button-fill margin-top-half" id="cancel-scan-referendum-button">Cancel</button>
-                </div>
-              </div>  
-            </swiper-slide>
-            <swiper-slide class="tab page-content" id="tab-sign">
-              <div class="block margin-top" id="petition-page">
-                <div style="width:100%;display:flex;align-items:center;" >
-                  <div class="list" style="margin:0">
-                    <ul style="width:95%">
-                      <li class="item-content item-input item-input-outline" style="margin:0">
-                        <div class="item-inner">
-                          <div class="item-title item-label">Enter Petition</div>
-                          <div class="item-input-wrap">
-                            <input id="enter-petition" type="text" size="40" maxlength="40" placeholder="Paste petition reference here">
-                            <span class="input-clear-button"></span>
-                          </div>
-                          <div class="item-input-info">Search petitions <a id="search-petition" class="link external" target="_blank">online</a></div>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                  <button id="scan-petition" class="button" style="width:5%"><i class="icon f7-icons">viewfinder</i></button>
-                </div>
-                <div class="no-margin-left no-margin-right block-title">Your Petitions</div>
-                <div id="petitions" class="no-margin-left no-margin-right list list-strong list-outline-ios list-dividers-ios inset-md accordion-list">
-                </div>
-              </div>
-              <div id="petition-scanner" class="display-none">
-                <div style="overflow:hidden">
-                  <video muted playsinline id="petition-video"></video>
-                </div>
-                <div class="block no-margin-top text-align-center">Scan the QR code of the petition.
-                  <button class="button button-fill margin-top-half" id="cancel-scan-petition-button">Cancel</button>
-                </div>
-              </div>
-          </swiper-slide>
-            <swiper-slide class="tab page-content" id="tab-settings">
-              <div class="block-title margin-top" data-i18n="webservices"></div>
-              <div class="list margin-bottom">
+            </div>
+            <div id="register-page" class="display-none">
+              <div class="block-title margin-top" id="tab-me-title" data-i18n="become-citizen"></div>
+              <div class="list">
                 <ul>
-                  <li>
-                    <div class="item-content item-input item-input-with-value item-input-outline">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="notary"></div>
-                        <div class="item-input-wrap">
-                          <input type="url" id="notary" placeholder="https://notary.directdemocracy.org" value="https://notary.directdemocracy.vote" />
+                  <li class="item-content item-input item-input-with-value item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="given-names"></div>
+                      <div class="item-input-wrap">
+                        <input type="text" id="register-given-names" data-i18n="enter-given-names" required>
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="item-content item-input item-input-with-value item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="family-name"></div>
+                      <div class="item-input-wrap">
+                        <input type="text" id="register-family-name" data-i18n="enter-family-name" required>
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="item-content item-input item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="picture"></div>
+                      <div class="item-input-wrap display-flex justify-content-space-between"
+                        style="padding-top:10px;padding-bottom:20px">
+                        <img id="register-picture" src="images/default-picture.png">
+                        <div class="display-flex flex-direction-column justify-content-center margin-right">
+                          <div class="item-title margin-left margin-bottom padding-bottom" style="font-size:80%"
+                            data-i18n="provide-picture">
+                          </div>
+                          <button class="button margin-left" id="register-camera-picture">
+                            <i class="icon f7-icons">camera_fill</i>
+                          </button>
+                          <button class="button margin-left" id="register-file-picture">
+                            <i class="icon f7-icons">folder_fill</i>
+                          </button>
                         </div>
                       </div>
                     </div>
                   </li>
-                  <li>
-                    <div class="item-content item-input item-input-with-value item-input-outline">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="judge"></div>
-                        <div class="item-input-wrap">
-                          <input type="url" id="judge" placeholder="https://judge.directdemocracy.org" value="https://judge.directdemocracy.vote" />
-                        </div>
+                  <li class="item-content item-input item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="home-location"></div>
+                      <div class="item-input-wrap display-flex">
+                        <input type="text" style="width:200%" id="register-location" data-i18n="latitude-longitude-text"
+                          disabled required>
+                        <button class="button" id="register-location-button">
+                          <i class="icon f7-icons">placemark_fill</i>
+                        </button>
                       </div>
                     </div>
                   </li>
-                  <li>
-                    <div class="item-content item-input item-input-with-value item-input-outline">
-                      <div class="item-inner">
-                        <div class="item-title item-label" data-i18n="polling-station"></div>
-                        <div class="item-input-wrap">
-                          <input type="url" id="station" placeholder="https://station.directdemocracy.org" value="https://station.directdemocracy.vote" />
-                        </div>
-                      </div>
-                    </div>
+                  <li class="block margin">
+                    <label class="checkbox no-ripple display-flex align-items-center"><input type="checkbox"
+                        id="register-adult">
+                      <i class="icon-checkbox margin-right-half"></i>
+                      <div data-i18n="adult-confirm"></div>
+                    </label>
+                  </li>
+                  <li class="block margin">
+                    <label class="checkbox no-ripple display-flex align-items-center"><input type="checkbox"
+                        id="register-confirm">
+                      <i class="icon-checkbox margin-right-half"></i>
+                      <div data-i18n="citizen-confirm"></div>
+                    </label>
+                  </li>
+                  <li class="block">
+                    <button class="button button-fill disabled" id="register-button" data-i18n="register"></button>
+                    <button class="button button-fill color-red margin-top" id="cancel-register-button"
+                      data-i18n="cancel"></button>
                   </li>
                 </ul>
               </div>
-              <div class="block-title margin-top" data-i18n='language'></div>
-              <div class="list list-dividers-ios list-outline-ios">
-                <div class="item-content item-input item-input-outline">
-                  <div class="item-inner">
-                    <div class="item-input-wrap">
-                      <input type="text" readonly="readonly" id="language-picker" />
-                    </div>
+            </div>
+            <div id="splash-page" class="text-align-center display-none">
+              <i class="f7-icons" style="font-size:1150%;transform:rotate(-90deg);margin-top:70%">hand_point_right</i>
+            </div>
+            <div id="card-page" class="display-none">
+              <div class="block margin-top-half margin-bottom-half">
+                <div class="display-flex">
+                  <img id="citizen-picture" style="width:150px;height:200px">
+                  <div class="margin-left">
+                    <div data-i18n="given-names"></div>
+                    <div style="font-size:120%"><b id="citizen-given-names"></b></div>
+                    <div data-i18n="family-name"></div>
+                    <div style="font-size:120%"><b id="citizen-family-name"></b></div>
+                    <div data-i18n="latitude-longitude-header"></div>
+                    <div><b id="citizen-coords"></b></div>
+                    <div><span data-i18n="created"></span><b id="citizen-published"></b></div>
+                    <div><span data-i18n="reputation"></span><span id="citizen-reputation">...</span></div>
                   </div>
                 </div>
               </div>
-            </swiper-slide>
-          </swiper-container>
-        </div>
+              <div class="block margin-top-half margin-bottom-half" data-i18n="meet-your-neighbors"></div>
+              <div class="block block-strong block-outline inset no-margin-top">
+                <div class="text-align-center" data-i18n="in-person-are-best"></div>
+                <button id="show-qrcode" class="button color-green button-fill margin-top margin-bottom"><i
+                    class="icon f7-icons margin-right">qrcode</i><span data-i18n="show-qr-code"></span></button>
+                <button id="scan-qrcode" class="button color-green button-fill margin-bottom"><i
+                    class="icon f7-icons margin-right">qrcode_viewfinder</i><span
+                    data-i18n="scan-qr-code"></span></button>
+                <div class="text-align-center" data-i18n="remote-endorsements"></div>
+                <button id="remote-endorsement" class="button button-fill margin-top margin-bottom"><i
+                    class="icon f7-icons margin-right">arrowshape_turn_up_right</i>
+                  <scan data-i18n="get-endorsed-remotely"></scan>
+                </button>
+              </div>
+            </div>
+          </swiper-slide>
+          <swiper-slide class="tab page-content" id="tab-neighbor">
+            <div id="neighbor-page" class="block margin-top">
+              <div style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
+                      <div class="item-inner">
+                        <div class="item-title item-label" data-i18n="review-a-neighbor"></div>
+                        <div class="item-input-wrap">
+                          <input id="enter-neighbor" type="text" size="40" maxlength="40"
+                            data-i18n="paste-citizen-number-here">
+                          <span class="input-clear-button"></span>
+                        </div>
+                        <div class="item-input-info" data-i18n="search-neighbors-online">
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button id="scan-neighbor" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
+                </button>
+              </div>
+              <div class="no-margin-left no-margin-right block-title" data-i18n="your-neighbors"></div>
+              <div id="endorsements-list">
+              </div>
+            </div>
+          </swiper-slide>
+          <swiper-slide class="tab page-content" id="tab-vote">
+            <div class="block margin-top" id="referendum-page">
+              <div style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
+                      <div class="item-inner">
+                        <div class="item-title item-label" data-i18n="vote-in-a-referendum"></div>
+                        <div class="item-input-wrap">
+                          <input id="enter-referendum" type="text" size="40" maxlength="40"
+                            data-i18n="paste-referendum-number-here">
+                          <span class="input-clear-button"></span>
+                        </div>
+                        <div class="item-input-info" data-i18n="search-referendums-online">
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button id="scan-referendum" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
+                </button>
+              </div>
+              <div class="no-margin-left no-margin-right block-title" data-i18n="your-referendums"></div>
+              <div id="referendums">
+              </div>
+            </div>
+          </swiper-slide>
+          <swiper-slide class="tab page-content" id="tab-sign">
+            <div class="block margin-top" id="petition-page">
+              <div style="width:100%;display:flex;align-items:center;">
+                <div class="list" style="margin:0">
+                  <ul style="width:95%">
+                    <li class="item-content item-input item-input-outline" style="margin:0">
+                      <div class="item-inner">
+                        <div class="item-title item-label" data-i18n="sign-a-petition"></div>
+                        <div class="item-input-wrap">
+                          <input id="enter-petition" type="text" size="40" maxlength="40"
+                            data-i18n="paste-petition-number-here">
+                          <span class="input-clear-button"></span>
+                        </div>
+                        <div class="item-input-info" data-i18n="search-petitions-online">
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button id="scan-petition" class="button" style="width:5%">
+                  <i class="icon f7-icons">qrcode_viewfinder</i>
+                </button>
+              </div>
+              <div class="no-margin-left no-margin-right block-title" data-i18n="your-petitions"></div>
+              <div id="petitions">
+              </div>
+            </div>
+          </swiper-slide>
+          <swiper-slide class="tab page-content" id="tab-settings">
+            <div class="block-title margin-top" data-i18n="webservices"></div>
+            <div class="list margin-bottom">
+              <ul>
+                <li>
+                  <div class="item-content item-input item-input-with-value item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="notary"></div>
+                      <div class="item-input-wrap">
+                        <input type="url" id="notary" placeholder="https://notary.directdemocracy.org"
+                          value="https://notary.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-content item-input item-input-with-value item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="judge"></div>
+                      <div class="item-input-wrap">
+                        <input type="url" id="judge" placeholder="https://judge.directdemocracy.org"
+                          value="https://judge.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-content item-input item-input-with-value item-input-outline">
+                    <div class="item-inner">
+                      <div class="item-title item-label" data-i18n="polling-station"></div>
+                      <div class="item-input-wrap">
+                        <input type="url" id="station" placeholder="https://station.directdemocracy.org"
+                          value="https://station.directdemocracy.vote" />
+                        <span class="input-clear-button"></span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="block-title margin-top" data-i18n='language'></div>
+            <div class="list list-dividers-ios list-outline-ios">
+              <div class="item-content item-input item-input-outline">
+                <div class="item-inner">
+                  <div class="item-input-wrap">
+                    <input type="text" readonly="readonly" id="language-picker" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="block-title margin-top" data-i18n="danger-zone"></div>
+            <div class="block block-strong block-outline inset">
+              <button id="update" class="button button-fill color-red margin-bottom"><i
+                  class="icon f7-icons margin-right">square_pencil</i><span
+                  data-i18n="update-citizen-card"></span></button>
+              <button id="export" class="button button-fill color-red margin-bottom"><i
+                  class="icon f7-icons margin-right" style="transform:scale(-1,1)">square_arrow_left</i><span
+                  data-i18n="export-citizen-card"></span></button>
+              <button id="delete" class="button button-fill color-red"><i
+                  class="icon f7-icons margin-right">trash</i><span data-i18n="delete-citizen-card"></span></button>
+            </div>
+          </swiper-slide>
+        </swiper-container>
       </div>
     </div>
-    <script src="//cdn.jsdelivr.net/npm/framework7@8.2.0/framework7-bundle.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
-    <script src="//directdemocracy.vote/js/jsencrypt.min.js"></script>
-    <script src="//directdemocracy.vote/js/crypto-js.js"></script>
-    <script src="//directdemocracy.vote/js/qrious.min.js"></script>
-    <script src="js/croppie.min.js"></script>
-    <script type="module" src="js/app.js"></script>
-  </body>
+  </div>
+  <script src="js/framework7-bundle.min.js"></script>
+  <script src="js/leaflet.js"></script>
+  <script src="js/exif.min.js"></script>
+  <script src="js/qrious.min.js"></script>
+  <script src="js/croppie.min.js"></script>
+  <script src="cordova.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+
 </html>

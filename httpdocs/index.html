@@ -4,38 +4,54 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>app.directdemocracy.vote</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+    <link rel="icon" href="/app/images/favicon.svg" type="image/svg+xml" sizes="any">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/framework7-icons@5.0.5/css/framework7-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://directdemocracy.vote/css/directdemocracy.css">
     <link rel="stylesheet" href="https://directdemocracy.vote/css/corner-ribbon.css">
+    <script type="module" src="/js/index.js"></script>
   </head>
-  <body>
+  <body class="has-navbar-fixed-top">
     <div class="corner-ribbon" title="This web site is in beta quality: it may have bugs and change without notice. Please, report any problem to info@directdemocracy.vote.">Beta</div>
+    <nav class="navbar is-fixed-top is-light" role="navigation" aria-label="main navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a id="main-menu" class="navbar-item">
+            <i class="f7-icons" style="rotate:-90deg;margin-right:4px">hand_point_right</i>
+            direct<b>democracy</b>
+          </a>
+          <a role="button" id="navbar-burger" class="navbar-burger" aria-label="menu" aria-expanded="false"
+            data-target="navbar-menu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+        <div class="navbar-menu" id="navbar-menu">
+          <div class="navbar-end">
+            <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link"><span class="is-size-4" id="language"></span></a>
+              <div class="navbar-dropdown" id="language-dropdown">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
     <section class="hero">
       <div class="hero-body">
         <div class="columns is-mobile">
           <div class="column is-narrow"><i class="f7-icons">device_phone_portrait</i></div>
           <div class="column">
             <p class="title">direct<b>democracy</b></p>
-            <p class="subtitle">a smartphone app allowing you to vote</p>
+            <p class="subtitle" data-i18n="a-smartphone-app"></p>
           </div>
         </div>
       </div>
     </section>
-    <section class="section">
-      <p>
-        This web site is the home of the sample <i>directdemocracy</i> app.
-        Currently, this app is under development.
-      </p>
-      <p>
-        You can test the app <a href="/app" target="_blank">here</a> (on a computer, press F12 and Ctrl-Shift-M to emulate a mobile device).
-      </p>
-    </section>
+    <section class="section" data-i18n="introduction"></section>
     <footer class="footer">
-      <div class="content has-text-centered">
-        More information is available from our <a href="https://github.com/directdemocracy-vote/app" target="_blank">GitHub repository</a>.
-      </div>
+      <div class="content has-text-centered" data-i18n="more-info"></div>
     </footer>
   </body>
 </html>

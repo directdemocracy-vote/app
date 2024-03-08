@@ -1,0 +1,13 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "appKey": "",
+    "appSignature": "",
+    "givenNames": "习",
+    "familyName": "近平",
+    "picture": "",
+    "latitude": 43.93692,
+    "longitude": 6.28473
+}

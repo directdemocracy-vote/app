@@ -1,0 +1,13 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "appKey": "",
+    "appSignature": "",
+    "givenNames": "володимир",
+    "familyName": "зеленський",
+    "picture": "",
+    "latitude": 43.93662,
+    "longitude": 6.28466
+}

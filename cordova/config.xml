@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="vote.directdemocracy.app" version="2.0.59" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>DirectDemocracy</name>
+  <description>DirectDemocracy Voting App</description>
+  <preference name="orientation" value="portrait" />
+  <author email="info@directdemocracy.vote" href="https://directdemocracy.vote">directdemocracy.vote</author>
+  <content src="index.html" />
+  <allow-intent href="http://*/*" />
+  <allow-intent href="https://*/*" />
+  <platform name="android">
+    <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/android/res/drawable/ic_cdv_splashscreen.xml" />
+    <icon density="mdpi" src="resources/android/res/mipmap-mdpi/ic_launcher.png"
+      ic_launcher_monochrome="resources/android/res/mipmap-mdpi/ic_launcher_monochrome.png"
+      ic_launcher_background="resources/android/res/mipmap-mdpi/ic_launcher_background.png"
+      ic_launcher_foreground="resources/android/res/mipmap-mdpi/ic_launcher_foreground.png" />
+    <icon density="hdpi" src="resources/android/res/mipmap-hdpi/ic_launcher.png"
+      ic_launcher_monochrome="resources/android/res/mipmap-hdpi/ic_launcher_monochrome.png"
+      ic_launcher_background="resources/android/res/mipmap-hdpi/ic_launcher_background.png"
+      ic_launcher_foreground="resources/android/res/mipmap-hdpi/ic_launcher_foreground.png" />
+    <icon density="xhdpi" src="resources/android/res/mipmap-xhdpi/ic_launcher.png"
+      ic_launcher_monochrome="resources/android/res/mipmap-xhdpi/ic_launcher_monochrome.png"
+      ic_launcher_background="resources/android/res/mipmap-xhdpi/ic_launcher_background.png"
+      ic_launcher_foreground="resources/android/res/mipmap-xhdpi/ic_launcher_foreground.png" />
+    <icon density="xxhdpi" src="resources/android/res/mipmap-xxhdpi/ic_launcher.png"
+      ic_launcher_monochrome="resources/android/res/mipmap-xxhdpi/ic_launcher_monochrome.png"
+      ic_launcher_background="resources/android/res/mipmap-xxhdpi/ic_launcher_background.png"
+      ic_launcher_foreground="resources/android/res/mipmap-xxhdpi/ic_launcher_foreground.png" />
+    <icon density="xxxhdpi" src="resources/android/res/mipmap-xxxhdpi/ic_launcher.png"
+      ic_launcher_monochrome="resources/android/res/mipmap-xxxhdpi/ic_launcher_monochrome.png"
+      ic_launcher_background="resources/android/res/mipmap-xxxhdpi/ic_launcher_background.png"
+      ic_launcher_foreground="resources/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png" />
+  </platform>
+  <platform name="ios">
+    <preference name="scheme" value="app" />
+    <preference name="hostname" value="localhost" />
+    <splash src="resources/ios/splash.png" />
+    <preference name="AutoHideSplashScreen" value="false" />
+    <preference name="FadeSplashScreen" value="true"/>
+    <icon src="resources/ios/29.png" width="29" height="29" />
+    <icon src="resources/ios/40.png" width="40" height="40" />
+    <icon src="resources/ios/50.png" width="50" height="50" />
+    <icon src="resources/ios/57.png" width="57" height="57" />
+    <icon src="resources/ios/58.png" width="58" height="58" />
+    <icon src="resources/ios/72.png" width="72" height="72" />
+    <icon src="resources/ios/76.png" width="76" height="76" />
+    <icon src="resources/ios/80.png" width="80" height="80" />
+    <icon src="resources/ios/87.png" width="87" height="87" />
+    <icon src="resources/ios/100.png" width="100" height="100" />
+    <icon src="resources/ios/114.png" width="114" height="114" />
+    <icon src="resources/ios/120.png" width="120" height="120" />
+    <icon src="resources/ios/144.png" width="144" height="144" />
+    <icon src="resources/ios/152.png" width="152" height="152" />
+    <icon src="resources/ios/167.png" width="167" height="167" />
+    <icon src="resources/ios/180.png" width="180" height="180" />
+    <icon src="resources/ios/512.png" width="512" height="512" />
+    <icon src="resources/ios/1024.png" width="1024" height="1024" />
+    <preference name="AllowNewWindows" value="false" />
+    <preference name="MediaPlaybackAllowsAirPlay" value="true" />
+    <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
+    <preference name="AllowBackForwardNavigationGestures" value="false" />
+    <preference name="Allow3DTouchLinkPreview" value="true" />
+    <preference name="AutoHideSplashScreen" value="true" />
+    <config-file target="*-Info.plist" parent="UIApplicationSceneManifest">
+      <dict>
+        <key>UISceneConfigurations</key>
+        <dict/>
+      </dict>
+    </config-file>
+    <config-file target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card.</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card.</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+      <string>Your location is useful to help you quickly locate your home when registering your citizen card.</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+      <string>Access to your photo library is needed to select your ID picture when registering your citizen card.</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+      <string>Access to your camera is needed to capture your ID picture when registering your citizen card.</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="ITSAppUsesNonExemptEncryption">
+      <string>YES</string>
+    </config-file>
+    <config-file target="*-Info.plist" parent="ITSEncryptionExportComplianceCode">
+      <string>40258adc-d155-4fb8-847f-a2d8db22066d</string>
+    </config-file>
+  </platform>
+</widget>

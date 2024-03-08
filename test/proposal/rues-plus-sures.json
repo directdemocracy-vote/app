@@ -1,0 +1,19 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/proposal.schema.json",
+    "key": "",
+    "signature": "",
+    "published": "",
+    "area": "",
+    "area_name": "hamlet=Le+Poil&city=Senez&country=France",
+    "title": "Pour des rues du village plus sûres au Poil",
+    "description": "Ce referendum demande l'introduction d'une limitation de vitesse à 30 km/h dans les rues du village du Poil afin d'assurer davantage de sécurité pour les piétons et les cyclistes. Le budget nécessaire à ce projet sera pris sur les finances municipales. Si le référendum est accepté, une telle limitation doit être mise en place avant le 1er juin 2024.",
+    "question": "Souhaitez vous limiter la vitesse à 30km/h dans les rues du village comme décrit dans ce référendum ?",
+    "answers": [
+        "Oui",
+        "Non"
+    ],
+    "type": "referendum",
+    "secret": true,
+    "deadline": "",
+    "trust": 0
+}

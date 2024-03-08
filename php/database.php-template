@@ -1,0 +1,9 @@
+<?php
+$mysqli = new mysqli('localhost', 'app', '********', 'app');
+if ($mysqli->connect_errno)
+  die("Failed to connect to MySQL database: $mysqli->connect_error ($mysqli->connect_errno)");
+$mysqli->set_charset('utf8mb4');
+$timeZone = new DateTimeZone('Europe/Zurich');
+$timeZoneOffset = $timeZone->getOffset(new DateTime) / 3600;
+$mysqli->query("SET time_zone = '+0$timeZoneOffset:00'");
+?>

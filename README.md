@@ -8,3 +8,12 @@ It requires the development of Cordova plugins for:
 - Accessing from a common interface the [Android Keystore](https://source.android.com/docs/security/features/keystore) and [Apple iOS Secure Enclave](https://developer.apple.com/documentation/security/certificate_key_and_trust_services/keys/protecting_keys_with_the_secure_enclave).
 
 It is currently under development and not yet available on the Android Play Store or Apple App Store.
+
+## Installation
+
+You will need a simple web server running a recent version of PHP.
+
+## Dependencies
+
+PHP dependencies should be installed by running `composer install` at the root of this repository.
+They include the Google Cloud API client library for PlayIntegrity to check the integrity of the phone and DirectDemocracy app.

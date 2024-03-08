@@ -1,0 +1,13 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "appKey": "",
+    "appSignature": "",
+    "givenNames": "Emmanuel",
+    "familyName": "Macron",
+    "picture": "",
+    "latitude": 43.93789,
+    "longitude": 6.28698
+}

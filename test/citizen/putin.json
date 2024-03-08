@@ -1,0 +1,13 @@
+{
+    "schema": "https://directdemocracy.vote/json-schema/2/citizen.schema.json",
+    "key": "",
+    "signature": "",
+    "published": 0,
+    "appKey": "",
+    "appSignature": "",
+    "givenNames": "владимир",
+    "familyName": "путин",
+    "picture": "",
+    "latitude": 43.93094,
+    "longitude": 6.25875
+}
