@@ -104,12 +104,12 @@ if ($os === 'Android') {
     foreach(array('MEETS_BASIC_INTEGRITY', 'MEETS_DEVICE_INTEGRITY', 'MEETS_STRONG_INTEGRITY') as &$check) {
       if (!in_array($check, $deviceRecognitionVerdict, true)) {
         $failed = true;
-        $message .= '❌ '.$check.'<br>';
+        $message .= '<br>❌ '.$check;
       } else
-        $message .= '✔️ '.$check.'<br>';
+        $message .= '<br>✔️ '.$check;
     }
     if ($failed)
-      error('Failed device integrity:<br>'.$message);
+      error('Failed device integrity:'.$message);
   }
 } else { # $os === 'iOS'
   if ($token === 'N/A' && $folder ==='')
