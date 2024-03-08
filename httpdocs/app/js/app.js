@@ -794,7 +794,9 @@ async function reviewCitizen(publication, action) {
   document.getElementById('distance').textContent = distance;
   translator.translateElement(document.getElementById('report-radio'), action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
+  app.dialog.preloader(translator.translate('getting-reputation'));
   let answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`);
+  app.dialog.close();
   if (answer.error) {
     app.dialog.alert(answer.error, 'Could not get reputation from judge.');
     reputation.textContent = 'N/A';
@@ -803,7 +805,7 @@ async function reviewCitizen(publication, action) {
     reputation.textContent = formatReputation(answer.reputation);
     reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
   }
-  app.dialog.preloader('downloading-map');
+  app.dialog.preloader(translator.translate('downloading-map'));
   answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
   app.dialog.close();
   const address = answer.display_name;
