@@ -794,10 +794,9 @@ async function reviewCitizen(publication, action) {
   document.getElementById('distance').textContent = distance;
   translator.translateElement(document.getElementById('report-radio'), action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
-  app.dialog.preloader(translator.translate('getting-reputation'));
   let answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`);
-  app.dialog.close();
   if (answer.error) {
+    app.dialog.close();
     app.dialog.alert(answer.error, 'Could not get reputation from judge.');
     reputation.textContent = 'N/A';
     reputation.style.color = 'red';
@@ -805,9 +804,7 @@ async function reviewCitizen(publication, action) {
     reputation.textContent = formatReputation(answer.reputation);
     reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
   }
-  app.dialog.preloader(translator.translate('downloading-map'));
   answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
-  app.dialog.close();
   const address = answer.display_name;
   reviewMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
   review = publication;
@@ -821,7 +818,6 @@ async function getCitizen(reference, action) {
   const parameter = (reference.length === 40) ? `fingerprint=${reference}` : `key=${encodeURIComponent(reference)}`;
   app.dialog.preloader(translator.translate('getting-citizen'));
   const publication = await syncJsonFetch(`${notary}/api/publication.php?${parameter}`);
-  app.dialog.close(); // preloader
   const meField = document.getElementById('enter-me');
   meField.value = '';
   app.input.checkEmptyState(meField);
@@ -833,6 +829,7 @@ async function getCitizen(reference, action) {
   enable(neighborField);
   enable('scan-neighbor');
   if (publication.error) {
+    app.dialog.close(); // preloader
     if (publication.error === 'publication not found')
       app.dialog.alert(translator.translate('citizen-not-found'), translator.translate('citizen-search-error'));
     else
@@ -843,14 +840,17 @@ async function getCitizen(reference, action) {
     const sha1Bytes = await crypto.subtle.digest('SHA-1', base64ToByteArray(publication.signature + '=='));
     const sha1 = Array.from(new Uint8Array(sha1Bytes), byte => ('0' + (byte & 0xFF).toString(16)).slice(-2)).join('');
     if (reference !== sha1) {
+      app.dialog.close(); // preloader
       app.dialog.alert('Fingerprint mismatch.', 'Cititen search error');
       return;
     }
   } else if (reference !== publication.key) {
+    app.dialog.close(); // preloader
     app.dialog.alert('Key mismatch.', 'Citizen search error');
     return;
   }
   if (publication.key === citizen.key) {
+    app.dialog.close(); // preloader
     app.dialog.alert(translator.translate('cannot-review-myself'), translator.translate('cannot-review-myself-title'));
     return;
   }
@@ -862,6 +862,7 @@ async function getCitizen(reference, action) {
   let buffer = new TextEncoder().encode(JSON.stringify(publication));
   let verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(signature), buffer);
   if (!verify) {
+    app.dialog.close(); // preloader
     app.dialog.alert('Failed to verify citizen signature', 'Citizen search error');
     console.error(publication);
     return;
@@ -871,10 +872,12 @@ async function getCitizen(reference, action) {
   buffer = new TextEncoder().encode(signature);
   verify = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, base64ToByteArray(appSignature), buffer);
   if (!verify) {
+    app.dialog.close(); // preloader
     app.dialog.alert('Failed to verify app signature', 'Citizen search error');
     return;
   }
   reviewCitizen(publication, action);
+  app.dialog.close(); // preloader
 }
 
 function addProposal(proposal, type, open) {
