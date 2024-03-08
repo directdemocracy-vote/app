@@ -30,6 +30,7 @@ let appKey = '';
 let languagePicker;
 let homePageIsReady = false;
 let translatorIsReady = false;
+let deviceIsReady = false;
 let challenge = '';
 let challengeBytes = null;
 let translator = new Translator('i18n');
@@ -267,7 +268,7 @@ async function syncJsonFetch(url, data) {
 }
 
 async function readyToGo() {
-  if (languagePicker || !homePageIsReady || !translatorIsReady)
+  if (languagePicker || !homePageIsReady || !translatorIsReady || !deviceIsReady)
     return;
   let values = [];
   for (let key in translator.languages)
@@ -299,12 +300,12 @@ async function readyToGo() {
     }
   });
   app.dialog.preloader(translator.translate('checking-update'));
-  const answer = await syncJsonFetch('https://app.directdemocracy.vote/api/update.php');
+  const answer = await syncJsonFetch('https://olivier.michel.id/api/update.php');
   app.dialog.close(); // preloader
   const version = answer.version.split('.');
   if (DIRECTDEMOCRACY_VERSION_MAJOR < version[0] ||
-        DIRECTDEMOCRACY_VERSION_MINOR < version[1] ||
-        DIRECTDEMOCRACY_VERSION_BUILD < version[2]) {
+      DIRECTDEMOCRACY_VERSION_MINOR < version[1] ||
+      DIRECTDEMOCRACY_VERSION_BUILD < version[2]) {
     app.dialog.alert(translator.translate('newer-version', [answer.version, DIRECTDEMOCRACY_VERSION]),
       translator.translate('update-needed'));
     return;
@@ -314,11 +315,8 @@ async function readyToGo() {
     setBetaCoordinates();
   if (!localStorage.getItem('registered'))
     welcome();
-  else {
-    app.dialog.preloader(translator.translate('downloading-citizen'));
-    await downloadCitizen(true);
-    app.dialog.close(); // preloader
-  }
+  else
+    await downloadCitizen(true, 'downloading-citizen');
 }
 
 function setBetaCoordinates() {
@@ -471,7 +469,7 @@ async function publish(publication, signature, type) {
     });
     app.dialog.close(); // preloader
     if (answer.hasOwnProperty('error'))
-      app.dialog.alert(`${answer.error}<br>Please try again.`, 'Publication Error');
+      app.dialog.alert(answer.error, 'Publication Error');
     else {
       if (type === 'citizen card') {
         updateCitizenCard();
@@ -529,7 +527,7 @@ async function publish(publication, signature, type) {
           body: JSON.stringify(vote)
         });
         if (answer.hasOwnProperty('error'))
-          app.dialog.alert(`${answer.error}<br>Please try again.`, 'Vote Error');
+          app.dialog.alert(answer.error, 'Vote Error');
         else {
           const message = translator.translate('vote-message', referendumProposal.title);
           app.dialog.alert(message, translator.translate('vote-success'));
@@ -816,9 +814,10 @@ async function reviewCitizen(publication, action) {
 }
 
 async function getCitizen(reference, action) {
-  app.dialog.preloader(translator.translate('getting-citizen'));
   const parameter = (reference.length === 40) ? `fingerprint=${reference}` : `key=${encodeURIComponent(reference)}`;
+  app.dialog.preloader(translator.translate('getting-citizen'));
   const publication = await syncJsonFetch(`${notary}/api/publication.php?${parameter}`);
+  app.dialog.close(); // preloader
   const meField = document.getElementById('enter-me');
   meField.value = '';
   app.input.checkEmptyState(meField);
@@ -1335,6 +1334,7 @@ async function getProposal(fingerprint, type) {
   app.dialog.preloader(message);
   const url = `${notary}/api/proposal.php?fingerprint=${fingerprint}&citizen=${encodeURIComponent(citizen.signature)}`;
   const proposal = await syncJsonFetch(url);
+  app.dialog.close(); // preloader
   enable(`scan-${type}`);
   const field = document.getElementById(`enter-${type}`);
   enable(field);
@@ -1482,7 +1482,7 @@ async function sendChallenge(otherAppUrl, challengeId, key, signature, action) {
   const answer = await syncJsonFetch(`https://${otherAppUrl}/api/challenge.php?id=${challengeId}&key=${encodeURIComponent(key)}&signature=${encodeURIComponent(sig)}`);
   if (answer.error) {
     console.error(answer.error);
-    app.dialog.alert(answer.error + '.<br>Please try again.', 'Challenge Error', function() {
+    app.dialog.alert(answer.error, 'Challenge Error', function() {
       scan(function(error, contents) {
         scanQRCode(error, contents, 'challenge', action);
       });
@@ -1581,6 +1581,9 @@ function onDeviceReady() {
     station = sanitizeWebservice(event.target.value);
     localStorage.setItem('station', station);
   });
+
+  deviceIsReady = true;
+  readyToGo();
   showPage('splash');
 
   function iUnderstandDialog(message, title, callback) {
@@ -2464,7 +2467,8 @@ function updateCitizenCard() {
   updateEndorsements();
 }
 
-async function downloadCitizen(initial) {
+async function downloadCitizen(initial, message) {
+  app.dialog.preloader(translator.translate(message));
   const answer = await syncJsonFetch(`${notary}/api/citizen.php`, {
     method: 'POST',
     headers: {
@@ -2473,6 +2477,7 @@ async function downloadCitizen(initial) {
     },
     body: 'key=' + encodeURIComponent(localStorage.getItem('publicKey'))
   });
+  app.dialog.close(); // preloader
   if (answer.error) {
     if (answer.error === 'citizen not found') {
       app.dialog.confirm(translator.translate('citizen-card-not-found'),
@@ -2481,7 +2486,7 @@ async function downloadCitizen(initial) {
           welcome();
         });
     } else
-      app.dialog.alert(answer.error + '.<br>Please try again.', 'Citizen Error');
+      app.dialog.alert(answer.error, 'Citizen Error');
   } else {
     citizen = answer.citizen;
     citizen.key = localStorage.getItem('publicKey');
@@ -2502,15 +2507,11 @@ async function downloadCitizen(initial) {
 }
 
 async function refreshEndorsements() {
-  app.dialog.preloader(translator.translate('updating-neighbors'));
-  await downloadCitizen(false);
-  app.dialog.close(); // preloader
+  await downloadCitizen(false, 'updating-neighbors');
 }
 
 document.getElementById('reload').addEventListener('click', async function(event) {
-  app.dialog.preloader(translator.translate('reloading'));
-  await downloadCitizen(false);
-  app.dialog.close(); // preloader
+  await downloadCitizen(false, 'reloading');
 });
 
 function formatReputation(reputation) {
