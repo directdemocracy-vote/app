@@ -72,7 +72,7 @@ class Translator {
       if (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')
         element.placeholder = t;
       else if (element.hasAttribute('title'))
-        element.title = t;
+        element.setAttribute('title') = t;
       else
         element.innerHTML = t;
     });
@@ -84,7 +84,11 @@ class Translator {
         element.setAttribute(`data-i18n-${i + 1}`, parameter[i]);
     } else if (parameter !== undefined)
       element.setAttribute('data-i18n-1', parameter);
-    element.innerHTML = this.translate(key, parameter);
+    const t = this.translate(key, parameter);
+    if (element.hasAttribute('title')
+      element.setAttribute('title', t);
+    else
+      element.innerHTML = t;
   }
   translate(key, parameter) {
     if (this.#dictionary === undefined)
