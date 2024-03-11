@@ -68,10 +68,13 @@ class Translator {
         parameter.push(element.getAttribute(`data-i18n-${i}`));
         i++;
       }
+      const t = this.translate(key, parameter);
       if (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')
-        element.placeholder = this.translate(key, parameter);
+        element.placeholder = t;
+      else if (element.hasAttribute('title'))
+        element.title = t;
       else
-        element.innerHTML = this.translate(key, parameter);
+        element.innerHTML = t;
     });
   }
   translateElement(element, key, parameter) {
