@@ -72,7 +72,7 @@ class Translator {
       if (element.nodeName === 'INPUT' || element.nodeName === 'TEXTAREA')
         element.placeholder = t;
       else if (element.hasAttribute('title'))
-        element.setAttribute('title') = t;
+        element.setAttribute('title', t);
       else
         element.innerHTML = t;
     });
