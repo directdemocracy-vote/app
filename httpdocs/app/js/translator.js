@@ -85,7 +85,7 @@ class Translator {
     } else if (parameter !== undefined)
       element.setAttribute('data-i18n-1', parameter);
     const t = this.translate(key, parameter);
-    if (element.hasAttribute('title')
+    if (element.hasAttribute('title'))
       element.setAttribute('title', t);
     else
       element.innerHTML = t;
