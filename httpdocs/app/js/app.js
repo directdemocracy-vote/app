@@ -8,7 +8,7 @@ const TESTING = false; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '60';
+const DIRECTDEMOCRACY_VERSION_BUILD = '61';
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -799,10 +799,10 @@ async function reviewCitizen(publication, action) {
     app.dialog.close(); // preloader
     app.dialog.alert(answer.error, 'Could not get reputation from judge.');
     reputation.textContent = 'N/A';
-    reputation.style.color = 'red';
+    reputation.style.color = trustedColor(-2);
   } else {
     reputation.textContent = formatReputation(answer.reputation);
-    reputation.style.color = answer.trusted === 1 ? 'green' : 'red';
+    reputation.style.color = trustedColor(answer.trusted);
   }
   answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
   const address = answer.display_name;
@@ -2530,11 +2530,20 @@ function formatReputation(reputation) {
   return 'N/A';
 }
 
-function updateReputation(reputationValue, endorsed) {
+function trustedColor(trusted) {
+  if (trusted === 1)
+    return 'Green';
+  if (trusted === -1)
+    return 'OrangeRed';
+  if (trusted === 0)
+    return 'Red';
+  return 'Gray';
+}
+
+function updateReputation(reputationValue, trusted) {
   let reputation = document.getElementById('citizen-reputation');
   const span = document.createElement('span');
-  const color = endorsed ? 'blue' : 'red';
-  span.setAttribute('style', `font-weight:bold;color:${color}`);
+  span.setAttribute('style', `font-weight:bold;color:${trustedColor(trusted)}`);
   span.textContent = formatReputation(reputationValue);
   reputation.innerHTML = '';
   reputation.appendChild(span);
@@ -2546,7 +2555,7 @@ async function getReputationFromJudge() {
   const answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`);
   if (answer.error) {
     app.dialog.alert(answer.error, 'Could not get reputation from judge.');
-    updateReputation('N/A', false);
+    updateReputation('N/A', 0);
     iAmTrustedByJudge = false;
   } else {
     iAmTrustedByJudge = answer.trusted;
@@ -2560,7 +2569,7 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   if (answer.error) {
     if (judgeUrl === judge) {
       iAmTrustedByJudge = false;
-      updateReputation('N/A', false);
+      updateReputation('N/A', 0);
     }
     app.dialog.alert(answer.error, 'Could not get reputation from notary');
     return false;
@@ -2718,24 +2727,24 @@ function updateEndorsements() {
     let otherComment;
     if (endorsement.hasOwnProperty('endorsed')) {
       day = new Date(endorsement.endorsed * 1000).toISOString().slice(0, 10);
-      color = endorsement.endorsedComment === 'in-person' ? 'green' : 'blue';
+      color = endorsement.endorsedComment === 'in-person' ? 'Green' : 'Blue';
       icon = 'arrow_left';
       comment = endorsement.endorsedComment;
     } else if (endorsement.hasOwnProperty('revoked')) {
       day = new Date(endorsement.revoked * 1000).toISOString().slice(0, 10);
-      color = 'red';
+      color = 'Red';
       icon = 'arrow_left';
       comment = endorsement.revokedComment;
     } else
       day = false;
     if (endorsement.hasOwnProperty('endorsedYou')) {
       otherDay = new Date(endorsement.endorsedYou * 1000).toISOString().slice(0, 10);
-      otherColor = endorsement.endorsedYouComment === 'in-person' ? 'green' : 'blue';
+      otherColor = endorsement.endorsedYouComment === 'in-person' ? 'Green' : 'Blue';
       otherIcon = 'arrow_right';
       otherComment = endorsement.endorsedYouComment;
     } else if (endorsement.hasOwnProperty('revokedYou')) {
       otherDay = new Date(endorsement.revokedYou * 1000).toISOString().slice(0, 10);
-      otherColor = 'red';
+      otherColor = 'Red';
       otherIcon = 'arrow_right';
       otherComment = endorsement.revokedYouComment;
     } else
@@ -2819,16 +2828,11 @@ function updateEndorsements() {
     a = newElement(div, 'a', 'link');
     let trustIcon;
     if (endorsement.hasOwnProperty('trusted')) {
-      if (endorsement.trusted === 1) {
-        trustIcon = 'checkmark_seal_fill';
-        color = 'green';
-      } else {
-        trustIcon = 'xmark_seal_fill';
-        color = 'red';
-      }
+      color = trustedColor(endorsement.trusted);
+      trustIcon = endorsement.trusted === 1 ? 'checkmark_seal_fill' : 'xmark_seal_fill';
     } else {
       trustIcon = 'checkmark_seal';
-      color = 'grey';
+      color = 'Gray';
     }
     let i = newElement(a, 'i', 'f7-icons', trustIcon);
     i.style.color = color;
@@ -2837,12 +2841,12 @@ function updateEndorsements() {
     d.style.textAlign = 'center';
     d.style.fontSize = '90%';
     d.style.fontWeight = 'bold';
-    d.style.color = 'green';
+    d.style.color = 'Green';
     a.addEventListener('click', async function() {
       d.classList.remove('display-none');
       d.textContent = '...';
-      d.style.color = 'grey';
-      i.style.color = 'grey';
+      d.style.color = 'Gray';
+      i.style.color = 'Gray';
       i.textContent = 'checkmark_seal';
       const answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(endorsement.key)}`);
       if (answer.hasOwnProperty('error'))
@@ -2851,17 +2855,12 @@ function updateEndorsements() {
         if (answer.hasOwnProperty('reputation'))
           d.textContent = formatReputation(answer.reputation);
         if (answer.hasOwnProperty('trusted')) {
-          if (answer.trusted === 1) { // trusted
-            d.style.color = 'green';
-            i.style.color = 'green';
-            i.textContent = 'checkmark_seal_fill';
-          } else { // never trusted or distrusted
-            d.style.color = 'red';
-            i.style.color = 'red';
-            i.textContent = 'xmark_seal_fill';
-          }
+          const color = trustedColor(answer.trusted);
+          d.style.color = color;
+          i.style.color = color;
+          i.textContent = answer.trusted === 1 ? 'checkmark_seal_fill' : 'xmark_seal_fill';
         } else
-          d.style.color = 'grey';
+          d.style.color = 'Gray';
       }
     });
     a = newElement(div, 'a', 'link');
