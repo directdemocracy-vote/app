@@ -472,6 +472,23 @@ async function publish(publication, signature, type) {
       app.dialog.alert(answer.error, 'Publication Error');
     else {
       if (type === 'citizen card') {
+        if (previousSignature) {
+          app.dialog.preloader(translator.translate('updating'));
+          certificateToPublish = {
+            schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
+            key: citizen.key,
+            signature: '',
+            published: Math.trunc(new Date().getTime() / 1000),
+            appKey: appKey,
+            appSignature: '',
+            type: 'report',
+            publication: previousSignature,
+            comment: certificateComment
+          };
+          certificateComment = '';
+          previousSignature = null;
+          Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
+        }
         updateCitizenCard();
         showPage('card');
         app.dialog.alert(translator.translate('citizen-card-published'), translator.translate('congratulations'));
@@ -505,7 +522,7 @@ async function publish(publication, signature, type) {
           app.dialog.alert(message, translator.translate('revoke-success'), refreshEndorsements);
           hide('review');
           show('home');
-        } else { // report
+        } else if (review) { // report
           const message = translator.translate('report-message', [review.givenNames, review.familyName]);
           app.dialog.alert(message, translator.translate('report-success'));
           hide('review');
@@ -560,22 +577,6 @@ async function publishCitizen(signature) {
   citizenFingerprint = String.fromCharCode(...new Uint8Array(citizenFingerprint));
   localStorage.setItem('citizenFingerprint', btoa(citizenFingerprint));
   publish(citizen, signature, 'citizen card');
-  if (previousSignature) {
-    certificateToPublish = {
-      schema: `https://directdemocracy.vote/json-schema/${DIRECTDEMOCRACY_VERSION_MAJOR}/certificate.schema.json`,
-      key: citizen.key,
-      signature: '',
-      published: Math.trunc(new Date().getTime() / 1000),
-      appKey: appKey,
-      appSignature: '',
-      type: 'report',
-      publication: previousSignature,
-      comment: certificateComment
-    };
-    certificateComment = '';
-    previousSignature = null;
-    Keystore.sign(PRIVATE_KEY_ALIAS, JSON.stringify(certificateToPublish), publishCertificate, keystoreFailure);
-  }
 }
 
 function publishCertificate(signature) {
