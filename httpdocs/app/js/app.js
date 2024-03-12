@@ -4,7 +4,7 @@ import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
-const TESTING = false; // if true, enforce the use of the test key for the app
+const TESTING = true; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
@@ -733,6 +733,7 @@ function updateChecksDisplay(action) {
     confirm = translator.translate('import');
     warning = translator.translate('import-warning');
     reviewChoiceClassList.add('display-none');
+    certificateComment = 'transferred';
     showChecks(['former']);
   } else if (action === 'review') {
     title = translator.translate('review-a-neighbor');
@@ -1926,7 +1927,7 @@ function onDeviceReady() {
       else if (certificateComment === 'transferred')
         app.dialog.preloader(translator.translate('importing'));
       else {
-        console.error('Unsupport certificateComment in review-confirm button click: "' + certificateComment + '"');
+        console.error('Unsupported certificate comment in review-confirm button click: "' + certificateComment + '"');
         return;
       }
       previousSignature = review.signature;
