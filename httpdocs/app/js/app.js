@@ -4,7 +4,7 @@ import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
-const TESTING = true; // if true, enforce the use of the test key for the app
+const TESTING = false; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
