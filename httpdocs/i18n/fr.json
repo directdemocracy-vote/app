@@ -2,5 +2,5 @@
   "a-smartphone-app": "une application mobile pour voter",
   "introduction": "<p>Ce site web héberge l'app de direct<b>democracy</b>. Elle est actuellement en développement.</p><p>L'app fonctionne sous iOS et Android. Elle nécessite un système d'exploitation authentique (non rooté).</p>",
   "more-info": "Pour plus d'informations, veuillez consulter <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.",
-  "invite": "%1 %2 aimerait que vous l'assermentiez.<br>Si vous êtes d'accord, installez l'app sur votre téléphone et cliquez sur le lien <b>Examiner</b> sur sa <a target=\"_blank\" href=\"https://notary.directdemocracy.vote/citizen.html?fingerprint=%3\">page de citoyen</a>."
+  "invite": "%1 %2 aimerait que vous le parrainiez.<br>Si vous êtes d'accord, installez l'app sur votre téléphone et cliquez sur le lien <b>Examiner</b> sur sa <a target=\"_blank\" href=\"https://notary.directdemocracy.vote/citizen.html?fingerprint=%3\">page de citoyen</a>."
 }
