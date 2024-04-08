@@ -1,5 +1,5 @@
 {
-  "adjust-photo": "Adjustez votre photo d'identité",
+  "adjust-photo": "Ajustez votre photo",
   "adult-confirm": "Je suis un adulte.",
   "ask-citizen-to-scan-this-code": "Faites scanner ce code",
   "back": "retour",
@@ -213,7 +213,7 @@
   "verification-error": "Erreur de vérification",
   "i-understand": "je comprends",
   "please-type": "Veuillez écrire %1 ici :",
-  "update-explanation": "Modifier votre carte de citoyen est nécessaire seulement si vous déménagez, si vous changez votre nom (mariage ?) ou si votre photo d'identité n'est plus à jour. Vos listes de référendum et pétitions seront vidées, de sorte que vous ne pourrez plus re-voter. Aussi vous perdrez tous vos parrainages et vous devrez être parrainé à nouveau pour pouvoir voter et signer. Notez que votre carte de citoyen modifiée doit toujours faire référence à vous et pas à quelqu'un d'autre. Voulez-vous vraiment modifier votre carte de citoyen ?",
+  "update-explanation": "Modifier votre carte de citoyen est nécessaire seulement si vous déménagez, si vous changez votre nom (mariage ?) ou si votre photo n'est plus à jour. Vos listes de référendum et pétitions seront vidées, de sorte que vous ne pourrez plus re-voter. Aussi vous perdrez tous vos parrainages et vous devrez être parrainé à nouveau pour pouvoir voter et signer. Notez que votre carte de citoyen modifiée doit toujours faire référence à vous et pas à quelqu'un d'autre. Voulez-vous vraiment modifier votre carte de citoyen ?",
   "update-title": "Modifier votre carte de citoyen ?",
   "export-explanation": "Si vous exportez votre carte de citoyen vers un autre téléphone, elle sera effacé du téléphone d'origine. Vous devez avoir un second téléphone sur lequel vous avez installé l'app directdemocracy et y avez effacé toute carte de citoyen. Sur ce second téléphone, suivez les instructions des boîtes de dialogue initiales pour importer votre carte de citoyen. Appuyez sur OK pour afficher le code QR d'export.",
   "export-title": "Exporter votre carte de citoyen ?",
