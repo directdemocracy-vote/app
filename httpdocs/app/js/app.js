@@ -300,7 +300,7 @@ async function readyToGo() {
     }
   });
   app.dialog.preloader(translator.translate('checking-update'));
-  const answer = await syncJsonFetch('https://olivier.michel.id/api/update.php');
+  const answer = await syncJsonFetch('https://app.directdemocracy.vote/api/update.php');
   app.dialog.close(); // preloader
   const version = answer.version.split('.');
   if (DIRECTDEMOCRACY_VERSION_MAJOR < version[0] ||
@@ -779,7 +779,7 @@ async function reviewCitizen(publication, action) {
   const lat = publication.latitude;
   const lon = publication.longitude;
   if (reviewMap == null) {
-    reviewMap = L.map('review-map', { dragging: false });
+    reviewMap = L.map('review-map');
     reviewMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -787,8 +787,8 @@ async function reviewCitizen(publication, action) {
     reviewMarker = L.marker([lat, lon]).addTo(reviewMap);
   } else
     reviewMarker.setLatLng([lat, lon]);
-  reviewMarker.bindPopup(lat + ', ' + lon);
   reviewMap.setView([lat, lon], 18);
+  reviewMarker.bindPopup(lat + ', ' + lon);
   reviewMap.on('contextmenu', function(event) {
     return false;
   });
@@ -806,14 +806,15 @@ async function reviewCitizen(publication, action) {
     reputation.textContent = formatReputation(answer.reputation);
     reputation.style.color = trustedColor(answer.trusted);
   }
+  hide('home');
+  show('review');
   answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
   const address = answer.display_name;
   reviewMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
   review = publication;
-  hide('home');
-  show('review');
   document.getElementById('review-page').scrollTop = 0;
   reviewAction = action;
+  reviewMap.invalidateSize();
 }
 
 async function getCitizen(reference, action) {
