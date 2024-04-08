@@ -787,7 +787,6 @@ async function reviewCitizen(publication, action) {
     reviewMarker = L.marker([lat, lon]).addTo(reviewMap);
   } else
     reviewMarker.setLatLng([lat, lon]);
-  reviewMap.setView([lat, lon], 18);
   reviewMarker.bindPopup(lat + ', ' + lon);
   reviewMap.on('contextmenu', function(event) {
     return false;
@@ -814,6 +813,7 @@ async function reviewCitizen(publication, action) {
   review = publication;
   document.getElementById('review-page').scrollTop = 0;
   reviewAction = action;
+  reviewMap.setView([lat, lon], 18);
   reviewMap.invalidateSize();
 }
 
