@@ -1,6 +1,6 @@
 {
   "a-smartphone-app": "a smartphone app allowing you to vote",
-  "introduction": "<p>This web site is the home of the sample <i>directdemocracy</i> app.</p><p>The app is available for both iOS and Android. It requires a genuine operating system (not rooted). Get it now from the Apple <a href=\"https://apps.apple.com/app/directdemocracy/id6471849230\" target=\"_blank\">App Store</a> or Android <a href=\"https://play.google.com/store/apps/details?id=vote.directdemocracy.app\" target=\"_blank\">Google Play</p>",
+  "introduction": "<p>This web site is the home of the sample <i>directdemocracy</i> app.</p><p>The app is available for both iOS and Android. It requires a genuine operating system (not rooted). Get it now from the Apple <a href=\"https://apps.apple.com/app/directdemocracy/id6471849230\" target=\"_blank\">App Store</a> or Android <a href=\"https://play.google.com/store/apps/details?id=vote.directdemocracy.app\" target=\"_blank\">Google Play</a>.</p>",
   "more-info": "More information is available from <a href=\"//directdemocracy.vote\" target=\"_blank\">directdemocracy.vote</a>.",
   "invite": "%1 %2 would like to be endorsed by you.<br>If you agree, install the app on your phone and click the <b>Review</b> link on their <a target=\"_blank\" href=\"https://notary.directdemocracy.vote/citizen.html?fingerprint=%3\">citizen page</a>."
 }
