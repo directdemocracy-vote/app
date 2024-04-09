@@ -1999,6 +1999,8 @@ function onDeviceReady() {
         attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(registerMap);
       registerMap.whenReady(function() {
+        const offset = device.platform === 'iOS' ? 210 : 104;
+        document.getElementById('register-map').style.height = `calc(100vh - ${offset}px)`;
         setTimeout(() => {
           this.invalidateSize();
         }, 0);
