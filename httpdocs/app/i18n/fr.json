@@ -1,5 +1,5 @@
 {
-  "adjust-photo": "Ajustez votre photo",
+  "adjust-picture": "Ajustez votre photo",
   "adult-confirm": "Je suis un adulte.",
   "ask-citizen-to-scan-this-code": "Faites scanner ce code",
   "back": "retour",
@@ -17,7 +17,7 @@
   "died": "décès",
   "distance-to-me": "Distance à moi : ",
   "done-home-location": "OK",
-  "done-photo": "OK",
+  "done-picture": "OK",
   "downloading-citizen": "Téléchargement de votre carte de citoyen...",
   "enter-family-name": "Saisissez votre nom de famille ici",
   "enter-given-names": "Saisissez votre ou vos prénom(s) ici",

@@ -77,6 +77,8 @@ let verifyButton = null;
 let review = null;
 let reviewMap = null;
 let reviewMarker = null;
+let registerMap = null;
+let registerMarker = null;
 let petitions = [];
 let referendums = [];
 let previousSignature = null;
@@ -85,6 +87,7 @@ let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 let beta = false;
+let croppie = null;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -1592,6 +1595,7 @@ function onDeviceReady() {
     localStorage.setItem('station', station);
   });
 
+  document.getElementById('register-location-button').style.marginTop = device.platform === 'iOS' ? '7px' : '-9px';
   deviceIsReady = true;
   readyToGo();
   showPage('splash');
@@ -1958,108 +1962,89 @@ function onDeviceReady() {
   document.getElementById('register-file-picture').addEventListener('click', uploadPicture);
 
   // setting-up the home location
-  document.getElementById('register-location-button').addEventListener('click', function() {
+  document.getElementById('register-location-button').addEventListener('click', async function() {
+    hide('home');
+    show('location-selector');
     disable('register-location-button');
-    let content = {};
-    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-  <div class="toolbar" style="margin-top:16px">
-    <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
-      <div class="right">
-        <a href="#" class="link sheet-close">${translator.translate('done-home-location')}</a>
-      </div>
-    </div>
-  </div>
-  <div class="sheet-modal-inner">
-    <div class="block margin-top-half no-padding-left no-padding-right">
-      <div class="text-align-center" style="width:100%"><small>${translator.translate('zoom-home-location')}</small></div>
-      <div id="register-map" style="width:100%;height:500px;margin-top:10px"></div>
-    </div>
-  </div>
-</div>`;
-    let sheet = app.sheet.create({
-      content: content.innerHTML,
-      on: {
-        opened: async function() {
-          let geolocation = false;
+    let geolocation = false;
+    async function updateLocation() {
+      registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
+      const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
+        `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`);
+      registerMarker.setPopupContent(
+        `${answer.display_name}<br><br><center style="color:#999">` +
+        `(${currentLatitude}, ${currentLongitude})</center>`
+      ).openPopup();
+    }
 
-          async function updateLocation() {
-            registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
-            const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
-              `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`);
-            registerMarker.setPopupContent(
-              `${answer.display_name}<br><br><center style="color:#999">` +
-              `(${currentLatitude}, ${currentLongitude})</center>`
-            ).openPopup();
-          }
-
-          function getGeolocationPosition(position) {
-            geolocation = true;
-            if (!beta) {
-              currentLatitude = roundGeo(position.coords.latitude);
-              currentLongitude = roundGeo(position.coords.longitude);
-            }
-            registerMap.setView([currentLatitude, currentLongitude], 18);
-            setTimeout(function() {
-              registerMarker.setLatLng([currentLatitude, currentLongitude]);
-              updateLocation();
-            }, 500);
-          }
-
-          function roundGeo(v) {
-            return Math.round(v * 1000000) / 1000000;
-          }
-          let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-          }).addTo(registerMap);
-          registerMap.whenReady(function() {
-            setTimeout(() => {
-              this.invalidateSize();
-            }, 0);
-          });
-          let registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
-            .bindPopup(currentLatitude + ',' + currentLongitude);
-          let e = document.getElementById('register-map');
-          const rect = e.getBoundingClientRect();
-          const h = screen.height - rect.top;
-          e.style.height = h + 'px';
-          updateLocation();
-          registerMap.on('contextmenu', function(event) {
-            return false;
-          });
-          registerMap.on('click', function onMapClick(e) {
-            currentLatitude = roundGeo(e.latlng.lat);
-            currentLongitude = roundGeo(e.latlng.lng);
-            registerMarker.setLatLng([currentLatitude, currentLongitude]);
-            updateLocation();
-          });
-          const response = await syncFetch('https://ipinfo.io/loc');
-          const answer = await response.text();
-          if (navigator.geolocation)
-            navigator.geolocation.getCurrentPosition(getGeolocationPosition);
-          if (geolocation)
-            return;
-          if (answer.startsWith('{')) {
-            const json = JSON.parse(answer);
-            console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
-          } else {
-            const coords = answer.split(',');
-            if (!beta) {
-              currentLatitude = parseFloat(coords[0]);
-              currentLongitude = parseFloat(coords[1]);
-            }
-          }
-          getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
-        },
-        close: function() {
-          document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
-          enable('register-location-button');
-          validateRegistration();
-        }
+    function getGeolocationPosition(position) {
+      geolocation = true;
+      if (!beta) {
+        currentLatitude = roundGeo(position.coords.latitude);
+        currentLongitude = roundGeo(position.coords.longitude);
       }
-    });
-    sheet.open();
+      registerMap.setView([currentLatitude, currentLongitude], 18);
+      setTimeout(function() {
+        registerMap.setView([currentLatitude, currentLongitude], 18);
+        registerMarker.setLatLng([currentLatitude, currentLongitude]);
+        updateLocation();
+      }, 500);
+    }
+
+    function roundGeo(v) {
+      return Math.round(v * 1000000) / 1000000;
+    }
+    if (!registerMap) {
+      registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(registerMap);
+      registerMap.whenReady(function() {
+        const rm = document.getElementById('register-map');
+        const rect = rm.getBoundingClientRect();
+        const offset = screen.height - rect.top - (device.platform === 'iOS' ? 0 : 50);
+        rm.style.height = `${offset}px`;
+        setTimeout(() => {
+          this.invalidateSize();
+        }, 0);
+      });
+      registerMap.on('contextmenu', function(event) {
+        return false;
+      });
+      registerMap.on('click', function onMapClick(e) {
+        currentLatitude = roundGeo(e.latlng.lat);
+        currentLongitude = roundGeo(e.latlng.lng);
+        registerMarker.setLatLng([currentLatitude, currentLongitude]);
+        updateLocation();
+      });
+      registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
+        .bindPopup(currentLatitude + ',' + currentLongitude);
+    }
+    updateLocation();
+    const response = await syncFetch('https://ipinfo.io/loc');
+    const answer = await response.text();
+    if (navigator.geolocation)
+      navigator.geolocation.getCurrentPosition(getGeolocationPosition);
+    if (geolocation)
+      return;
+    if (answer.startsWith('{')) {
+      const json = JSON.parse(answer);
+      console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
+    } else {
+      const coords = answer.split(',');
+      if (!beta) {
+        currentLatitude = parseFloat(coords[0]);
+        currentLongitude = parseFloat(coords[1]);
+      }
+    }
+    getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
+  });
+  document.getElementById('done-home-location').addEventListener('click', function() {
+    document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
+    hide('location-selector');
+    show('home');
+    enable('register-location-button');
+    validateRegistration();
   });
 
   document.getElementById('register-adult').addEventListener('input', validateRegistration);
@@ -2311,108 +2296,22 @@ function onDeviceReady() {
   });
   updateProposalsText('petition', count);
 
-  function validateRegistration() {
-    disable('register-button');
-    const givenNames = document.getElementById('register-given-names').value.trim();
-    if (givenNames === '')
-      return;
-    const familyName = document.getElementById('register-family-name').value.trim();
-    if (familyName === '')
-      return;
-    const picture = document.getElementById('register-picture').src;
-    if (picture.endsWith('images/default-picture.png'))
-      return;
-    const location = document.getElementById('register-location').value;
-    if (location === '')
-      return;
-    if (!document.getElementById('register-adult').checked)
-      return;
-    if (!document.getElementById('register-confirm').checked)
-      return;
-    const coords = location.split(', ');
-    const latitude = parseFloat(coords[0]);
-    const longitude = parseFloat(coords[1]);
-    if (previousSignature && certificateComment === 'updated' && // test for change
-      givenNames === citizen.givenNames &&
-      familyName === citizen.familyName &&
-      picture === citizen.picture &&
-      latitude === citizen.latitude &&
-      longitude === citizen.longitude)
-      return;
-    enable('register-button');
-  }
-
   function uploadPicture(event) {
     const sourceType = event.currentTarget === document.getElementById('register-camera-picture')
       ? Camera.PictureSourceType.CAMERA
       : Camera.PictureSourceType.PHOTOLIBRARY;
     function successCallback(imageData) {
-      let content = {};
-      content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-    <div class="toolbar">
-      <div class="toolbar-inner">
-        <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
-        <div class="right">
-          <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
-        </div>
-      </div>
-    </div>
-    <div class="sheet-modal-inner">
-      <div class="block no-margin no-padding">
-        <img id="edit-picture">
-      </div>
-      <div class="grid grid-cols-2">
-        <button class="button no-padding-right" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
-        <button class="button no-padding-left" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
-      </div>
-    </div>
-  </div>`;
-      let croppie = null;
-      let sheet = app.sheet.create({
-        content: content.innerHTML,
-        on: {
-          opened: function() {
-            let img = document.getElementById('edit-picture');
-            img.src = 'data:image/jpeg;base64,' + imageData;
-            let w = screen.width * 0.95;
-            croppie = new Croppie(img, {
-              boundary: {
-                width: w,
-                height: w * 4 / 3
-              },
-              viewport: {
-                width: w * 0.75,
-                height: w * 0.75 * 4 / 3
-              },
-              enableOrientation: true,
-              enableExif: true
-            });
-            document.getElementById('rotate-right').addEventListener('click', function() {
-              croppie.rotate(-90);
-            });
-            document.getElementById('rotate-left').addEventListener('click', function() {
-              croppie.rotate(90);
-            });
-          },
-          close: function() {
-            croppie.result({
-              type: 'base64',
-              size: {
-                width: 150,
-                height: 200
-              },
-              format: 'jpeg',
-              quality: 0.95
-            }).then(result => {
-              document.getElementById('register-picture').setAttribute('src', result);
-              croppie.destroy();
-              croppie = null;
-              validateRegistration();
-            });
-          }
-        }
+      let img = document.getElementById('edit-picture');
+      img.src = 'data:image/jpeg;base64,' + imageData;
+      let w = screen.width * 0.95;
+      croppie = new Croppie(img, {
+        boundary: { width: w, height: w * 4 / 3 },
+        viewport: { width: w * 0.75, height: w * 0.75 * 4 / 3 },
+        enableOrientation: true,
+        enableExif: true
       });
-      sheet.open();
+      hide('home');
+      show('picture-adjustor');
     }
     function errorCallback(message) {
       // console.log('Cannot get picture: ' + message);
@@ -2430,6 +2329,63 @@ function onDeviceReady() {
     navigator.camera.getPicture(successCallback, errorCallback, options);
   }
 };
+
+function validateRegistration() {
+  disable('register-button');
+  const givenNames = document.getElementById('register-given-names').value.trim();
+  if (givenNames === '')
+    return;
+  const familyName = document.getElementById('register-family-name').value.trim();
+  if (familyName === '')
+    return;
+  const picture = document.getElementById('register-picture').src;
+  if (picture.endsWith('images/default-picture.png'))
+    return;
+  const location = document.getElementById('register-location').value;
+  if (location === '')
+    return;
+  if (!document.getElementById('register-adult').checked)
+    return;
+  if (!document.getElementById('register-confirm').checked)
+    return;
+  const coords = location.split(', ');
+  const latitude = parseFloat(coords[0]);
+  const longitude = parseFloat(coords[1]);
+  if (previousSignature && certificateComment === 'updated' && // test for change
+    givenNames === citizen.givenNames &&
+    familyName === citizen.familyName &&
+    picture === citizen.picture &&
+    latitude === citizen.latitude &&
+    longitude === citizen.longitude)
+    return;
+  enable('register-button');
+}
+
+document.getElementById('rotate-right').addEventListener('click', function() {
+  croppie.rotate(-90);
+});
+document.getElementById('rotate-left').addEventListener('click', function() {
+  croppie.rotate(90);
+});
+
+document.getElementById('done-picture').addEventListener('click', function() {
+  croppie.result({
+    type: 'base64',
+    size: {
+      width: 150,
+      height: 200
+    },
+    format: 'jpeg',
+    quality: 0.95
+  }).then(result => {
+    document.getElementById('register-picture').setAttribute('src', result);
+    croppie.destroy();
+    croppie = null;
+    validateRegistration();
+    hide('picture-adjustor');
+    show('home');
+  });
+});
 
 function updateProposeLink() {
   let propose = document.getElementById('propose');
