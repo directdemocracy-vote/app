@@ -1960,106 +1960,82 @@ function onDeviceReady() {
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', function() {
     disable('register-location-button');
-    let content = {};
-    content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-  <div class="toolbar" style="margin-top:16px">
-    <div class="toolbar-inner">
-      <div class="left" style="margin-left:16px">${translator.translate('select-home-location')}</div>
-      <div class="right">
-        <a href="#" class="link sheet-close">${translator.translate('done-home-location')}</a>
-      </div>
-    </div>
-  </div>
-  <div class="sheet-modal-inner">
-    <div class="block margin-top-half no-padding-left no-padding-right">
-      <div class="text-align-center" style="width:100%"><small>${translator.translate('zoom-home-location')}</small></div>
-      <div id="register-map" style="width:100%;height:500px;margin-top:10px"></div>
-    </div>
-  </div>
-</div>`;
-    let sheet = app.sheet.create({
-      content: content.innerHTML,
-      on: {
-        opened: async function() {
-          let geolocation = false;
+    let geolocation = false;
+    async function updateLocation() {
+      registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
+      const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
+        `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`);
+      registerMarker.setPopupContent(
+        `${answer.display_name}<br><br><center style="color:#999">` +
+        `(${currentLatitude}, ${currentLongitude})</center>`
+      ).openPopup();
+    }
 
-          async function updateLocation() {
-            registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
-            const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
-              `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`);
-            registerMarker.setPopupContent(
-              `${answer.display_name}<br><br><center style="color:#999">` +
-              `(${currentLatitude}, ${currentLongitude})</center>`
-            ).openPopup();
-          }
-
-          function getGeolocationPosition(position) {
-            geolocation = true;
-            if (!beta) {
-              currentLatitude = roundGeo(position.coords.latitude);
-              currentLongitude = roundGeo(position.coords.longitude);
-            }
-            registerMap.setView([currentLatitude, currentLongitude], 18);
-            setTimeout(function() {
-              registerMarker.setLatLng([currentLatitude, currentLongitude]);
-              updateLocation();
-            }, 500);
-          }
-
-          function roundGeo(v) {
-            return Math.round(v * 1000000) / 1000000;
-          }
-          let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-          }).addTo(registerMap);
-          registerMap.whenReady(function() {
-            setTimeout(() => {
-              this.invalidateSize();
-            }, 0);
-          });
-          let registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
-            .bindPopup(currentLatitude + ',' + currentLongitude);
-          let e = document.getElementById('register-map');
-          const rect = e.getBoundingClientRect();
-          const h = screen.height - rect.top;
-          e.style.height = h + 'px';
-          updateLocation();
-          registerMap.on('contextmenu', function(event) {
-            return false;
-          });
-          registerMap.on('click', function onMapClick(e) {
-            currentLatitude = roundGeo(e.latlng.lat);
-            currentLongitude = roundGeo(e.latlng.lng);
-            registerMarker.setLatLng([currentLatitude, currentLongitude]);
-            updateLocation();
-          });
-          const response = await syncFetch('https://ipinfo.io/loc');
-          const answer = await response.text();
-          if (navigator.geolocation)
-            navigator.geolocation.getCurrentPosition(getGeolocationPosition);
-          if (geolocation)
-            return;
-          if (answer.startsWith('{')) {
-            const json = JSON.parse(answer);
-            console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
-          } else {
-            const coords = answer.split(',');
-            if (!beta) {
-              currentLatitude = parseFloat(coords[0]);
-              currentLongitude = parseFloat(coords[1]);
-            }
-          }
-          getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
-        },
-        close: function() {
-          document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
-          enable('register-location-button');
-          validateRegistration();
-        }
+    function getGeolocationPosition(position) {
+      geolocation = true;
+      if (!beta) {
+        currentLatitude = roundGeo(position.coords.latitude);
+        currentLongitude = roundGeo(position.coords.longitude);
       }
+      registerMap.setView([currentLatitude, currentLongitude], 18);
+      setTimeout(function() {
+        registerMarker.setLatLng([currentLatitude, currentLongitude]);
+        updateLocation();
+      }, 500);
+    }
+
+    function roundGeo(v) {
+      return Math.round(v * 1000000) / 1000000;
+    }
+    let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(registerMap);
+    registerMap.whenReady(function() {
+      setTimeout(() => {
+        this.invalidateSize();
+      }, 0);
     });
-    sheet.open();
+    let registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
+      .bindPopup(currentLatitude + ',' + currentLongitude);
+    let e = document.getElementById('register-map');
+    const rect = e.getBoundingClientRect();
+    const h = screen.height - rect.top;
+    e.style.height = h + 'px';
+    updateLocation();
+    registerMap.on('contextmenu', function(event) {
+      return false;
+    });
+    registerMap.on('click', function onMapClick(e) {
+      currentLatitude = roundGeo(e.latlng.lat);
+      currentLongitude = roundGeo(e.latlng.lng);
+      registerMarker.setLatLng([currentLatitude, currentLongitude]);
+      updateLocation();
+    });
+    const response = await syncFetch('https://ipinfo.io/loc');
+    const answer = await response.text();
+    if (navigator.geolocation)
+      navigator.geolocation.getCurrentPosition(getGeolocationPosition);
+    if (geolocation)
+      return;
+    if (answer.startsWith('{')) {
+      const json = JSON.parse(answer);
+      console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
+    } else {
+      const coords = answer.split(',');
+      if (!beta) {
+        currentLatitude = parseFloat(coords[0]);
+        currentLongitude = parseFloat(coords[1]);
+      }
+    }
+    getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
+    hide('home');
+    show('locationSelector');
+  });
+  document.getElementById('done-home-location').addEventListener('click', function() {
+    document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
+    enable('register-location-button');
+    validateRegistration();
   });
 
   document.getElementById('register-adult').addEventListener('input', validateRegistration);
@@ -2349,9 +2325,9 @@ function onDeviceReady() {
     function successCallback(imageData) {
       let content = {};
       content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-    <div class="toolbar">
+    <div class="toolbar" id="doneToolbar">
       <div class="toolbar-inner">
-        <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
+        <div class="left">${translator.translate('adjust-photo')}</div>
         <div class="right">
           <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
         </div>
@@ -2372,6 +2348,8 @@ function onDeviceReady() {
         content: content.innerHTML,
         on: {
           opened: function() {
+            if (device.platform === 'iOS')
+              document.getElementById('doneToolbar').style.marginTop='16px';
             let img = document.getElementById('edit-picture');
             img.src = 'data:image/jpeg;base64,' + imageData;
             let w = screen.width * 0.95;
