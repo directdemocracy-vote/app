@@ -77,6 +77,8 @@ let verifyButton = null;
 let review = null;
 let reviewMap = null;
 let reviewMarker = null;
+let registerMap = null;
+let registerMarker = null;
 let petitions = [];
 let referendums = [];
 let previousSignature = null;
@@ -85,6 +87,7 @@ let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 let beta = false;
+let croppie = null;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -1958,7 +1961,7 @@ function onDeviceReady() {
   document.getElementById('register-file-picture').addEventListener('click', uploadPicture);
 
   // setting-up the home location
-  document.getElementById('register-location-button').addEventListener('click', function() {
+  document.getElementById('register-location-button').addEventListener('click', async function() {
     disable('register-location-button');
     let geolocation = false;
     async function updateLocation() {
@@ -1987,31 +1990,33 @@ function onDeviceReady() {
     function roundGeo(v) {
       return Math.round(v * 1000000) / 1000000;
     }
-    let registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(registerMap);
-    registerMap.whenReady(function() {
-      setTimeout(() => {
-        this.invalidateSize();
-      }, 0);
-    });
-    let registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
-      .bindPopup(currentLatitude + ',' + currentLongitude);
+    if (!registerMap) {
+      registerMap = L.map('register-map').setView([currentLatitude, currentLongitude], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(registerMap);
+      registerMap.whenReady(function() {
+        setTimeout(() => {
+          this.invalidateSize();
+        }, 0);
+      });
+      registerMap.on('contextmenu', function(event) {
+        return false;
+      });
+      registerMap.on('click', function onMapClick(e) {
+        currentLatitude = roundGeo(e.latlng.lat);
+        currentLongitude = roundGeo(e.latlng.lng);
+        registerMarker.setLatLng([currentLatitude, currentLongitude]);
+        updateLocation();
+      });
+      registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
+        .bindPopup(currentLatitude + ',' + currentLongitude);
+    }
     let e = document.getElementById('register-map');
     const rect = e.getBoundingClientRect();
     const h = screen.height - rect.top;
     e.style.height = h + 'px';
     updateLocation();
-    registerMap.on('contextmenu', function(event) {
-      return false;
-    });
-    registerMap.on('click', function onMapClick(e) {
-      currentLatitude = roundGeo(e.latlng.lat);
-      currentLongitude = roundGeo(e.latlng.lng);
-      registerMarker.setLatLng([currentLatitude, currentLongitude]);
-      updateLocation();
-    });
     const response = await syncFetch('https://ipinfo.io/loc');
     const answer = await response.text();
     if (navigator.geolocation)
@@ -2030,9 +2035,11 @@ function onDeviceReady() {
     }
     getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
     hide('home');
-    show('locationSelector');
+    show('location-selector');
   });
   document.getElementById('done-home-location').addEventListener('click', function() {
+    hide('location-selector');
+    show('home');
     document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
     enable('register-location-button');
     validateRegistration();
@@ -2287,110 +2294,22 @@ function onDeviceReady() {
   });
   updateProposalsText('petition', count);
 
-  function validateRegistration() {
-    disable('register-button');
-    const givenNames = document.getElementById('register-given-names').value.trim();
-    if (givenNames === '')
-      return;
-    const familyName = document.getElementById('register-family-name').value.trim();
-    if (familyName === '')
-      return;
-    const picture = document.getElementById('register-picture').src;
-    if (picture.endsWith('images/default-picture.png'))
-      return;
-    const location = document.getElementById('register-location').value;
-    if (location === '')
-      return;
-    if (!document.getElementById('register-adult').checked)
-      return;
-    if (!document.getElementById('register-confirm').checked)
-      return;
-    const coords = location.split(', ');
-    const latitude = parseFloat(coords[0]);
-    const longitude = parseFloat(coords[1]);
-    if (previousSignature && certificateComment === 'updated' && // test for change
-      givenNames === citizen.givenNames &&
-      familyName === citizen.familyName &&
-      picture === citizen.picture &&
-      latitude === citizen.latitude &&
-      longitude === citizen.longitude)
-      return;
-    enable('register-button');
-  }
-
   function uploadPicture(event) {
     const sourceType = event.currentTarget === document.getElementById('register-camera-picture')
       ? Camera.PictureSourceType.CAMERA
       : Camera.PictureSourceType.PHOTOLIBRARY;
     function successCallback(imageData) {
-      let content = {};
-      content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-    <div class="toolbar" id="doneToolbar">
-      <div class="toolbar-inner">
-        <div class="left">${translator.translate('adjust-photo')}</div>
-        <div class="right">
-          <a href="#" class="link sheet-close">${translator.translate('done-photo')}</a>
-        </div>
-      </div>
-    </div>
-    <div class="sheet-modal-inner">
-      <div class="block no-margin no-padding">
-        <img id="edit-picture">
-      </div>
-      <div class="grid grid-cols-2">
-        <button class="button no-padding-right" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
-        <button class="button no-padding-left" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
-      </div>
-    </div>
-  </div>`;
-      let croppie = null;
-      let sheet = app.sheet.create({
-        content: content.innerHTML,
-        on: {
-          opened: function() {
-            if (device.platform === 'iOS')
-              document.getElementById('doneToolbar').style.marginTop='16px';
-            let img = document.getElementById('edit-picture');
-            img.src = 'data:image/jpeg;base64,' + imageData;
-            let w = screen.width * 0.95;
-            croppie = new Croppie(img, {
-              boundary: {
-                width: w,
-                height: w * 4 / 3
-              },
-              viewport: {
-                width: w * 0.75,
-                height: w * 0.75 * 4 / 3
-              },
-              enableOrientation: true,
-              enableExif: true
-            });
-            document.getElementById('rotate-right').addEventListener('click', function() {
-              croppie.rotate(-90);
-            });
-            document.getElementById('rotate-left').addEventListener('click', function() {
-              croppie.rotate(90);
-            });
-          },
-          close: function() {
-            croppie.result({
-              type: 'base64',
-              size: {
-                width: 150,
-                height: 200
-              },
-              format: 'jpeg',
-              quality: 0.95
-            }).then(result => {
-              document.getElementById('register-picture').setAttribute('src', result);
-              croppie.destroy();
-              croppie = null;
-              validateRegistration();
-            });
-          }
-        }
+      let img = document.getElementById('edit-picture');
+      img.src = 'data:image/jpeg;base64,' + imageData;
+      let w = screen.width * 0.95;
+      croppie = new Croppie(img, {
+        boundary: { width: w, height: w * 4 / 3 },
+        viewport: { width: w * 0.75, height: w * 0.75 * 4 / 3 },
+        enableOrientation: true,
+        enableExif: true
       });
-      sheet.open();
+      hide('home');
+      show('picture-adjustor');
     }
     function errorCallback(message) {
       // console.log('Cannot get picture: ' + message);
@@ -2408,6 +2327,63 @@ function onDeviceReady() {
     navigator.camera.getPicture(successCallback, errorCallback, options);
   }
 };
+
+function validateRegistration() {
+  disable('register-button');
+  const givenNames = document.getElementById('register-given-names').value.trim();
+  if (givenNames === '')
+    return;
+  const familyName = document.getElementById('register-family-name').value.trim();
+  if (familyName === '')
+    return;
+  const picture = document.getElementById('register-picture').src;
+  if (picture.endsWith('images/default-picture.png'))
+    return;
+  const location = document.getElementById('register-location').value;
+  if (location === '')
+    return;
+  if (!document.getElementById('register-adult').checked)
+    return;
+  if (!document.getElementById('register-confirm').checked)
+    return;
+  const coords = location.split(', ');
+  const latitude = parseFloat(coords[0]);
+  const longitude = parseFloat(coords[1]);
+  if (previousSignature && certificateComment === 'updated' && // test for change
+    givenNames === citizen.givenNames &&
+    familyName === citizen.familyName &&
+    picture === citizen.picture &&
+    latitude === citizen.latitude &&
+    longitude === citizen.longitude)
+    return;
+  enable('register-button');
+}
+
+document.getElementById('rotate-right').addEventListener('click', function() {
+  croppie.rotate(-90);
+});
+document.getElementById('rotate-left').addEventListener('click', function() {
+  croppie.rotate(90);
+});
+
+document.getElementById('done-picture').addEventListener('click', function() {
+  croppie.result({
+    type: 'base64',
+    size: {
+      width: 150,
+      height: 200
+    },
+    format: 'jpeg',
+    quality: 0.95
+  }).then(result => {
+    document.getElementById('register-picture').setAttribute('src', result);
+    croppie.destroy();
+    croppie = null;
+    validateRegistration();
+    hide('picture-adjustor');
+    show('home');
+  });
+});
 
 function updateProposeLink() {
   let propose = document.getElementById('propose');
