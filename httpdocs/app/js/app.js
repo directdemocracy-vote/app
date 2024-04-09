@@ -2002,7 +2002,7 @@ function onDeviceReady() {
       registerMap.whenReady(function() {
         const rm = document.getElementById('register-map');
         const rect = rm.getBoundingClientRect();
-        const offset = screen.height - rect.top - 50;
+        const offset = screen.height - rect.top - (device.platform === 'iOS' ? 0 : 50);
         rm.style.height = `${offset}px`;
         setTimeout(() => {
           this.invalidateSize();
