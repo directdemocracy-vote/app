@@ -1595,6 +1595,7 @@ function onDeviceReady() {
     localStorage.setItem('station', station);
   });
 
+  document.getElementById('register-location-button').style.marginTop = device.platform === 'iOS' ? '7px' : '-9px';
   deviceIsReady = true;
   readyToGo();
   showPage('splash');
@@ -2001,7 +2002,7 @@ function onDeviceReady() {
       registerMap.whenReady(function() {
         const rm = document.getElementById('register-map');
         const rect = rm.getBoundingClientRect();
-        const offset = screen.height - rect.top;
+        const offset = screen.height - rect.top - 50;
         rm.style.height = `${offset}px`;
         setTimeout(() => {
           this.invalidateSize();
