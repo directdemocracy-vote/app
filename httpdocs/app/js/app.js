@@ -1962,6 +1962,8 @@ function onDeviceReady() {
 
   // setting-up the home location
   document.getElementById('register-location-button').addEventListener('click', async function() {
+    hide('home');
+    show('location-selector');
     disable('register-location-button');
     let geolocation = false;
     async function updateLocation() {
@@ -1982,6 +1984,7 @@ function onDeviceReady() {
       }
       registerMap.setView([currentLatitude, currentLongitude], 18);
       setTimeout(function() {
+        registerMap.setView([currentLatitude, currentLongitude], 18);
         registerMarker.setLatLng([currentLatitude, currentLongitude]);
         updateLocation();
       }, 500);
@@ -2012,10 +2015,6 @@ function onDeviceReady() {
       registerMarker = L.marker([currentLatitude, currentLongitude]).addTo(registerMap)
         .bindPopup(currentLatitude + ',' + currentLongitude);
     }
-    let e = document.getElementById('register-map');
-    const rect = e.getBoundingClientRect();
-    const h = screen.height - rect.top;
-    e.style.height = h + 'px';
     updateLocation();
     const response = await syncFetch('https://ipinfo.io/loc');
     const answer = await response.text();
@@ -2034,13 +2033,11 @@ function onDeviceReady() {
       }
     }
     getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
-    hide('home');
-    show('location-selector');
   });
   document.getElementById('done-home-location').addEventListener('click', function() {
+    document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
     hide('location-selector');
     show('home');
-    document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
     enable('register-location-button');
     validateRegistration();
   });
