@@ -2349,7 +2349,7 @@ function onDeviceReady() {
     function successCallback(imageData) {
       let content = {};
       content.innerHTML = `<div class="sheet-modal" style="height: 100%">
-    <div class="toolbar" style="margin-top:16px">
+    <div class="toolbar">
       <div class="toolbar-inner">
         <div class="left" style="margin-left:16px">${translator.translate('adjust-photo')}</div>
         <div class="right">
@@ -2358,12 +2358,12 @@ function onDeviceReady() {
       </div>
     </div>
     <div class="sheet-modal-inner">
-      <div class="block margin-top-half no-padding-left no-padding-right">
-        <p><img id="edit-picture"></p>
-        <div class="row">
-          <button class="col button" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
-          <button class="col button" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
-        </div>
+      <div class="block no-margin no-padding">
+        <img id="edit-picture">
+      </div>
+      <div class="grid grid-cols-2">
+        <button class="button no-padding-right" id="rotate-right"><i class="icon f7-icons">rotate_right_fill</i></button>
+        <button class="button no-padding-left" id="rotate-left"><i class="icon f7-icons">rotate_left_fill</i></button>
       </div>
     </div>
   </div>`;
