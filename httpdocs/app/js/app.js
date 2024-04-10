@@ -2308,13 +2308,14 @@ function onDeviceReady() {
         boundary: { width: w, height: w * 4 / 3 },
         viewport: { width: w * 0.75, height: w * 0.75 * 4 / 3 },
         enableOrientation: true,
-        enableExif: true
+        enableExif: true,
+        showZoomer: false
       });
       hide('home');
       show('picture-adjustor');
     }
     function errorCallback(message) {
-      // console.log('Cannot get picture: ' + message);
+      console.error('Cannot get picture: ' + message);
     }
     const options = {
       quality: 90,
@@ -2364,6 +2365,7 @@ function validateRegistration() {
 document.getElementById('rotate-right').addEventListener('click', function() {
   croppie.rotate(-90);
 });
+
 document.getElementById('rotate-left').addEventListener('click', function() {
   croppie.rotate(90);
 });
