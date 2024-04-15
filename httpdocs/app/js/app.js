@@ -445,7 +445,7 @@ function deleteCitizen() {
   updateEndorsements();
   document.getElementById('register-given-names').value = '';
   document.getElementById('register-family-name').value = '';
-  document.getElementById('register-picture').src = 'images/default-picture.png';
+  document.getElementById('register-picture').src = 'images/profile.png';
   document.getElementById('register-location').value = '';
   document.getElementById('register-adult').checked = false;
   document.getElementById('register-confirm').checked = false;
@@ -2340,7 +2340,7 @@ function validateRegistration() {
   if (familyName === '')
     return;
   const picture = document.getElementById('register-picture').src;
-  if (picture.endsWith('images/default-picture.png'))
+  if (picture.endsWith('images/profile.png'))
     return;
   const location = document.getElementById('register-location').value;
   if (location === '')
