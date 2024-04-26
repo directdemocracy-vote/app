@@ -43,9 +43,8 @@ let citizen = {
   appSignature: '',
   givenNames: '',
   familyName: '',
-  picture: '',
-  latitude: 0,
-  longitude: 0
+  commune: 0,
+  picture: ''
 };
 let citizenFingerprint = null;
 let endorsements = [];
@@ -75,8 +74,6 @@ let referendumProposal = null;
 let voteButton = null;
 let verifyButton = null;
 let review = null;
-let reviewMap = null;
-let reviewMarker = null;
 let registerMap = null;
 let registerMarker = null;
 let petitions = [];
@@ -88,6 +85,8 @@ let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 let beta = false;
 let croppie = null;
+let communeName = '';
+let commune = 0;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -322,6 +321,20 @@ async function readyToGo() {
     await downloadCitizen(true, 'downloading-citizen');
 }
 
+function getCommuneName(address) {
+  const order = ['village', 'suburb', 'borough', 'town', 'municipality', 'city_district',
+    'subdivision', 'city', 'district', 'county'];
+  for (const a of order) {
+    if (address.hasOwnProperty(a)) {
+      if (address.country_code === 'fr' && a === 'suburb' && address['suburb'].indexOf(address['city']) === -1)
+        return address['city'] + ' ' + address['suburb'];
+      else
+        return address[a];
+    }
+  }
+  return 'Unknown';
+}
+
 function setBetaCoordinates() {
   if (translator.language === 'fr') { // French beta test in Le Poil, France
     currentLatitude = 43.925 + 0.035 * Math.random();
@@ -446,7 +459,9 @@ function deleteCitizen() {
   document.getElementById('register-given-names').value = '';
   document.getElementById('register-family-name').value = '';
   document.getElementById('register-picture').src = 'images/profile.png';
-  document.getElementById('register-location').value = '';
+  const c = document.getElementById('register-commune');
+  c.textContent = translator.translate('select-home-location');
+  c.style.fontStyle = 'italic';
   document.getElementById('register-adult').checked = false;
   document.getElementById('register-confirm').checked = false;
   showPage('splash');
@@ -654,7 +669,7 @@ function showChecks(checks) {
 
 function showEndorseChecks(inPerson, warning) {
   translator.translateElement(document.getElementById('review-know-text'), inPerson ? 'review-standing' : 'review-know');
-  showChecks(['know', 'adult', 'picture', 'name', 'coords']);
+  showChecks(['know', 'adult', 'name', 'commune', 'picture']);
   const reviewConfirm = document.getElementById('review-confirm');
   translator.translateElement(reviewConfirm, 'endorse');
   certificateComment = inPerson ? 'in-person' : 'remote';
@@ -775,26 +790,12 @@ async function reviewCitizen(publication, action) {
   document.getElementById('review-picture').src = publication.picture;
   document.getElementById('review-given-names').textContent = publication.givenNames;
   document.getElementById('review-family-name').textContent = publication.familyName;
-  document.getElementById('review-coords').textContent = publication.latitude + ', ' + publication.longitude;
+  document.getElementById('review-commune').textContent = publication.commune;
   const published = new Date(publication.published * 1000);
   document.getElementById('review-published').textContent = published.toISOString().slice(0, 10);
   document.getElementById('review-reputation').textContent = '...';
-  const lat = publication.latitude;
-  const lon = publication.longitude;
-  if (reviewMap == null) {
-    reviewMap = L.map('review-map');
-    reviewMap.whenReady(function() { setTimeout(() => { this.invalidateSize(); }, 0); });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(reviewMap);
-    reviewMarker = L.marker([lat, lon]).addTo(reviewMap);
-  } else
-    reviewMarker.setLatLng([lat, lon]);
-  reviewMarker.bindPopup(lat + ', ' + lon);
-  reviewMap.on('contextmenu', function(event) {
-    return false;
-  });
-  const distance = distanceAsText(citizen.latitude, citizen.longitude, publication.latitude, publication.longitude);
+  const distance = 0; // FIXME
+  // It was ditance = distanceAsText(citizen.latitude, citizen.longitude, lat, lon);
   document.getElementById('distance').textContent = distance;
   translator.translateElement(document.getElementById('report-radio'), action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
@@ -810,14 +811,9 @@ async function reviewCitizen(publication, action) {
   }
   hide('home');
   show('review');
-  answer = await syncJsonFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`);
-  const address = answer.display_name;
-  reviewMarker.setPopupContent(`${address}<br><br><center style="color:#999">(${lat}, ${lon})</center>`).openPopup();
   review = publication;
   document.getElementById('review-page').scrollTop = 0;
   reviewAction = action;
-  reviewMap.setView([lat, lon], 18);
-  reviewMap.invalidateSize();
 }
 
 async function getCitizen(reference, action) {
@@ -1386,7 +1382,7 @@ async function getProposal(fingerprint, type) {
   else if (type === 'referendum' && !proposal.secret) {
     app.dialog.alert(title + translator.translate('not-a-referendum-message'),
       translator.translate('not-a-referendum-title'));
-  } else if (!pointInPolygons([citizen.longitude, citizen.latitude], proposal.areaPolygons)) {
+  } else if (false) { // FIXME
     const areaName = proposal.areaName[0].split('=')[1];
     const message = translator.translate(type === 'petition' ? 'wrong-petition-area' : 'wrong-referendum-area', areaName);
     app.dialog.alert(`${title}${message}`, translator.translate('wrong-area'));
@@ -1655,7 +1651,7 @@ function onDeviceReady() {
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
-      document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
+      document.getElementById('register-commune').textContent = communeName;
       document.getElementById('register-adult').checked = true;
       document.getElementById('register-confirm').checked = false;
       showPage('register');
@@ -1742,7 +1738,7 @@ function onDeviceReady() {
       document.getElementById('review-adult-check').checked &&
       document.getElementById('review-picture-check').checked &&
       document.getElementById('review-name-check').checked &&
-      document.getElementById('review-coords-check').checked)
+      document.getElementById('review-commune-check').checked)
       enable('review-confirm');
     else
       disable('review-confirm');
@@ -1751,7 +1747,7 @@ function onDeviceReady() {
   document.getElementById('review-adult-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-picture-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-name-check').addEventListener('click', endorsementChecks);
-  document.getElementById('review-coords-check').addEventListener('click', endorsementChecks);
+  document.getElementById('review-commune-check').addEventListener('click', endorsementChecks);
 
   function revokeChecks(event) {
     const died = document.getElementById('review-died-check');
@@ -1942,9 +1938,8 @@ function onDeviceReady() {
         citizen.published = Math.trunc(new Date().getTime() / 1000);
         citizen.givenNames = review.givenNames;
         citizen.familyName = review.familyName;
+        citizen.commune = review.commune;
         citizen.picture = review.picture;
-        citizen.latitude = review.latitude;
-        citizen.longitude = review.longitude;
         citizen.signature = '';
         citizen.appKey = appKey;
         citizen.appSignature = '';
@@ -1970,9 +1965,12 @@ function onDeviceReady() {
     async function updateLocation() {
       registerMarker.setPopupContent(currentLatitude + ', ' + currentLongitude).openPopup();
       const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
-        `?format=json&lat=${currentLatitude}&lon=${currentLongitude}&zoom=20`);
+        `?lat=${currentLatitude}&lon=${currentLongitude}&format=json&zoom=11` +
+        `&accept-language=${translator.language}`);
+      communeName = getCommuneName(answer.address);
+      commune = answer.osm_id;
       registerMarker.setPopupContent(
-        `${answer.display_name}<br><br><center style="color:#999">` +
+        `<b>${communeName}</b><br><i style="color:#999">${answer.display_name}</i><br><center style="color:#999">` +
         `(${currentLatitude}, ${currentLongitude})</center>`
       ).openPopup();
     }
@@ -2040,7 +2038,9 @@ function onDeviceReady() {
     getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
   });
   document.getElementById('done-home-location').addEventListener('click', function() {
-    document.getElementById('register-location').value = currentLatitude + ', ' + currentLongitude;
+    const rc = document.getElementById('register-commune');
+    rc.style.fontStyle = ''; // remove italic
+    rc.textContent = communeName;
     hide('location-selector');
     show('home');
     enable('register-location-button');
@@ -2073,9 +2073,8 @@ function onDeviceReady() {
       citizen.published = Math.trunc(new Date().getTime() / 1000);
       citizen.givenNames = document.getElementById('register-given-names').value.trim();
       citizen.familyName = document.getElementById('register-family-name').value.trim();
+      citizen.commune = commune;
       citizen.picture = document.getElementById('register-picture').src;
-      citizen.latitude = currentLatitude;
-      citizen.longitude = currentLongitude;
       citizen.appKey = appKey;
       citizen.appSignature = '';
       citizen.signature = '';
@@ -2339,25 +2338,20 @@ function validateRegistration() {
   const familyName = document.getElementById('register-family-name').value.trim();
   if (familyName === '')
     return;
-  const picture = document.getElementById('register-picture').src;
-  if (picture.endsWith('images/profile.png'))
+  if (commune === 0)
     return;
-  const location = document.getElementById('register-location').value;
-  if (location === '')
+  if (document.getElementById('register-picture').src.endsWith('images/profile.png'))
     return;
   if (!document.getElementById('register-adult').checked)
     return;
   if (!document.getElementById('register-confirm').checked)
     return;
-  const coords = location.split(', ');
-  const latitude = parseFloat(coords[0]);
-  const longitude = parseFloat(coords[1]);
+  const picture = document.getElementById('register-picture').src;
   if (previousSignature && certificateComment === 'updated' && // test for change
     givenNames === citizen.givenNames &&
     familyName === citizen.familyName &&
-    picture === citizen.picture &&
-    latitude === citizen.latitude &&
-    longitude === citizen.longitude)
+    commune === citizen.commune &&
+    picture === citizen.picture)
     return;
   enable('register-button');
 }
@@ -2392,26 +2386,26 @@ document.getElementById('done-picture').addEventListener('click', function() {
 function updateProposeLink() {
   let propose = document.getElementById('propose');
   if (propose)
-    propose.setAttribute('href', `${judge}/propose.html?latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    propose.setAttribute('href', `${judge}/propose.html?commune=${citizen.commune}`);
 }
 
 function updateSearchLinks() {
   const searchMe = document.getElementById('search-me');
   if (searchMe)
-    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true&commune=${citizen.commune}`);
   const searchNeighbor = document.getElementById('search-neighbor');
   if (searchNeighbor)
-    searchNeighbor.setAttribute('href', `${notary}?tab=citizens&latitude=${citizen.latitude}&longitude=${citizen.longitude}`);
+    searchNeighbor.setAttribute('href', `${notary}?tab=citizens&commune=${citizen.commune}`);
   const searchPetitions = document.getElementById('search-petition');
   if (searchPetitions) {
     searchPetitions.setAttribute('href',
-      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}` +
+      `${notary}?tab=proposals&commune=${citizen.commune}` +
       '&referendum=false&petition=true&open=true&closed=false&search=true');
   }
   const searchReferendums = document.getElementById('search-referendum');
   if (searchReferendums) {
     searchReferendums.setAttribute('href',
-      `${notary}?tab=proposals&latitude=${citizen.latitude}&longitude=${citizen.longitude}` +
+      `${notary}?tab=proposals&commune=${citizen.commune}` +
       '&referendum=true&petition=false&open=true&closed=false&search=true');
   }
 }
@@ -2423,15 +2417,34 @@ function updateCitizenCard() {
   document.getElementById('register-given-names').value = citizen.givenNames;
   document.getElementById('citizen-family-name').textContent = citizen.familyName;
   document.getElementById('register-family-name').value = citizen.familyName;
-  document.getElementById('citizen-coords').innerHTML =
-    '<a class="link external" target="_blank" href="https://openstreetmap.org/?mlat=' +
-    citizen.latitude + '&mlon=' + citizen.longitude + '&zoom=12">' +
-    citizen.latitude + ', ' + citizen.longitude + '</a>';
-  document.getElementById('register-location').value = citizen.latitude + ', ' + citizen.longitude;
-  let published = new Date(citizen.published * 1000);
+  document.getElementById('citizen-commune').href = `https://openstreetmap.org/relation/${citizen.commune}`;
+
+  const published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').textContent = published.toISOString().slice(0, 10);
   citizenFingerprint = atob(localStorage.getItem('citizenFingerprint'));
-  getReputationFromJudge();
+
+  if (document.getElementById('citizen-commune').textContent === '...') {
+    fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${citizen.commune}&accept-language=${translator.language}&format=json`)
+      .then(response => response.json())
+      .then(answer => {
+        communeName = getCommuneName(answer[0].address);
+        document.getElementById('citizen-commune').textContent = communeName;
+        document.getElementById('register-commune').textContent = communeName;
+      });
+  }
+
+  fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`)
+    .then(response => response.json())
+    .then(answer => {
+      if (answer.error) {
+        app.dialog.alert(answer.error, 'Could not get reputation from judge.');
+        updateReputation('N/A', 0);
+        iAmTrustedByJudge = false;
+      } else {
+        iAmTrustedByJudge = answer.trusted;
+        updateReputation(answer.reputation, answer.trusted);
+      }
+    });
   updateEndorsements();
 }
 
@@ -2512,18 +2525,6 @@ function updateReputation(reputationValue, trusted) {
   updateProposals(referendums);
 }
 
-async function getReputationFromJudge() {
-  const answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(citizen.key)}`);
-  if (answer.error) {
-    app.dialog.alert(answer.error, 'Could not get reputation from judge.');
-    updateReputation('N/A', 0);
-    iAmTrustedByJudge = false;
-  } else {
-    iAmTrustedByJudge = answer.trusted;
-    updateReputation(answer.reputation, answer.trusted);
-  }
-}
-
 async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadline, proposalTrust, type) {
   const url = `${notary}/api/reputation.php?judge=${encodeURIComponent(judgeKey)}&key=${encodeURIComponent(citizen.key)}`;
   const answer = await syncJsonFetch(url);
@@ -2579,8 +2580,7 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
 }
 
 async function getLocalAreaFromProposalJudge(judgeKey) {
-  const url = `${notary}/api/publish_area.php?judge=${encodeURIComponent(judgeKey)}` +
-                                             `&lat=${citizen.latitude}&lon=${citizen.longitude}`;
+  const url = `${notary}/api/publish_area.php?judge=${encodeURIComponent(judgeKey)}&commune=${citizen.commune}`;
   const answer = await syncJsonFetch(url);
   if (answer.error) {
     app.dialog.alert(answer.error, 'Could not get local area from notary');
@@ -2676,7 +2676,8 @@ function updateEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const distance = distanceAsText(citizen.latitude, citizen.longitude, endorsement.latitude, endorsement.longitude);
+    const distance = 0; // FIXME:
+    // It was: distanceAsText(citizen.latitude, citizen.longitude, endorsement.latitude, endorsement.longitude);
     newElement(div, 'div', 'item-subtitle align-self-flex-start', distance);
     let icon;
     let day;

@@ -122,9 +122,9 @@
               <div style="font-size:120%"><b id="review-given-names"></b></div>
               <div data-i18n="family-name"></div>
               <div style="font-size:120%"><b id="review-family-name"></b></div>
-              <div data-i18n="latitude-longitude-header"></div>
-              <div><b id="review-coords"></b></div>
-              <div><span data-i18n="created"></span><b id="review-published"></b></div>
+              <div data-i18n="commune-header"></div>
+              <div><b id="review-commune"></b></div>
+              <div><span data-i18n="issued"></span><b id="review-published"></b></div>
               <div class="display-flex justify-content-space-between">
                 <div>
                   <span data-i18n="reputation"></span><b id="review-reputation">...</b>
@@ -201,9 +201,9 @@
                   </div>
                 </label>
               </li>
-              <li id="review-coords-check-item" class="display-none">
+              <li id="review-commune-check-item" class="display-none">
                 <label class="checkbox no-ripple item-content">
-                  <input type="checkbox" id="review-coords-check">
+                  <input type="checkbox" id="review-commune-check">
                   <i class="icon icon-checkbox"></i>
                   <div class="item-inner">
                     <div class="item-title margin-left-half" data-i18n="review-address-ok"></div>
@@ -419,6 +419,27 @@
                       </div>
                     </div>
                   </li>
+
+
+                  <li class="item-content item-input item-input-outline">
+                    <div class="item-inner padding-bottom-half">
+                      <div class="item-title item-label" data-i18n="commune"></div>
+                      <div class="display-flex flex-direction-row">
+                        <div class="display-flex flex-direction-column" style="width:69vw">
+                          <div class="item-input-wrap">
+                            <div id="register-commune" data-i18n="select-home-location" style="font-style:italic">
+                            </div>
+                          </div>
+                        </div>
+                        <div class="display-flex flex-direction-column">
+                          <button class="button" id="register-location-button">
+                            <i class="icon f7-icons">placemark_fill</i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+
                   <li class="item-content item-input item-input-outline">
                     <div class="item-inner">
                       <div class="item-title item-label" data-i18n="picture"></div>
@@ -427,7 +448,7 @@
                         <img id="register-picture" src="images/profile.png">
                         <div class="display-flex flex-direction-column justify-content-center margin-right">
                           <div class="item-title margin-left margin-bottom padding-bottom" style="font-size:80%"
-                            data-i18n="provide-picture">
+                            data-i18n="publish-picture">
                           </div>
                           <button class="button margin-left" id="register-camera-picture">
                             <i class="icon f7-icons">camera_fill</i>
@@ -436,18 +457,6 @@
                             <i class="icon f7-icons">folder_fill</i>
                           </button>
                         </div>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="item-content item-input item-input-outline">
-                    <div class="item-inner">
-                      <div class="item-title item-label" data-i18n="home-location"></div>
-                      <div class="item-input-wrap display-flex">
-                        <input type="text" style="width:200%" id="register-location" data-i18n="latitude-longitude-text"
-                          disabled required>
-                        <button class="button" id="register-location-button" style="margin-top:7px">
-                          <i class="icon f7-icons">placemark_fill</i>
-                        </button>
                       </div>
                     </div>
                   </li>
@@ -481,14 +490,18 @@
                 <div class="display-flex">
                   <img id="citizen-picture" style="width:150px;height:200px">
                   <div class="margin-left">
-                    <div data-i18n="given-names"></div>
-                    <div style="font-size:120%"><b id="citizen-given-names"></b></div>
-                    <div data-i18n="family-name"></div>
-                    <div style="font-size:120%"><b id="citizen-family-name"></b></div>
-                    <div data-i18n="latitude-longitude-header"></div>
-                    <div><b id="citizen-coords"></b></div>
-                    <div><span data-i18n="created"></span><b id="citizen-published"></b></div>
-                    <div><span data-i18n="reputation"></span><span id="citizen-reputation">...</span></div>
+                    <div data-i18n="given-names" style="font-size:80%"></div>
+                    <div id="citizen-given-names" style="font-size:120%;font-weight:bold"></div>
+                    <div data-i18n="family-name" style="font-size:80%"></div>
+                    <div id="citizen-family-name" style="font-size:120%;font-weight:bold"></div>
+                    <div data-i18n="commune-header" style="font-size:80%"></div>
+                    <div>
+                      <a id="citizen-commune" class="link external" target="_blank" style="font-weight:bold">...</a>
+                    </div>
+                    <div data-i18n="issued" style="font-size:80%"></div>
+                    <div id="citizen-published" style="font-weight:bold"></div>
+                    <div data-i18n="reputation" style="font-size:80%"></div>
+                    <div id="citizen-reputation">...</div>
                   </div>
                 </div>
               </div>
