@@ -4,11 +4,11 @@ import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
-const TESTING = false; // if true, enforce the use of the test key for the app
+const TESTING = true; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '65';
+const DIRECTDEMOCRACY_VERSION_BUILD = '65'; // FIXME: set TESTING to false before releasing!
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
@@ -43,7 +43,7 @@ let citizen = {
   appSignature: '',
   givenNames: '',
   familyName: '',
-  commune: 0,
+  locality: 0,
   picture: ''
 };
 let citizenFingerprint = null;
@@ -85,8 +85,10 @@ let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
 let beta = false;
 let croppie = null;
-let communeName = '';
-let commune = 0;
+let localityName = '';
+let localityLatitude = false;
+let localityLongitude = false;
+let locality = 0;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -321,7 +323,7 @@ async function readyToGo() {
     await downloadCitizen(true, 'downloading-citizen');
 }
 
-function getCommuneName(address) {
+function getLocalityName(address) {
   const order = ['village', 'suburb', 'borough', 'town', 'municipality', 'city_district',
     'subdivision', 'city', 'district', 'county'];
   for (const a of order) {
@@ -459,7 +461,7 @@ function deleteCitizen() {
   document.getElementById('register-given-names').value = '';
   document.getElementById('register-family-name').value = '';
   document.getElementById('register-picture').src = 'images/profile.png';
-  const c = document.getElementById('register-commune');
+  const c = document.getElementById('register-locality');
   c.textContent = translator.translate('select-home-location');
   c.style.fontStyle = 'italic';
   document.getElementById('register-adult').checked = false;
@@ -669,7 +671,7 @@ function showChecks(checks) {
 
 function showEndorseChecks(inPerson, warning) {
   translator.translateElement(document.getElementById('review-know-text'), inPerson ? 'review-standing' : 'review-know');
-  showChecks(['know', 'adult', 'name', 'commune', 'picture']);
+  showChecks(['know', 'adult', 'name', 'locality', 'picture']);
   const reviewConfirm = document.getElementById('review-confirm');
   translator.translateElement(reviewConfirm, 'endorse');
   certificateComment = inPerson ? 'in-person' : 'remote';
@@ -692,7 +694,7 @@ function showRevokeChecks() {
 }
 
 function showReportChecks() {
-  showChecks(['report_ghost', 'report_duplicate', 'report_dead', 'report_address',
+  showChecks(['report_ghost', 'report_duplicate', 'report_dead', 'report_locality',
     'report_name', 'report_picture', 'report_other']);
   const reviewConfirm = document.getElementById('review-confirm');
   translator.translateElement(reviewConfirm, 'report');
@@ -723,7 +725,7 @@ function updateChecksDisplay(action) {
   }
   if (action.startsWith('revoked+')) { // already revoked
     let warning = translator.translate('you-revoked-this-neighbor') + ' (';
-    if (action.search('address') !== -1)
+    if (action.search('locality') !== -1)
       warning += translator.translate('moved') + ', ';
     if (action.search('name') !== -1)
       warning += translator.translate('renamed') + ', ';
@@ -790,13 +792,24 @@ async function reviewCitizen(publication, action) {
   document.getElementById('review-picture').src = publication.picture;
   document.getElementById('review-given-names').textContent = publication.givenNames;
   document.getElementById('review-family-name').textContent = publication.familyName;
-  document.getElementById('review-commune').textContent = publication.commune;
+  const reviewLocality = document.getElementById('review-locality');
+  reviewLocality.href = `https://openstreetmap.org/relation/${publication.locality}`;
+  if (publication.locality === citizen.locality)
+    reviewLocality.textContent = localityName;
+  else {
+    reviewLocality.textContent = '...';
+    fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${publication.locality}&accept-language=${translator.language}&format=json`)
+      .then(response => response.json())
+      .then(answer => {
+        reviewLocality.textContent = getLocalityName(answer[0].address);
+        const distance = distanceAsText(localityLatitude, localityLongitude,
+          parseFloat(answer[0].lat), parseFloat(answer[0].lon));
+        document.getElementById('distance').textContent = distance;
+      });
+  }
   const published = new Date(publication.published * 1000);
   document.getElementById('review-published').textContent = published.toISOString().slice(0, 10);
   document.getElementById('review-reputation').textContent = '...';
-  const distance = 0; // FIXME
-  // It was ditance = distanceAsText(citizen.latitude, citizen.longitude, lat, lon);
-  document.getElementById('distance').textContent = distance;
   translator.translateElement(document.getElementById('report-radio'), action === 'review' ? 'report' : 'revoke');
   const reputation = document.getElementById('review-reputation');
   let answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(publication.key)}`);
@@ -1166,11 +1179,6 @@ function addProposal(proposal, type, open) {
           enable(button);
           return;
         }
-        const area = await getLocalAreaFromProposalJudge(proposal.key);
-        if (area === 0) {
-          enable(button);
-          return;
-        }
         if (proposal.ballot === null) {
           let ballotBytes = new Uint8Array(32);
           crypto.getRandomValues(ballotBytes);
@@ -1183,7 +1191,7 @@ function addProposal(proposal, type, open) {
         vote = {
           referendum: proposal.signature,
           number: proposal.number,
-          area: area,
+          locality: citizen.locality,
           ballot: proposal.ballot,
           answer: answer
         };
@@ -1199,7 +1207,7 @@ function addProposal(proposal, type, open) {
           appKey: appKey,
           appSignature: '',
           referendum: proposal.signature,
-          area: area
+          locality: citizen.locality
         };
         voteButton = button;
         verifyButton = vButton;
@@ -1651,7 +1659,7 @@ function onDeviceReady() {
       document.getElementById('register-given-names').value = citizen.givenNames;
       document.getElementById('register-family-name').value = citizen.familyName;
       document.getElementById('register-picture').src = citizen.picture;
-      document.getElementById('register-commune').textContent = communeName;
+      document.getElementById('register-locality').textContent = localityName;
       document.getElementById('register-adult').checked = true;
       document.getElementById('register-confirm').checked = false;
       showPage('register');
@@ -1738,7 +1746,7 @@ function onDeviceReady() {
       document.getElementById('review-adult-check').checked &&
       document.getElementById('review-picture-check').checked &&
       document.getElementById('review-name-check').checked &&
-      document.getElementById('review-commune-check').checked)
+      document.getElementById('review-locality-check').checked)
       enable('review-confirm');
     else
       disable('review-confirm');
@@ -1747,7 +1755,7 @@ function onDeviceReady() {
   document.getElementById('review-adult-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-picture-check').addEventListener('click', endorsementChecks);
   document.getElementById('review-name-check').addEventListener('click', endorsementChecks);
-  document.getElementById('review-commune-check').addEventListener('click', endorsementChecks);
+  document.getElementById('review-locality-check').addEventListener('click', endorsementChecks);
 
   function revokeChecks(event) {
     const died = document.getElementById('review-died-check');
@@ -1774,7 +1782,7 @@ function onDeviceReady() {
     const ghost = document.getElementById('review-report_ghost-check');
     const duplicate = document.getElementById('review-report_duplicate-check');
     const dead = document.getElementById('review-report_dead-check');
-    const address = document.getElementById('review-report_address-check');
+    const locality = document.getElementById('review-report_locality-check');
     const name = document.getElementById('review-report_name-check');
     const picture = document.getElementById('review-report_picture-check');
     const other = document.getElementById('review-report_other-check');
@@ -1782,21 +1790,21 @@ function onDeviceReady() {
     if (event.currentTarget === ghost && ghost.checked) {
       duplicate.checked = false;
       dead.checked = false;
-      address.checked = false;
+      locality.checked = false;
       name.checked = false;
       picture.checked = false;
       other.checked = false;
     } else if (event.currentTarget === duplicate && duplicate.checked) {
       ghost.checked = false;
       dead.checked = false;
-      address.checked = false;
+      locality.checked = false;
       name.checked = false;
       picture.checked = false;
       other.checked = false;
     } else if (event.currentTarget === dead && dead.checked) {
       ghost.checked = false;
       duplicate.checked = false;
-      address.checked = false;
+      locality.checked = false;
       name.checked = false;
       picture.checked = false;
       other.checked = false;
@@ -1804,11 +1812,11 @@ function onDeviceReady() {
       ghost.checked = false;
       duplicate.checked = false;
       dead.checked = false;
-      address.checked = false;
+      locality.checked = false;
       name.checked = false;
       picture.checked = false;
       input.focus();
-    } else if (address.checked || name.checked || picture.checked) {
+    } else if (locality.checked || name.checked || picture.checked) {
       ghost.checked = false;
       duplicate.checked = false;
       dead.checked = false;
@@ -1818,8 +1826,7 @@ function onDeviceReady() {
       document.getElementById('review-report_other-input-item').classList.add('display-none');
     else
       document.getElementById('review-report_other-input-item').classList.remove('display-none');
-    if (ghost.checked || duplicate.checked || dead.checked ||
-      address.checked || name.checked || picture.checked ||
+    if (ghost.checked || duplicate.checked || dead.checked || locality.checked || name.checked || picture.checked ||
       (other.checked && input.value.trim() !== ''))
       enable('review-confirm');
     else
@@ -1828,7 +1835,7 @@ function onDeviceReady() {
   document.getElementById('review-report_ghost-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_duplicate-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_dead-check').addEventListener('click', reportChecks);
-  document.getElementById('review-report_address-check').addEventListener('click', reportChecks);
+  document.getElementById('review-report_locality-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_name-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_picture-check').addEventListener('click', reportChecks);
   document.getElementById('review-report_other-check').addEventListener('click', reportChecks);
@@ -1864,7 +1871,7 @@ function onDeviceReady() {
           certificateComment += '+died';
         else {
           if (document.getElementById('review-moved-check').checked)
-            certificateComment += '+address';
+            certificateComment += '+locality';
           if (document.getElementById('review-renamed-check').checked)
             certificateComment += '+name';
           if (document.getElementById('review-outdated-check').checked)
@@ -1897,8 +1904,8 @@ function onDeviceReady() {
           certificateComment = 'other';
         else {
           certificateComment = '';
-          if (document.getElementById('review-report_address-check').checked)
-            certificateComment += '+address';
+          if (document.getElementById('review-report_locality-check').checked)
+            certificateComment += '+locality';
           if (document.getElementById('review-report_name-check').checked)
             certificateComment += '+name';
           if (document.getElementById('review-report_picture-check').checked)
@@ -1938,7 +1945,7 @@ function onDeviceReady() {
         citizen.published = Math.trunc(new Date().getTime() / 1000);
         citizen.givenNames = review.givenNames;
         citizen.familyName = review.familyName;
-        citizen.commune = review.commune;
+        citizen.locality = review.locality;
         citizen.picture = review.picture;
         citizen.signature = '';
         citizen.appKey = appKey;
@@ -1967,10 +1974,12 @@ function onDeviceReady() {
       const answer = await syncJsonFetch('https://nominatim.openstreetmap.org/reverse' +
         `?lat=${currentLatitude}&lon=${currentLongitude}&format=json&zoom=11` +
         `&accept-language=${translator.language}`);
-      communeName = getCommuneName(answer.address);
-      commune = answer.osm_id;
+      localityName = getLocalityName(answer.address);
+      localityLatitude = parseFloat(answer.lat);
+      localityLongitude = parseFloat(answer.long);
+      locality = answer.osm_id;
       registerMarker.setPopupContent(
-        `<b>${communeName}</b><br><i style="color:#999">${answer.display_name}</i><br><center style="color:#999">` +
+        `<b>${localityName}</b><br><i style="color:#999">${answer.display_name}</i><br><center style="color:#999">` +
         `(${currentLatitude}, ${currentLongitude})</center>`
       ).openPopup();
     }
@@ -2038,9 +2047,9 @@ function onDeviceReady() {
     getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
   });
   document.getElementById('done-home-location').addEventListener('click', function() {
-    const rc = document.getElementById('register-commune');
+    const rc = document.getElementById('register-locality');
     rc.style.fontStyle = ''; // remove italic
-    rc.textContent = communeName;
+    rc.textContent = localityName;
     hide('location-selector');
     show('home');
     enable('register-location-button');
@@ -2073,7 +2082,7 @@ function onDeviceReady() {
       citizen.published = Math.trunc(new Date().getTime() / 1000);
       citizen.givenNames = document.getElementById('register-given-names').value.trim();
       citizen.familyName = document.getElementById('register-family-name').value.trim();
-      citizen.commune = commune;
+      citizen.locality = locality;
       citizen.picture = document.getElementById('register-picture').src;
       citizen.appKey = appKey;
       citizen.appSignature = '';
@@ -2338,7 +2347,7 @@ function validateRegistration() {
   const familyName = document.getElementById('register-family-name').value.trim();
   if (familyName === '')
     return;
-  if (commune === 0)
+  if (locality === 0)
     return;
   if (document.getElementById('register-picture').src.endsWith('images/profile.png'))
     return;
@@ -2350,7 +2359,7 @@ function validateRegistration() {
   if (previousSignature && certificateComment === 'updated' && // test for change
     givenNames === citizen.givenNames &&
     familyName === citizen.familyName &&
-    commune === citizen.commune &&
+    locality === citizen.locality &&
     picture === citizen.picture)
     return;
   enable('register-button');
@@ -2386,26 +2395,26 @@ document.getElementById('done-picture').addEventListener('click', function() {
 function updateProposeLink() {
   let propose = document.getElementById('propose');
   if (propose)
-    propose.setAttribute('href', `${judge}/propose.html?commune=${citizen.commune}`);
+    propose.setAttribute('href', `${judge}/propose.html?locality=${citizen.locality}`);
 }
 
 function updateSearchLinks() {
   const searchMe = document.getElementById('search-me');
   if (searchMe)
-    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true&commune=${citizen.commune}`);
+    searchMe.setAttribute('href', `${notary}?tab=citizens&me=true&locality=${citizen.locality}`);
   const searchNeighbor = document.getElementById('search-neighbor');
   if (searchNeighbor)
-    searchNeighbor.setAttribute('href', `${notary}?tab=citizens&commune=${citizen.commune}`);
+    searchNeighbor.setAttribute('href', `${notary}?tab=citizens&locality=${citizen.locality}`);
   const searchPetitions = document.getElementById('search-petition');
   if (searchPetitions) {
     searchPetitions.setAttribute('href',
-      `${notary}?tab=proposals&commune=${citizen.commune}` +
+      `${notary}?tab=proposals&locality=${citizen.locality}` +
       '&referendum=false&petition=true&open=true&closed=false&search=true');
   }
   const searchReferendums = document.getElementById('search-referendum');
   if (searchReferendums) {
     searchReferendums.setAttribute('href',
-      `${notary}?tab=proposals&commune=${citizen.commune}` +
+      `${notary}?tab=proposals&locality=${citizen.locality}` +
       '&referendum=true&petition=false&open=true&closed=false&search=true');
   }
 }
@@ -2417,19 +2426,21 @@ function updateCitizenCard() {
   document.getElementById('register-given-names').value = citizen.givenNames;
   document.getElementById('citizen-family-name').textContent = citizen.familyName;
   document.getElementById('register-family-name').value = citizen.familyName;
-  document.getElementById('citizen-commune').href = `https://openstreetmap.org/relation/${citizen.commune}`;
+  document.getElementById('citizen-locality').href = `https://openstreetmap.org/relation/${citizen.locality}`;
 
   const published = new Date(citizen.published * 1000);
   document.getElementById('citizen-published').textContent = published.toISOString().slice(0, 10);
   citizenFingerprint = atob(localStorage.getItem('citizenFingerprint'));
 
-  if (document.getElementById('citizen-commune').textContent === '...') {
-    fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${citizen.commune}&accept-language=${translator.language}&format=json`)
+  if (document.getElementById('citizen-locality').textContent === '...') {
+    fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${citizen.locality}&accept-language=${translator.language}&format=json`)
       .then(response => response.json())
       .then(answer => {
-        communeName = getCommuneName(answer[0].address);
-        document.getElementById('citizen-commune').textContent = communeName;
-        document.getElementById('register-commune').textContent = communeName;
+        localityName = getLocalityName(answer[0].address);
+        localityLatitude = parseFloat(answer[0].lat);
+        localityLongitude = parseFloat(answer[0].lon);
+        document.getElementById('citizen-locality').textContent = localityName;
+        document.getElementById('register-locality').textContent = localityName;
       });
   }
 
@@ -2579,24 +2590,6 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   return true;
 }
 
-async function getLocalAreaFromProposalJudge(judgeKey) {
-  const url = `${notary}/api/publish_area.php?judge=${encodeURIComponent(judgeKey)}&commune=${citizen.commune}`;
-  const answer = await syncJsonFetch(url);
-  if (answer.error) {
-    app.dialog.alert(answer.error, 'Could not get local area from notary');
-    return 0;
-  }
-  if (answer.key !== judgeKey) {
-    app.dialog.alert('Wrong judge key returned by notary for local area.', 'Local area error');
-    return 0;
-  }
-  if (!await verifySignature(answer)) {
-    app.dialog.alert('Wrong signature for judge area.', 'Wrong signature');
-    return 0;
-  }
-  return answer.id;
-}
-
 function updateProposals(proposals) {
   const type = (proposals === petitions) ? 'petition' : 'referendum';
   for (let proposal of proposals) {
@@ -2676,9 +2669,20 @@ function updateEndorsements() {
     a.target = '_blank';
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
-    const distance = 0; // FIXME:
-    // It was: distanceAsText(citizen.latitude, citizen.longitude, endorsement.latitude, endorsement.longitude);
-    newElement(div, 'div', 'item-subtitle align-self-flex-start', distance);
+    const localityElement = newElement(div, 'div', 'item-subtitle align-self-flex-start');
+    if (endorsement.locality === citizen.locality)
+      localityElement.textContent = citizen.locality;
+    else {
+      localityElement.textContent = '...';
+      fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${endorsement.locality}&accept-language=${translator.language}&format=json`)
+        .then(response => response.json())
+        .then(answer => {
+          let name = getLocalityName(answer[0].address);
+          const distance = distanceAsText(localityLatitude, localityLongitude,
+            parseFloat(answer[0].lat), parseFloat(answer[0].lon));
+          localityElement.textContent = `${name} (${distance})`;
+        });
+    }
     let icon;
     let day;
     let color;
@@ -2720,20 +2724,20 @@ function updateEndorsements() {
         otherComment = 'endorsed-you-remotely';
       else if (otherComment === 'in-person')
         otherComment = 'endorsed-you-in-person';
-      else if (otherComment === 'revoked+address')
+      else if (otherComment === 'revoked+locality')
         otherComment = 'revoked-moved';
       else if (otherComment === 'revoked+name')
         otherComment = 'revoked-name';
       else if (otherComment === 'revoked+picture')
         otherComment = 'revoked-picture';
-      else if (otherComment === 'revoked+address+name')
-        otherComment = 'revoked-address-name';
-      else if (otherComment === 'revoked+address+picture')
-        otherComment = 'revoked-address-picture';
+      else if (otherComment === 'revoked+locality+name')
+        otherComment = 'revoked-locality-name';
+      else if (otherComment === 'revoked+locality+picture')
+        otherComment = 'revoked-locality-picture';
       else if (otherComment === 'revoked+name+picture')
         otherComment = 'revoked-name-picture';
-      else if (otherComment === 'revoked+address+name+picture')
-        otherComment = 'revoked-address-name-picture';
+      else if (otherComment === 'revoked+locality+name+picture')
+        otherComment = 'revoked-locality-name-picture';
       else if (otherComment === 'revoked+died')
         otherComment = 'revoked-died';
       else if (otherComment)
@@ -2742,20 +2746,20 @@ function updateEndorsements() {
         comment = 'you-endorsed-remotely';
       else if (comment === 'in-person')
         comment = 'you-endorsed-in-person';
-      else if (comment === 'revoked+address')
+      else if (comment === 'revoked+locality')
         comment = 'you-revoked-moved';
       else if (comment === 'revoked+name')
         comment = 'you-revoked-name';
       else if (comment === 'revoked+picture')
         comment = 'you-revoked-picture';
-      else if (comment === 'revoked+address+name')
-        comment = 'you-revoked-address-name';
-      else if (comment === 'revoked+address+picture')
-        comment = 'you-revoked-address-picture';
+      else if (comment === 'revoked+locality+name')
+        comment = 'you-revoked-locality-name';
+      else if (comment === 'revoked+locality+picture')
+        comment = 'you-revoked-locality-picture';
       else if (comment === 'revoked+name+picture')
         comment = 'you-revoked-name-picture';
-      else if (comment === 'revoked+address+name+picture')
-        comment = 'you-revoked-address-name-picture';
+      else if (comment === 'revoked+locality+name+picture')
+        comment = 'you-revoked-locality-name-picture';
       else if (comment === 'revoked+died')
         comment = 'you-revoked-died';
       else if (comment)
@@ -2810,20 +2814,23 @@ function updateEndorsements() {
       d.style.color = 'Gray';
       i.style.color = 'Gray';
       i.textContent = 'checkmark_seal';
-      const answer = await syncJsonFetch(`${judge}/api/reputation.php?key=${encodeURIComponent(endorsement.key)}`);
-      if (answer.hasOwnProperty('error'))
-        console.error(answer.error);
-      else {
-        if (answer.hasOwnProperty('reputation'))
-          d.textContent = formatReputation(answer.reputation);
-        if (answer.hasOwnProperty('trusted')) {
-          const color = trustedColor(answer.trusted);
-          d.style.color = color;
-          i.style.color = color;
-          i.textContent = answer.trusted === 1 ? 'checkmark_seal_fill' : 'xmark_seal_fill';
-        } else
-          d.style.color = 'Gray';
-      }
+      fetch(`${judge}/api/reputation.php?key=${encodeURIComponent(endorsement.key)}`)
+        .then(response => response.json())
+        .then(answer => {
+          if (answer.hasOwnProperty('error'))
+            console.error(answer.error);
+          else {
+            if (answer.hasOwnProperty('reputation'))
+              d.textContent = formatReputation(answer.reputation);
+            if (answer.hasOwnProperty('trusted')) {
+              const color = trustedColor(answer.trusted);
+              d.style.color = color;
+              i.style.color = color;
+              i.textContent = answer.trusted === 1 ? 'checkmark_seal_fill' : 'xmark_seal_fill';
+            } else
+              d.style.color = 'Gray';
+          }
+        });
     });
     a = newElement(div, 'a', 'link');
     newElement(a, 'i', 'f7-icons', 'doc_text_search');
