@@ -4,11 +4,11 @@ import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 import { pointInPolygons } from './point-in-polygons.js';
 
-const TESTING = true; // if true, enforce the use of the test key for the app
+const TESTING = false; // if true, enforce the use of the test key for the app
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '65'; // FIXME: set TESTING to false before releasing!
+const DIRECTDEMOCRACY_VERSION_BUILD = '66'; // FIXME: set TESTING to false before releasing!
 
 const TEST_APP_KEY = // public key of the test app
   'nRhEkRo47vT2Zm4Cquzavyh+S/yFksvZh1eV20bcg+YcCfwzNdvPRs+5WiEmE4eujuGPkkXG6u/DlmQXf2szMMUwGCkqJSPi6fa90pQKx81QHY8Ab4' +
