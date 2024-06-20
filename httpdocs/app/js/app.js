@@ -1370,10 +1370,6 @@ async function getProposal(fingerprint, type) {
   else if (type === 'referendum' && !proposal.secret) {
     app.dialog.alert(title + translator.translate('not-a-referendum-message'),
       translator.translate('not-a-referendum-title'));
-  } else if (false) { // FIXME
-    const areaName = proposal.areaName[0].split('=')[1];
-    const message = translator.translate(type === 'petition' ? 'wrong-petition-area' : 'wrong-referendum-area', areaName);
-    app.dialog.alert(`${title}${message}`, translator.translate('wrong-area'));
   } else if (outdated) {
     const message = translator.translate(type === 'petition'
       ? 'petition-deadline-passed'
