@@ -2,7 +2,6 @@
 
 import Translator from './translator.js';
 import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
-import { pointInPolygons } from './point-in-polygons.js';
 
 const TESTING = false; // if true, enforce the use of the test key for the app
 
@@ -83,7 +82,6 @@ let certificateComment = ''; // 'in-person', 'remote', 'deleted', 'replaced', 'u
 let reviewAction = '';
 let currentLatitude = 46.517493; // Lausanne
 let currentLongitude = 6.629111;
-let beta = false;
 let croppie = null;
 let localityName = '';
 let localityLatitude = false;
@@ -296,8 +294,6 @@ async function readyToGo() {
         if (translator.language !== key) {
           translator.language = key;
           updateProposeLink();
-          if (beta)
-            setBetaCoordinates();
         }
         break;
       }
@@ -314,9 +310,6 @@ async function readyToGo() {
       translator.translate('update-needed'));
     return;
   }
-  beta = answer.beta;
-  if (beta)
-    setBetaCoordinates();
   if (!localStorage.getItem('registered'))
     welcome();
   else
@@ -335,18 +328,6 @@ function getLocalityName(address) {
     }
   }
   return 'Unknown';
-}
-
-function setBetaCoordinates() {
-  if (translator.language === 'fr') { // French beta test in Le Poil, France
-    currentLatitude = 43.925 + 0.035 * Math.random();
-    currentLongitude = 6.260 + 0.045 * Math.random();
-  } else { // English beta test in Bodie, USA
-    currentLatitude = 38.2095 + 0.007 * Math.random();
-    currentLongitude = -119.0075 - 0.009 * Math.random();
-  }
-  currentLatitude = Math.round(currentLatitude * 1000000) / 1000000;
-  currentLongitude = Math.round(currentLongitude * 1000000) / 1000000;
 }
 
 translator.onready = function() {
@@ -1986,10 +1967,8 @@ function onDeviceReady() {
 
     function getGeolocationPosition(position) {
       geolocation = true;
-      if (!beta) {
-        currentLatitude = roundGeo(position.coords.latitude);
-        currentLongitude = roundGeo(position.coords.longitude);
-      }
+      currentLatitude = roundGeo(position.coords.latitude);
+      currentLongitude = roundGeo(position.coords.longitude);
       registerMap.setView([currentLatitude, currentLongitude], 18);
       setTimeout(function() {
         registerMap.setView([currentLatitude, currentLongitude], 18);
@@ -2039,10 +2018,8 @@ function onDeviceReady() {
       console.error('Status ' + json.status + ': ' + json.error.title + ': ' + json.error.message);
     } else {
       const coords = answer.split(',');
-      if (!beta) {
-        currentLatitude = parseFloat(coords[0]);
-        currentLongitude = parseFloat(coords[1]);
-      }
+      currentLatitude = parseFloat(coords[0]);
+      currentLongitude = parseFloat(coords[1]);
     }
     getGeolocationPosition({ coords: { latitude: currentLatitude, longitude: currentLongitude } });
   });
