@@ -86,6 +86,10 @@ let localityName = '';
 let localityLatitude = false;
 let localityLongitude = false;
 let locality = 0;
+let otherLocalityName = '';
+let otherLocalityLatitude = false;
+let otherLocalityLongitude = false;
+let otherLocality = 0;
 
 const base128Charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
   'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõøùúûüýÿþ@$*£¢';
@@ -456,15 +460,27 @@ async function publish(publication, signature, type) {
   integrity.check(nonce, async function(token) { // success
     if (TESTING && device.platform === 'iOS')
       token = 'N/A';
+    let headers = {
+      'directdemocracy-version': directDemocracyVersion,
+      'integrity-token': token,
+      'user-notary': notary,
+      'app-time': Math.round(Date.now() / 1000),
+      'Content-Type': 'application/json'
+    };
+    if (type === 'citizen card') {
+      headers.locality = locality;
+      headers.latitude = localityLatitude;
+      headers.longitude = localityLongitude;
+      headers['locality-name'] = localityName;
+    } else if (type === 'endorse' && otherLocality !== 0) {
+      headers.locality = otherLocality;
+      headers.latitude = otherLocalityLatitude;
+      headers.longitude = otherLocalityLongitude;
+      headers['locality-name'] = otherLocalityName;
+    }
     let answer = await syncJsonFetch('https://app.directdemocracy.vote/api/integrity.php', {
       method: 'POST',
-      headers: {
-        'directdemocracy-version': directDemocracyVersion,
-        'integrity-token': token,
-        'user-notary': notary,
-        'app-time': Math.round(Date.now() / 1000),
-        'Content-Type': 'application/json'
-      },
+      headers: headers,
       body: JSON.stringify(publication)
     });
     app.dialog.close(); // preloader
@@ -774,16 +790,20 @@ async function reviewCitizen(publication, action) {
   document.getElementById('review-family-name').textContent = publication.familyName;
   const reviewLocality = document.getElementById('review-locality');
   reviewLocality.href = `https://openstreetmap.org/relation/${publication.locality}`;
-  if (publication.locality === citizen.locality)
+  if (publication.locality === citizen.locality) {
     reviewLocality.textContent = localityName;
-  else {
+    otherLocality = 0;
+  } else {
     reviewLocality.textContent = '...';
     fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${publication.locality}&accept-language=${translator.language}&format=json`)
       .then(response => response.json())
       .then(answer => {
-        reviewLocality.textContent = getLocalityName(answer[0].address);
-        const distance = distanceAsText(localityLatitude, localityLongitude,
-          parseFloat(answer[0].lat), parseFloat(answer[0].lon));
+        otherLocality = publication.locality;
+        otherLocalityName = getLocalityName(answer[0].address);
+        reviewLocality.textContent = otherLocalityName;
+        otherLocalityLatitude = parseFloat(answer[0].lat);
+        otherLocalityLongitude = parseFloat(answer[0].lon);
+        const distance = distanceAsText(localityLatitude, localityLongitude, otherLocalityLatitude, otherLocalityLongitude);
         document.getElementById('distance').textContent = distance;
       });
   }
@@ -2642,17 +2662,20 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.givenNames);
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const localityElement = newElement(div, 'div', 'item-subtitle align-self-flex-start');
-    if (endorsement.locality === citizen.locality)
+    if (endorsement.locality === citizen.locality) {
       localityElement.textContent = citizen.locality;
-    else {
+      otherLocality = 0;
+    } else {
       localityElement.textContent = '...';
       fetch(`https://nominatim.openstreetmap.org/lookup?osm_ids=R${endorsement.locality}&accept-language=${translator.language}&format=json`)
         .then(response => response.json())
         .then(answer => {
-          let name = getLocalityName(answer[0].address);
-          const distance = distanceAsText(localityLatitude, localityLongitude,
-            parseFloat(answer[0].lat), parseFloat(answer[0].lon));
-          localityElement.textContent = `${name} (${distance})`;
+          otherLocality = endorsement.locality;
+          otherLocalityName = getLocalityName(answer[0].address);
+          otherLocalityLatitude = parseFloat(answer[0].lat);
+          otherLocalityLongitude = parseFloat(answer[0].lon);
+          const distance = distanceAsText(localityLatitude, localityLongitude, otherLocalityLatitude, otherLocalityLongitude);
+          localityElement.textContent = `${otherLocalityName} (${distance})`;
         });
     }
     let icon;
