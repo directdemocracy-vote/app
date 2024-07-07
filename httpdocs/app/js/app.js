@@ -5,7 +5,7 @@ import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '66'; // FIXME: set TESTING to false before releasing!
+const DIRECTDEMOCRACY_VERSION_BUILD = '67'; // FIXME: set TESTING to false before releasing!
 const TESTING = false; // if true, enforce the use of the test key for the app
 
 const TEST_APP_KEY = // public key of the test app
