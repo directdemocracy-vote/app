@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = document.getElementByTagNames('html')[0];
     const dark = (html.hasAttribute('data-theme') && html.getAttribute('data-theme') === 'dark')
               || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    const theme = dark ? 'light', 'dark';
+    const theme = dark ? 'light' : 'dark';
     html.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   });
