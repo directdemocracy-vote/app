@@ -70,15 +70,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('main-menu').addEventListener('click', function() {
     window.location.href = 'https://directdemocracy.vote';
   });
-  document.getElementById('mode').addEventListener('click', function() {
+  function setThemeIcon(theme) {
+    document.getElementById('theme-icon').style.transform.rotate('180deg');
+  }
+  document.getElementById('theme').addEventListener('click', function() {
     const html = document.getElementsByTagName('html')[0];
     const dark = (html.hasAttribute('data-theme') && html.getAttribute('data-theme') === 'dark')
               || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const theme = dark ? 'light' : 'dark';
-    html.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    html.setAttribute('data-theme', theme);
+    setThemeIcon(theme);
   });
   const theme = localStorage.getItem('theme');
-  if (theme)
+  if (theme) {
     document.getElementsByTagName('html')[0].setAttribute('data-theme', theme);
+    setThemeIcon(theme);
+  }
 });
