@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'https://directdemocracy.vote';
   });
   document.getElementById('mode').addEventListener('click', function() {
-    const html = document.getElementByTagNames('html')[0];
+    const html = document.getElementsByTagName('html')[0];
     const dark = (html.hasAttribute('data-theme') && html.getAttribute('data-theme') === 'dark')
               || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const theme = dark ? 'light' : 'dark';
@@ -80,5 +80,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const theme = localStorage.getItem('theme');
   if (theme)
-    document.getElementByTagNames('html')[0].setAttribute('data-theme', theme);
+    document.getElementsByTagName('html')[0].setAttribute('data-theme', theme);
 });
