@@ -145,9 +145,18 @@ if (isset($publication->schema)) { # this is a publication
   $publication->appSignature = substr(base64_encode($binarySignature), 0, -2);
   $type = get_type($publication->schema);
   if ($type !== 'participation') {
+    if (isset($headers['locality']) && isset($headers['locality-name']) && isset($headers['latitude']) && isset($headers['longitude'])) {
+      $locality = $headers['locality'];
+      $localityName = $headers['locality-name'];
+      $latitude = $headers['latitude'];
+      $longitude = $headers['longitude'];
+      $header = "locality: $locality\r\nlocality-name: $localityName\r\nlatitude: $latitude\r\nlongitude: $longitude\r\n";
+    } else
+      $header = "";
+    $header .= "Content-Type: application/json\r\nAccept: application/json\r\n";
     $options = array('http' => array('method' => 'POST',
                                      'content' => json_encode($publication, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                                     'header' => "Content-Type: application/json\r\nAccept: application/json\r\n"));
+                                     'header' => $header));
     $context  = stream_context_create($options);
     die(file_get_contents("$notary/api/publish.php", false, $context));
   }
