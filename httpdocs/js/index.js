@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'https://directdemocracy.vote';
   });
   function setThemeIcon(theme) {
-    document.getElementById('theme-icon').style.transform = 'rotate(180deg)';
+    document.getElementById('theme-icon').style.transform = theme === 'dark' ? 'rotate(180deg)' : '';
   }
   document.getElementById('theme').addEventListener('click', function() {
     const html = document.getElementsByTagName('html')[0];
