@@ -5,7 +5,7 @@ import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '67'; // FIXME: set TESTING to false before releasing!
+const DIRECTDEMOCRACY_VERSION_BUILD = '68'; // FIXME: set TESTING to false before releasing!
 const TESTING = false; // if true, enforce the use of the test key for the app
 
 const TEST_APP_KEY = // public key of the test app
@@ -267,9 +267,16 @@ async function syncFetch(url, data) {
 async function syncJsonFetch(url, data) {
   const response = await syncFetch(url, data);
   if (!response)
-    return {'error': translator.translate('network-error', 'Download failed')};
-  const answer = await response.json();
-  return answer;
+    return { 'error': translator.translate('network-error', 'Download failed') };
+  const text = await response.text();
+  try {
+    const answer = JSON.parse(text);
+    return answer;
+  } catch (error) {
+    console.error('Cannot read JSON from reponse:');
+    console.error(text);
+    return '';
+  }
 }
 
 async function readyToGo() {
@@ -307,8 +314,8 @@ async function readyToGo() {
   app.dialog.close(); // preloader
   const version = answer.version.split('.');
   if (DIRECTDEMOCRACY_VERSION_MAJOR < version[0] ||
-      DIRECTDEMOCRACY_VERSION_MINOR < version[1] ||
-      DIRECTDEMOCRACY_VERSION_BUILD < version[2]) {
+    DIRECTDEMOCRACY_VERSION_MINOR < version[1] ||
+    DIRECTDEMOCRACY_VERSION_BUILD < version[2]) {
     app.dialog.alert(translator.translate('newer-version', [answer.version, DIRECTDEMOCRACY_VERSION]),
       translator.translate('update-needed'));
     return;
@@ -342,7 +349,7 @@ let app = new Framework7({
   el: '#app',
   name: 'directdemocracy',
   routes: [{ path: '/', pageName: 'home' }],
-  navbar: {iosCenterTitle: false}
+  navbar: { iosCenterTitle: false }
 });
 
 app.on('pageInit', function(page) {
@@ -1037,7 +1044,7 @@ function addProposal(proposal, type, open) {
   const deadline = new Date(proposal.deadline * 1000).toLocaleString();
   const outdated = (proposal.deadline * 1000 < new Date().getTime());
   p.innerHTML = '<b data-i18n="deadline-header">' + translator.translate('deadline-header') +
-  `</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
+    `</b> <span${outdated ? ' style="color:red"' : ''}>${deadline}</span>`;
   let grid = document.createElement('div');
   block.appendChild(grid);
   grid.classList.add('grid', type === 'petition' ? 'grid-cols-2' : 'grid-cols-3', 'grid-gap');
@@ -1168,7 +1175,7 @@ function addProposal(proposal, type, open) {
       const answer = checked ? checked.value : '';
       const explanation = translator.translate('vote-explanation', answer);
       const text = (checked ? explanation : translator.translate('blank-explanation')) +
-       translator.translate('vote-change-explanation');
+        translator.translate('vote-change-explanation');
       app.dialog.confirm(text, translator.translate('vote-confirm'), async function() {
         // prepare the vote aimed at blind signature
         disable(button);
@@ -1394,7 +1401,7 @@ async function getProposal(fingerprint, type) {
     const message = translator.translate(type === 'petition'
       ? 'petition-deadline-passed'
       : 'referendum-deadline-passed',
-    deadline);
+      deadline);
     app.dialog.alert(`${title}${message}`, translator.translate('deadline-passed'));
   } else {
     let already = false;
@@ -1551,7 +1558,7 @@ async function scanQRCode(error, contents, type, action = '') {
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
         hash: 'SHA-256'
       },
-      true, ['sign']);
+        true, ['sign']);
       const exported = await crypto.subtle.exportKey('spki', k.publicKey);
       const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
       challengeBytes = decodeBase128(challenge);
@@ -1972,7 +1979,7 @@ function onDeviceReady() {
         `&accept-language=${translator.language}`);
       localityName = getLocalityName(answer.address);
       localityLatitude = parseFloat(answer.lat);
-      localityLongitude = parseFloat(answer.long);
+      localityLongitude = parseFloat(answer.lon);
       locality = answer.osm_id;
       registerMarker.setPopupContent(
         `<b>${localityName}</b><br><i style="color:#999">${answer.display_name}</i><br><center style="color:#999">` +
@@ -2567,13 +2574,13 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   const reputation = formatReputation(answer.reputation);
   if (answer.trusted === 0) {
     app.dialog.alert(translator.translate('untrusted-message') + ' ' +
-    translator.translate('reputation-message', reputation),
-    translator.translate('untrusted-title'));
+      translator.translate('reputation-message', reputation),
+      translator.translate('untrusted-title'));
     return false;
   } else if (answer.trusted === -1) {
     app.dialog.alert(translator.translate('distrusted-message') + ' ' +
-    translator.translate('reputation-message', reputation),
-    translator.translate('distrusted-title'));
+      translator.translate('reputation-message', reputation),
+      translator.translate('distrusted-title'));
     return false;
   }
   const issued = parseInt(answer.issued);
@@ -2619,8 +2626,8 @@ function distanceInMeter(lat1, lon1, lat2, lon2) {
   const deltaLon = lon2 - lon1;
   const deltaLambda = (deltaLon * Math.PI) / 180;
   const a = Math.sin(deltaP / 2) * Math.sin(deltaP / 2) +
-            Math.cos(p1) * Math.cos(p2) *
-            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    Math.cos(p1) * Math.cos(p2) *
+    Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
   const d = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * R;
   return d;
 }
