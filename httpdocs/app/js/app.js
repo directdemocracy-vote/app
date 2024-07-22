@@ -5,7 +5,7 @@ import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '68'; // FIXME: set TESTING to false before releasing!
+const DIRECTDEMOCRACY_VERSION_BUILD = '69'; // FIXME: set TESTING to false before releasing!
 const TESTING = false; // if true, enforce the use of the test key for the app
 
 const TEST_APP_KEY = // public key of the test app
@@ -1583,6 +1583,10 @@ async function scanQRCode(error, contents, type, action = '') {
 }
 
 function onDeviceReady() {
+  localityName = localStorage.getItem('localityName');
+  localityLatitude = localStorage.getItem('localityLatitude');
+  localityLongitude = localStorage.getItem('localityLongitude');
+
   directDemocracyVersion += ` (${device.platform})`;
   document.getElementById('version').textContent = `version ${directDemocracyVersion}`;
   appKey = (device.isVirtual || TESTING) ? TEST_APP_KEY : PRODUCTION_APP_KEY;
@@ -1980,6 +1984,9 @@ function onDeviceReady() {
       localityName = getLocalityName(answer.address);
       localityLatitude = parseFloat(answer.lat);
       localityLongitude = parseFloat(answer.lon);
+      localStorage.setItem('localityName', localityName);
+      localStorage.setItem('localityLatitude', localityLatitude);
+      localStorage.setItem('localityLongitude', localityLongitude);
       locality = answer.osm_id;
       registerMarker.setPopupContent(
         `<b>${localityName}</b><br><i style="color:#999">${answer.display_name}</i><br><center style="color:#999">` +
@@ -2438,6 +2445,9 @@ function updateCitizenCard() {
         localityName = getLocalityName(answer[0].address);
         localityLatitude = parseFloat(answer[0].lat);
         localityLongitude = parseFloat(answer[0].lon);
+        localStorage.setItem('localityName', localityName);
+        localStorage.setItem('localityLatitude', localityLatitude);
+        localStorage.setItem('localityLongitude', localityLongitude);
         document.getElementById('citizen-locality').textContent = localityName;
         document.getElementById('register-locality').textContent = localityName;
       });
@@ -2670,7 +2680,7 @@ function updateEndorsements() {
     newElement(a, 'div', 'item-title', endorsement.familyName);
     const localityElement = newElement(div, 'div', 'item-subtitle align-self-flex-start');
     if (endorsement.locality === citizen.locality) {
-      localityElement.textContent = citizen.locality;
+      localityElement.textContent = localityName;
       otherLocality = 0;
     } else {
       localityElement.textContent = '...';
