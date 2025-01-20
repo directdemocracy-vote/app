@@ -5,7 +5,7 @@ import { rsaBlind, rsaUnblind, rsaVerifyBlind } from './rsa-blind.js';
 
 const DIRECTDEMOCRACY_VERSION_MAJOR = '2';
 const DIRECTDEMOCRACY_VERSION_MINOR = '0';
-const DIRECTDEMOCRACY_VERSION_BUILD = '70'; // FIXME: set TESTING to false before releasing!
+const DIRECTDEMOCRACY_VERSION_BUILD = '71'; // FIXME: set TESTING to false before releasing!
 const TESTING = false; // if true, enforce the use of the test key for the app
 
 const TEST_APP_KEY = // public key of the test app
@@ -1401,7 +1401,7 @@ async function getProposal(fingerprint, type) {
     const message = translator.translate(type === 'petition'
       ? 'petition-deadline-passed'
       : 'referendum-deadline-passed',
-      deadline);
+    deadline);
     app.dialog.alert(`${title}${message}`, translator.translate('deadline-passed'));
   } else {
     let already = false;
@@ -1558,7 +1558,7 @@ async function scanQRCode(error, contents, type, action = '') {
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
         hash: 'SHA-256'
       },
-        true, ['sign']);
+      true, ['sign']);
       const exported = await crypto.subtle.exportKey('spki', k.publicKey);
       const key = btoa(String.fromCharCode.apply(null, new Uint8Array(exported))).slice(44, -6);
       challengeBytes = decodeBase128(challenge);
@@ -2585,12 +2585,12 @@ async function getGreenLightFromProposalJudge(judgeUrl, judgeKey, proposalDeadli
   if (answer.trusted === 0) {
     app.dialog.alert(translator.translate('untrusted-message') + ' ' +
       translator.translate('reputation-message', reputation),
-      translator.translate('untrusted-title'));
+    translator.translate('untrusted-title'));
     return false;
   } else if (answer.trusted === -1) {
     app.dialog.alert(translator.translate('distrusted-message') + ' ' +
       translator.translate('reputation-message', reputation),
-      translator.translate('distrusted-title'));
+    translator.translate('distrusted-title'));
     return false;
   }
   const issued = parseInt(answer.issued);
