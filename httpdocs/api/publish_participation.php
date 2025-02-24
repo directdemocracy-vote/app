@@ -1,13 +1,10 @@
 <?php
 require_once(__DIR__.'/../../php/database.php');
+require_once '../../php/header.php';
 
 function error($message) {
   die("{\"error\":\"$message\"}");
 }
-
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: content-type");
 
 $notary = 'https://notary.directdemocracy.vote';
 
