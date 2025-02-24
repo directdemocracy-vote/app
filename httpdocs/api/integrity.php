@@ -35,13 +35,13 @@ if (!$publication)
   error('unable to parse JSON post');
 
 $headers = getallheaders();
-if (!isset($headers['integrity-token']))
-  error('Unable to read integrity-token header: ');
-$token = $headers['integrity-token'];
+if (!isset($headers['Integrity-Token']))
+  error('Unable to read Integrity-Token header: ');
+$token = $headers['Integrity-Token'];
 
-if (!isset($headers['directdemocracy-version']))
-  error('Unable to read directdemocracy-version header');
-$directdemocracyVersion = $headers['directdemocracy-version'];
+if (!isset($headers['Directdemocracy-Version']))
+  error('Unable to read Directdemocracy-Version header');
+$directdemocracyVersion = $headers['Directdemocracy-Version'];
 
 $version = explode('.', explode(' ', $directdemocracyVersion)[0]);
 if (intval($version[0]) !== $DIRECTDEMOCRACY_VERSION_MAJOR || intval($version[1]) !== $DIRECTDEMOCRACY_VERSION_MINOR)
@@ -50,17 +50,17 @@ $os = substr($directdemocracyVersion, strpos($directdemocracyVersion, '(', 6) + 
 if ($os !== 'iOS' && $os !== 'Android')
   error("Wrong os in DirectDemocracy-Version header: $os");
 
-if (!isset($headers['user-notary']))
-  error('Unable to read user-notary header');
-$notary = $headers['user-notary'];
+if (!isset($headers['User-Notary']))
+  error('Unable to read User-Notary header');
+$notary = $headers['User-Notary'];
 if ('https://' . parse_url($notary, PHP_URL_HOST) !== $notary)
-  error("Bad user-notary header: $notary");
+  error("Bad User-Notary header: $notary");
 
-if (!isset($headers['app-time']))
+if (!isset($headers['App-Time']))
   error('Unable to read app-time header');
-$time_difference = time() - intval($headers['app-time']);
+$time_difference = time() - intval($headers['App-Time']);
 if (abs($time_difference) > 60)
-  error("App time mismatches server time by $time_difference seconds"); 
+  error("App-Time mismatches server time by $time_difference seconds"); 
 # if the integrity check is successful, this means the publication is well formed because
 # it was created by a geniune app, so we don't need to check it
 
@@ -146,11 +146,11 @@ if (isset($publication->schema)) { # this is a publication
   $publication->appSignature = substr(base64_encode($binarySignature), 0, -2);
   $type = get_type($publication->schema);
   if ($type !== 'participation') {
-    if (isset($headers['locality']) && isset($headers['locality-name']) && isset($headers['latitude']) && isset($headers['longitude'])) {
-      $locality = $headers['locality'];
-      $localityName = $headers['locality-name'];
-      $latitude = $headers['latitude'];
-      $longitude = $headers['longitude'];
+    if (isset($headers['Locality']) && isset($headers['Locality-Name']) && isset($headers['Latitude']) && isset($headers['Longitude'])) {
+      $locality = $headers['Locality'];
+      $localityName = $headers['Locality-Name'];
+      $latitude = $headers['Latitude'];
+      $longitude = $headers['Longitude'];
       $header = "locality: $locality\r\nlocality-name: $localityName\r\nlatitude: $latitude\r\nlongitude: $longitude\r\n";
     } else
       $header = "";
