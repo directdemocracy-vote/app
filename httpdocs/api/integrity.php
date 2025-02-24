@@ -1,5 +1,6 @@
 <?php
 require_once '../../vendor/autoload.php';
+require_once '../../php/header.php';
 
 # Android dependencies
 use Google\Client;
