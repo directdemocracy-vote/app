@@ -1,4 +1,5 @@
 <?php
+require_once '../../php/header.php';
 if (!isset($_GET['id']))
   die('{"error":"missing id parameter"}');
 if (!isset($_GET['key']))
