@@ -1,9 +1,4 @@
 <?php
-
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: content-type");
-
+require_once '../../php/header.php';
 die('{"version":"2.0.63"}');
-
 ?>
