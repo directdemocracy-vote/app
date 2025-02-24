@@ -5,7 +5,7 @@ if (!isset($_GET['key']))
   die('{"error":"missing key parameter"}');
 if (!isset($_GET['signature']))
   die('{"error":"missing signature parameter"}');
-require_once '../../php/header.php');
+require_once '../../php/header.php';
 require_once '../../php/sanitizer.php';
 $id = intval($_GET['id']);
 $key = sanitize_field($_GET['key'], 'base64', 'key');
