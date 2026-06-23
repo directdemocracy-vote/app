@@ -1,2 +1,4 @@
 /.htaccess
 /.well-known
+/client
+/server
